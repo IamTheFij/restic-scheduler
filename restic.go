@@ -122,7 +122,7 @@ func (rcmd ResticCmd) RunRestic(command string, options CommandOptions, commandA
 	cmd.Dir = rcmd.Cwd
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error running restic: %w", err)
+		return fmt.Errorf("error running restic %s: %w", command, err)
 	}
 
 	return nil
@@ -136,6 +136,14 @@ type BackupOpts struct {
 }
 
 func (bo BackupOpts) ToArgs() (args []string) {
+	for _, exclude := range bo.Exclude {
+		args = append(args, "--exclude", exclude)
+	}
+
+	for _, include := range bo.Include {
+		args = append(args, "--include", include)
+	}
+
 	for _, tag := range bo.Tags {
 		args = append(args, "--tag", tag)
 	}
@@ -147,22 +155,16 @@ func (bo BackupOpts) ToArgs() (args []string) {
 	return
 }
 
-func (rcmd ResticCmd) Backup(files []string, options *BackupOpts) error {
-	if options == nil {
-		options = &BackupOpts{} // nolint:exhaustivestruct
-	}
-
-	err := rcmd.RunRestic("backup", options, files...)
-
-	return err
+func (rcmd ResticCmd) Backup(files []string, opts BackupOpts) error {
+	return rcmd.RunRestic("backup", opts, files...)
 }
 
 type RestoreOpts struct {
 	Exclude []string `hcl:"Exclude,optional"`
-	Host    []string `hcl:"Host,optional"`
 	Include []string `hcl:"Include,optional"`
-	Path    string   `hcl:"Path,optional"`
+	Host    []string `hcl:"Host,optional"`
 	Tags    []string `hcl:"Tags,optional"`
+	Path    string   `hcl:"Path,optional"`
 	Target  string   `hcl:"Target,optional"`
 	Verify  bool     `hcl:"Verify,optional"`
 }
@@ -180,12 +182,12 @@ func (ro RestoreOpts) ToArgs() (args []string) {
 		args = append(args, "--host", host)
 	}
 
-	if ro.Path != "" {
-		args = append(args, "--path", ro.Path)
-	}
-
 	for _, tag := range ro.Tags {
 		args = append(args, "--tag", tag)
+	}
+
+	if ro.Path != "" {
+		args = append(args, "--path", ro.Path)
 	}
 
 	if ro.Target != "" {
@@ -199,14 +201,14 @@ func (ro RestoreOpts) ToArgs() (args []string) {
 	return
 }
 
-func (rcmd ResticCmd) Restore(snapshot string, opts *RestoreOpts) error {
-	if opts == nil {
-		opts = &RestoreOpts{} // nolint:exhaustivestruct
-	}
+func (rcmd ResticCmd) Restore(snapshot string, opts RestoreOpts) error {
+	return rcmd.RunRestic("restore", opts, snapshot)
+}
 
-	err := rcmd.RunRestic("restore", opts, snapshot)
+type TagList []string
 
-	return err
+func (t TagList) String() string {
+	return strings.Join(t, ",")
 }
 
 type ForgetOpts struct {
@@ -224,8 +226,8 @@ type ForgetOpts struct {
 	KeepWithinMonthly time.Duration `hcl:"KeepWithinMonthly,optional"`
 	KeepWithinYearly  time.Duration `hcl:"KeepWithinYearly,optional"`
 
-	Tags     []string `hcl:"Tags,optional"`
-	KeepTags []string `hcl:"KeepTags,optional"`
+	Tags     []TagList `hcl:"Tags,optional"`
+	KeepTags []TagList `hcl:"KeepTags,optional"`
 
 	Prune bool `hcl:"Prune,optional"`
 }
@@ -257,11 +259,12 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 		args = append(args, "--keep-yearly", fmt.Sprint(fo.KeepYearly))
 	}
 
+	// Add keep-within-*
+
 	if fo.KeepWithin > 0 {
-		args = append(args, "--keep-within", fmt.Sprint(fo.KeepWithin))
+		args = append(args, "--keep-within", fo.KeepWithin.String())
 	}
 
-	// Add keep-within-*
 	if fo.KeepWithinHourly > 0 {
 		args = append(args, "--keep-within-hourly", fo.KeepWithinHourly.String())
 	}
@@ -283,16 +286,15 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 	}
 
 	// Add tags
-	if len(fo.Tags) > 0 {
-		args = append(args, "--tag", strings.Join(fo.Tags, ","))
+	for _, tagList := range fo.Tags {
+		args = append(args, "--tag", tagList.String())
 	}
 
-	if len(fo.KeepTags) > 0 {
-		args = append(args, "--keep-tag", strings.Join(fo.Tags, ","))
+	for _, tagList := range fo.KeepTags {
+		args = append(args, "--keep-tag", tagList.String())
 	}
 
 	// Add prune options
-
 	if fo.Prune {
 		args = append(args, "--prune")
 	}
@@ -300,20 +302,12 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 	return args
 }
 
-func (rcmd ResticCmd) Forget(forgetOpts *ForgetOpts) error {
-	if forgetOpts == nil {
-		forgetOpts = &ForgetOpts{} // nolint:exhaustivestruct
-	}
-
-	err := rcmd.RunRestic("forget", forgetOpts)
-
-	return err
+func (rcmd ResticCmd) Forget(forgetOpts ForgetOpts) error {
+	return rcmd.RunRestic("forget", forgetOpts)
 }
 
 func (rcmd ResticCmd) Check() error {
-	err := rcmd.RunRestic("check", NoOpts{})
-
-	return err
+	return rcmd.RunRestic("check", NoOpts{})
 }
 
 func (rcmd ResticCmd) EnsureInit() error {

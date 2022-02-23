@@ -42,7 +42,7 @@ func main() {
 	}
 
 	for _, job := range config.Jobs {
-		if err := job.RunTasks(); err != nil {
+		if err := job.RunBackup(); err != nil {
 			log.Fatalf("%v", err)
 		}
 	}

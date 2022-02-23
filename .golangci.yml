@@ -107,5 +107,6 @@ issues:
       linters:
         - errcheck
         - gosec
+        - funlen
   # Enable autofix
   fix: true

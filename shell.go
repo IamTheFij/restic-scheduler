@@ -51,8 +51,6 @@ func RunShell(script string, cwd string, env map[string]string, logger *log.Logg
 	cmd := exec.Command("sh", "-c", strings.TrimSpace(script)) // nolint:gosec
 
 	// Make both stderr and stdout go to logger
-	// fmt.Println("LOGGER PREFIX", logger.Prefix())
-	// logger.Println("From logger")
 	cmd.Stdout = NewLogWriter(logger)
 	cmd.Stderr = cmd.Stdout
 
@@ -62,11 +60,7 @@ func RunShell(script string, cwd string, env map[string]string, logger *log.Logg
 	// Convert env to list if values provided
 	if len(env) > 0 {
 		envList := os.Environ()
-
-		for name, value := range env {
-			envList = append(envList, fmt.Sprintf("%s=%s", name, value))
-		}
-
+		envList = append(envList, EnvMapToList(env)...)
 		cmd.Env = envList
 	}
 
