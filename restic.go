@@ -15,7 +15,7 @@ type CommandOptions interface {
 
 type NoOpts struct{}
 
-func (_ NoOpts) ToArgs() []string {
+func (NoOpts) ToArgs() []string {
 	return []string{}
 }
 
@@ -23,7 +23,7 @@ type ResticGlobalOpts struct {
 	CaCertFile        string `hcl:"CaCertFile,optional"`
 	CacheDir          string `hcl:"CacheDir,optional"`
 	PasswordFile      string `hcl:"PasswordFile,optional"`
-	TlsClientCertFile string `hcl:"TlsClientCertFile,optional"`
+	TLSClientCertFile string `hcl:"TlsClientCertFile,optional"`
 	LimitDownload     int    `hcl:"LimitDownload,optional"`
 	LimitUpload       int    `hcl:"LimitUpload,optional"`
 	VerboseLevel      int    `hcl:"VerboseLevel,optional"`
@@ -32,6 +32,7 @@ type ResticGlobalOpts struct {
 	NoLock            bool   `hcl:"NoLock,optional"`
 }
 
+// nolint:cyclop
 func (glo ResticGlobalOpts) ToArgs() (args []string) {
 	if glo.CaCertFile != "" {
 		args = append(args, "--cacert", glo.CaCertFile)
@@ -65,8 +66,8 @@ func (glo ResticGlobalOpts) ToArgs() (args []string) {
 		args = append(args, "--password-file", glo.PasswordFile)
 	}
 
-	if glo.TlsClientCertFile != "" {
-		args = append(args, "--tls-client-cert", glo.TlsClientCertFile)
+	if glo.TLSClientCertFile != "" {
+		args = append(args, "--tls-client-cert", glo.TLSClientCertFile)
 	}
 
 	if glo.VerboseLevel > 0 {
@@ -120,9 +121,11 @@ func (rcmd ResticCmd) RunRestic(command string, options CommandOptions, commandA
 	cmd.Env = rcmd.BuildEnv()
 	cmd.Dir = rcmd.Cwd
 
-	err := cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("error running restic: %w", err)
+	}
 
-	return err
+	return nil
 }
 
 type BackupOpts struct {
@@ -146,7 +149,7 @@ func (bo BackupOpts) ToArgs() (args []string) {
 
 func (rcmd ResticCmd) Backup(files []string, options *BackupOpts) error {
 	if options == nil {
-		options = &BackupOpts{}
+		options = &BackupOpts{} // nolint:exhaustivestruct
 	}
 
 	err := rcmd.RunRestic("backup", options, files...)
@@ -198,7 +201,7 @@ func (ro RestoreOpts) ToArgs() (args []string) {
 
 func (rcmd ResticCmd) Restore(snapshot string, opts *RestoreOpts) error {
 	if opts == nil {
-		opts = &RestoreOpts{}
+		opts = &RestoreOpts{} // nolint:exhaustivestruct
 	}
 
 	err := rcmd.RunRestic("restore", opts, snapshot)
@@ -227,6 +230,7 @@ type ForgetOpts struct {
 	Prune bool `hcl:"Prune,optional"`
 }
 
+// nolint:funlen,cyclop
 func (fo ForgetOpts) ToArgs() (args []string) {
 	// Add keep-*
 	if fo.KeepLast > 0 {
@@ -298,7 +302,7 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 
 func (rcmd ResticCmd) Forget(forgetOpts *ForgetOpts) error {
 	if forgetOpts == nil {
-		forgetOpts = &ForgetOpts{}
+		forgetOpts = &ForgetOpts{} // nolint:exhaustivestruct
 	}
 
 	err := rcmd.RunRestic("forget", forgetOpts)

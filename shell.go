@@ -30,25 +30,25 @@ func GetChildLogger(parent *log.Logger, name string) *log.Logger {
 	return GetLogger(childName)
 }
 
-type logWriter struct {
+type LogWriter struct {
 	logger *log.Logger
 }
 
-func NewLogWriter(logger *log.Logger) *logWriter {
-	return &logWriter{logger}
+func NewLogWriter(logger *log.Logger) *LogWriter {
+	return &LogWriter{logger}
 }
 
-func (w logWriter) Write(p []byte) (n int, err error) {
-	message := fmt.Sprintf("%s", p)
+func (w LogWriter) Write(content []byte) (n int, err error) {
+	message := string(content)
 	for _, line := range strings.Split(message, "\n") {
 		w.logger.Printf(" %s", line)
 	}
 
-	return len(p), nil
+	return len(content), nil
 }
 
 func RunShell(script string, cwd string, env map[string]string, logger *log.Logger) error {
-	cmd := exec.Command("sh", "-c", strings.TrimSpace(script))
+	cmd := exec.Command("sh", "-c", strings.TrimSpace(script)) // nolint:gosec
 
 	// Make both stderr and stdout go to logger
 	// fmt.Println("LOGGER PREFIX", logger.Prefix())

@@ -16,7 +16,7 @@ type TaskConfig struct {
 	Restic *ResticCmd
 }
 
-// ResticConfig is all configuration to be sent to Restic
+// ResticConfig is all configuration to be sent to Restic.
 type ResticConfig struct {
 	Repo       string            `hcl:"repo"`
 	Passphrase string            `hcl:"passphrase,optional"`
@@ -24,14 +24,14 @@ type ResticConfig struct {
 	GlobalOpts *ResticGlobalOpts `hcl:"options,block"`
 }
 
-// ExecutableTask is a task to be run before or after backup/retore
+// ExecutableTask is a task to be run before or after backup/retore.
 type ExecutableTask interface {
 	RunBackup(cfg TaskConfig) error
 	RunRestore(cfg TaskConfig) error
 	Name() string
 }
 
-// JobTaskScript is a sript to be executed as part of a job task
+// JobTaskScript is a sript to be executed as part of a job task.
 type JobTaskScript struct {
 	OnBackup   string `hcl:"on_backup,optional"`
 	OnRestore  string `hcl:"on_restore,optional"`
@@ -40,7 +40,7 @@ type JobTaskScript struct {
 	name       string
 }
 
-// RunBackup runs script on backup
+// RunBackup runs script on backup.
 func (t JobTaskScript) RunBackup(cfg TaskConfig) error {
 	env := MergeEnv(cfg.Env, t.env)
 	if env == nil {
@@ -61,7 +61,7 @@ func (t JobTaskScript) RunBackup(cfg TaskConfig) error {
 	return nil
 }
 
-// RunRestore script on restore
+// RunRestore script on restore.
 func (t JobTaskScript) RunRestore(cfg TaskConfig) error {
 	env := MergeEnv(cfg.Env, t.env)
 	if env == nil {
@@ -90,7 +90,7 @@ func (t *JobTaskScript) SetName(name string) {
 	t.name = name
 }
 
-// JobTaskMySQL is a sqlite backup task that performs required pre and post tasks
+// JobTaskMySQL is a sqlite backup task that performs required pre and post tasks.
 type JobTaskMySQL struct {
 	Name     string `hcl:"name,label"`
 	Hostname string `hcl:"hostname,optional"`
@@ -102,6 +102,7 @@ type JobTaskMySQL struct {
 func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 	return JobTaskScript{
 		name: t.Name,
+		env:  nil,
 		OnBackup: fmt.Sprintf(
 			"mysqldump -h '%s' -u '%s' -p '%s' '%s' > './%s.sql'",
 			t.Hostname,
@@ -110,13 +111,16 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 			t.Database,
 			t.Name,
 		),
+		OnRestore:  "",
 		FromJobDir: true,
 	}
 }
 
 func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 	return JobTaskScript{
-		name: t.Name,
+		name:     t.Name,
+		env:      nil,
+		OnBackup: "",
 		OnRestore: fmt.Sprintf(
 			"mysql -h '%s' -u '%s' -p '%s' '%s' << './%s.sql'",
 			t.Hostname,
@@ -129,7 +133,7 @@ func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 	}
 }
 
-// JobTaskSqlite is a sqlite backup task that performs required pre and post tasks
+// JobTaskSqlite is a sqlite backup task that performs required pre and post tasks.
 type JobTaskSqlite struct {
 	Name string `hcl:"name,label"`
 	Path string `hcl:"path"`
@@ -138,17 +142,23 @@ type JobTaskSqlite struct {
 func (t JobTaskSqlite) GetPreTask() ExecutableTask {
 	return JobTaskScript{
 		name: t.Name,
+		env:  nil,
 		OnBackup: fmt.Sprintf(
 			"sqlite3 %s '.backup $RESTIC_JOB_DIR/%s.bak'",
 			t.Path, t.Name,
 		),
+		OnRestore:  "",
+		FromJobDir: false,
 	}
 }
 
 func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 	return JobTaskScript{
-		name:      t.Name,
-		OnRestore: fmt.Sprintf("cp '$RESTIC_JOB_DIR/%s.bak' '%s'", t.Name, t.Path),
+		name:       t.Name,
+		env:        nil,
+		OnBackup:   "",
+		OnRestore:  fmt.Sprintf("cp '$RESTIC_JOB_DIR/%s.bak' '%s'", t.Name, t.Path),
+		FromJobDir: false,
 	}
 }
 
@@ -189,7 +199,7 @@ func (t *BackupFilesTask) SetName(name string) {
 	t.name = name
 }
 
-// JobTask represents a single task within a backup job
+// JobTask represents a single task within a backup job.
 type JobTask struct {
 	Name    string           `hcl:"name,label"`
 	Scripts []JobTaskScript  `hcl:"script,block"`
@@ -213,7 +223,7 @@ func (t JobTask) GetTasks() []ExecutableTask {
 }
 
 // Job contains all configuration required to construct and run a backup
-// and restore job
+// and restore job.
 type Job struct {
 	Name     string       `hcl:"name,label"`
 	Schedule string       `hcl:"schedule"`
@@ -223,7 +233,7 @@ type Job struct {
 	Forget   *ForgetOpts  `hcl:"forget,block"`
 
 	// Meta Tasks
-	MySql  []JobTaskMySQL  `hcl:"mysql,block"`
+	MySQL  []JobTaskMySQL  `hcl:"mysql,block"`
 	Sqlite []JobTaskSqlite `hcl:"sqlite,block"`
 }
 
@@ -231,7 +241,7 @@ func (j Job) AllTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
 
 	// Pre tasks
-	for _, mysql := range j.MySql {
+	for _, mysql := range j.MySQL {
 		allTasks = append(allTasks, mysql.GetPreTask())
 	}
 
@@ -245,7 +255,7 @@ func (j Job) AllTasks() []ExecutableTask {
 	}
 
 	// Post tasks
-	for _, mysql := range j.MySql {
+	for _, mysql := range j.MySQL {
 		allTasks = append(allTasks, mysql.GetPreTask())
 	}
 
@@ -277,6 +287,7 @@ func (j Job) RunTasks() error {
 			JobDir: jobDir,
 			Logger: GetChildLogger(logger, exTask.Name()),
 			Restic: restic,
+			Env:    nil,
 		}
 
 		if err := exTask.RunBackup(taskCfg); err != nil {
@@ -285,7 +296,9 @@ func (j Job) RunTasks() error {
 	}
 
 	if j.Forget != nil {
-		restic.Forget(j.Forget)
+		if err := restic.Forget(j.Forget); err != nil {
+			return fmt.Errorf("failed forgetting and pruning job %s: %w", j.Name, err)
+		}
 	}
 
 	return nil
@@ -298,6 +311,7 @@ func (j Job) NewRestic() *ResticCmd {
 		Env:        j.Config.Env,
 		Passphrase: j.Config.Passphrase,
 		GlobalOpts: j.Config.GlobalOpts,
+		Cwd:        "",
 	}
 }
 

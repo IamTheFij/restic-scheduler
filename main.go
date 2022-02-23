@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// version of restic-scheduler being run
+	// version of restic-scheduler being run.
 	version = "dev"
 )
 

@@ -1,43 +1,105 @@
 ---
 linters:
   enable:
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    - varcheck
+
     - asciicheck
+    - bidichk
     - bodyclose
-    - dogsled
+    - containedctx
+    - contextcheck
+    - cyclop
+    - decorder
+    - depguard
     - dupl
+    - durationcheck
+    - errchkjson
+    - errname
+    - errorlint
     - exhaustive
+    - exhaustivestruct
+    - exportloopref
+    - forcetypeassert
+    - funlen
+    - gci
     - gochecknoinits
     - gocognit
+    - goconst
     - gocritic
-    - gocyclo
-    - goerr113
-    - gofumpt
+    # - gocyclo  # Using cyclop
+    - godot
+    # - goerr113  # Using errorlint
+    - gofmt
+    - goheader
     - goimports
     - gomnd
+    - gomoddirectives
+    - gomodguard
     - goprintffuncname
-    # - gosec
-    # - ifshort
-    - interfacer
-    - maligned
+    - gosec
+    - grouper
+    - ifshort
+    - importas
+    # - ireturn
+    - lll
+    - maintidx
+    - makezero
     - misspell
     - nakedret
     - nestif
+    - nilerr
+    - nilnil
     - nlreturn
     - noctx
+    - nolintlint
+    - paralleltest
+    - prealloc
+    - predeclared
+    # - promlinter  # Not common enough
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    # - stylecheck  # Using revive
+    - tagliatelle
+    - tenv
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
     - unparam
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
     - wsl
-    # - errorlint
+
   disable:
     - gochecknoglobals
+    - godox
+    - forbidigo
+    # Deprecated
+    - golint
+    - interfacer
+    - maligned
+    - scopelint
 
 linters-settings:
-  gosec:
-    excludes:
-      - G204
-#   gomnd:
-#     settings:
-#       mnd:
-#         ignored-functions: math.*
+  # gosec:
+  #   excludes:
+  #     - G204
+  gomnd:
+    settings:
+      mnd:
+        ignored-functions: math.*
 
 issues:
   exclude-rules:
@@ -45,4 +107,5 @@ issues:
       linters:
         - errcheck
         - gosec
-        - maligned
+  # Enable autofix
+  fix: true
