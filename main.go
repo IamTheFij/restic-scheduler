@@ -26,9 +26,24 @@ func main() {
 
 	var config Config
 
-	if err := hclsimple.DecodeFile("config.hcl", nil, &config); err != nil {
+	args := flag.Args()
+	if len(args) == 0 {
+		log.Fatalf("Requires a path to a job file, but found none")
+	}
+
+	if err := hclsimple.DecodeFile(args[0], nil, &config); err != nil {
 		log.Fatalf("Failed to load configuration: %s", err)
 	}
 
 	log.Printf("Configuration is %#v", config)
+
+	if len(config.Jobs) == 0 {
+		log.Fatalf("No jobs defined in config")
+	}
+
+	for _, job := range config.Jobs {
+		if err := job.RunTasks(); err != nil {
+			log.Fatalf("%v", err)
+		}
+	}
 }

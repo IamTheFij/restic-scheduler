@@ -1,30 +1,73 @@
-job "My App" {
+// Example job file
+job "MyApp" {
   schedule = "* * * * *"
 
   config {
     repo = "s3://..."
     passphrase = "foo"
-  }
-
-  task "Dump mysql" {
-    mysql {
-      hostname = "foo"
-      username = "bar"
+    env = {
+      "foo" = "bar",
+    }
+    options {
+      VerboseLevel = 3
     }
   }
 
-  task "Create biz file" {
-    on_backup {
-      body = <<EOF
+  mysql "DumpMainDB" {
+    hostname = "foo"
+    username = "bar"
+  }
+
+  sqlite "DumpSqlite" {
+    path = "/db/path"
+  }
+
+  task "RunSomePreScripts" {
+    script {
+      on_backup = <<EOF
       echo foo > /biz.txt
+      EOF
+
+      on_restore = "/foo/bar.sh"
+    }
+
+    script {
+      on_backup = <<EOF
+      echo bar >> /biz.txt
       EOF
     }
   }
 
-  task "Backup data files" {
-    files = [
-      "/foo/bar",
-      "/biz.txt",
-    ]
+  task "ActuallyBackupSomeStuff" {
+    backup {
+      files =[
+        "/foo/bar",
+        "/biz.txt",
+      ]
+
+      backup_opts {
+        Tags = ["service"]
+      }
+
+      restore_opts {
+        Verify = true
+      }
+    }
+  }
+
+  task "RunSomePostScripts" {
+    script {
+      on_backup = <<EOF
+      rm /biz.txt
+      EOF
+    }
+  }
+
+  forget {
+    KeepLast = 3
+    KeepWeekly = 2
+    KeepMonthly = 2
+    KeepYearly = 2
+    Prune = true
   }
 }
