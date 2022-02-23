@@ -2,7 +2,10 @@ module git.iamthefij.com/iamthefij/restic-scheduler
 
 go 1.17
 
-require github.com/hashicorp/hcl/v2 v2.11.1
+require (
+	github.com/go-test/deep v1.0.8
+	github.com/hashicorp/hcl/v2 v2.11.1
+)
 
 require (
 	github.com/agext/levenshtein v1.2.1 // indirect

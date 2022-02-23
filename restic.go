@@ -42,8 +42,12 @@ func (glo ResticGlobalOpts) ToArgs() (args []string) {
 		args = append(args, "--cache-dir", glo.CacheDir)
 	}
 
-	if glo.CleanupCache {
-		args = append(args, "--cleanup-cache")
+	if glo.PasswordFile != "" {
+		args = append(args, "--password-file", glo.PasswordFile)
+	}
+
+	if glo.TLSClientCertFile != "" {
+		args = append(args, "--tls-client-cert", glo.TLSClientCertFile)
 	}
 
 	if glo.LimitDownload > 0 {
@@ -54,24 +58,20 @@ func (glo ResticGlobalOpts) ToArgs() (args []string) {
 		args = append(args, "--limit-upload", fmt.Sprint(glo.LimitUpload))
 	}
 
+	if glo.VerboseLevel > 0 {
+		args = append(args, "--verbose", fmt.Sprint(glo.VerboseLevel))
+	}
+
+	if glo.CleanupCache {
+		args = append(args, "--cleanup-cache")
+	}
+
 	if glo.NoCache {
 		args = append(args, "--no-cache")
 	}
 
 	if glo.NoLock {
 		args = append(args, "--no-lock")
-	}
-
-	if glo.PasswordFile != "" {
-		args = append(args, "--password-file", glo.PasswordFile)
-	}
-
-	if glo.TLSClientCertFile != "" {
-		args = append(args, "--tls-client-cert", glo.TLSClientCertFile)
-	}
-
-	if glo.VerboseLevel > 0 {
-		args = append(args, "--verbose", fmt.Sprint(glo.VerboseLevel))
 	}
 
 	return args
