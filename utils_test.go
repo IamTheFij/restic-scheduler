@@ -7,6 +7,16 @@ import (
 	"github.com/go-test/deep"
 )
 
+func AssertEqual(t *testing.T, message string, expected, actual interface{}) bool {
+	t.Helper()
+
+	if expected != actual {
+		t.Errorf("%s. expected: %v, actual: %v", message, expected, actual)
+	}
+
+	return true
+}
+
 func TestMergeEnvMap(t *testing.T) {
 	t.Parallel()
 

@@ -173,3 +173,125 @@ func TestJobTaskScript(t *testing.T) {
 		})
 	}
 }
+
+func TestJobTaskMySQL(t *testing.T) {
+	t.Parallel()
+
+	type TaskGenerator interface {
+		Validate() error
+		GetPreTask() main.ExecutableTask
+		GetPostTask() main.ExecutableTask
+	}
+
+	cases := []struct {
+		name          string
+		task          TaskGenerator
+		validationErr error
+		preBackup     string
+		postBackup    string
+		preRestore    string
+		postRestore   string
+	}{
+		{
+			name: "mysql simple",
+			// nolint:exhaustivestruct
+			task:          main.JobTaskMySQL{Name: "simple"},
+			validationErr: nil,
+			preBackup:     "mysqldump --result-file './simple.sql'",
+			postBackup:    "",
+			preRestore:    "",
+			postRestore:   "mysql < './simple.sql'",
+		},
+		{
+			name: "mysql invalid name",
+			// nolint:exhaustivestruct
+			task:          main.JobTaskMySQL{Name: "it's invalid;"},
+			validationErr: main.ErrInvalidConfigValue,
+			preBackup:     "",
+			postBackup:    "",
+			preRestore:    "",
+			postRestore:   "",
+		},
+		{
+			name: "mysql tables no database",
+			// nolint:exhaustivestruct
+			task: main.JobTaskMySQL{
+				Name:   "name",
+				Tables: []string{"table1", "table2"},
+			},
+			validationErr: main.ErrMissingField,
+			preBackup:     "",
+			postBackup:    "",
+			preRestore:    "",
+			postRestore:   "",
+		},
+		{
+			name: "mysql all options",
+			task: main.JobTaskMySQL{
+				Name:     "simple",
+				Hostname: "host",
+				Username: "user",
+				Password: "pass",
+				Database: "db",
+				Tables:   []string{"table1", "table2"},
+			},
+			validationErr: nil,
+			preBackup:     "mysqldump --result-file './simple.sql' --host host --user user --password pass db table1 table2",
+			postBackup:    "",
+			preRestore:    "",
+			postRestore:   "mysql --host host --user user --password pass < './simple.sql'",
+		},
+		// Sqlite
+		{
+			name: "sqlite simple",
+
+			task:          main.JobTaskSqlite{Name: "simple", Path: "database.db"},
+			validationErr: nil,
+			preBackup:     "sqlite3 'database.db' '.backup $RESTIC_JOB_DIR/simple.db.bak'",
+			postBackup:    "",
+			preRestore:    "",
+			postRestore:   "cp '$RESTIC_JOB_DIR/simple.db.bak' 'database.db'",
+		},
+		{
+			name: "sqlite invalid name",
+
+			task:          main.JobTaskSqlite{Name: "it's invalid;", Path: "database.db"},
+			validationErr: main.ErrInvalidConfigValue,
+			preBackup:     "",
+			postBackup:    "",
+			preRestore:    "",
+			postRestore:   "",
+		},
+	}
+
+	for _, c := range cases {
+		testCase := c
+
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			validateErr := testCase.task.Validate()
+			if !errors.Is(validateErr, testCase.validationErr) {
+				t.Errorf("unexpected validation result. expected: %v, actual: %v", testCase.validationErr, validateErr)
+			}
+
+			if validateErr != nil {
+				return
+			}
+
+			if preTask, ok := testCase.task.GetPreTask().(main.JobTaskScript); ok {
+				AssertEqual(t, "incorrect pre-backup", testCase.preBackup, preTask.OnBackup)
+				AssertEqual(t, "incorrect pre-restore", testCase.preRestore, preTask.OnRestore)
+			} else {
+				t.Error("pre task was not a JobTaskScript")
+			}
+
+			if postTask, ok := testCase.task.GetPostTask().(main.JobTaskScript); ok {
+				AssertEqual(t, "incorrect post-backup", testCase.postBackup, postTask.OnBackup)
+				AssertEqual(t, "incorrect post-restore", testCase.postRestore, postTask.OnRestore)
+			} else {
+				t.Error("post task was not a JobTaskScript")
+			}
+		})
+	}
+}

@@ -14,10 +14,11 @@ import (
 const WorkDirPerms = 0o666
 
 var (
-	ErrNoJobsFound       = errors.New("no jobs found and at least one job is required")
-	ErrMissingField      = errors.New("missing config field")
-	ErrMissingBlock      = errors.New("missing config block")
-	ErrMutuallyExclusive = errors.New("mutually exclusive values not valid")
+	ErrNoJobsFound        = errors.New("no jobs found and at least one job is required")
+	ErrMissingField       = errors.New("missing config field")
+	ErrMissingBlock       = errors.New("missing config block")
+	ErrMutuallyExclusive  = errors.New("mutually exclusive values not valid")
+	ErrInvalidConfigValue = errors.New("invalid config value")
 )
 
 type TaskConfig struct {
@@ -128,11 +129,20 @@ func (t JobTaskMySQL) Filename() string {
 
 func (t JobTaskMySQL) Validate() error {
 	if invalidChars := "'\";"; strings.ContainsAny(t.Name, invalidChars) {
-		return fmt.Errorf("mysql task %s has an invalid name. The name may not contain %s", t.Name, invalidChars)
+		return fmt.Errorf(
+			"mysql task %s has an invalid name. The name may not contain %s: %w",
+			t.Name,
+			invalidChars,
+			ErrInvalidConfigValue,
+		)
 	}
 
 	if len(t.Tables) > 0 && t.Database == "" {
-		return fmt.Errorf("mysql task %s is invalid. Must specify a database to use tables: %w", t.Name, ErrMissingField)
+		return fmt.Errorf(
+			"mysql task %s is invalid. Must specify a database to use tables: %w",
+			t.Name,
+			ErrMissingField,
+		)
 	}
 
 	return nil
@@ -206,7 +216,12 @@ func (t JobTaskSqlite) Filename() string {
 
 func (t JobTaskSqlite) Validate() error {
 	if invalidChars := "'\";"; strings.ContainsAny(t.Name, invalidChars) {
-		return fmt.Errorf("sqlite task %s has an invalid name. The name may not contain %s", t.Name, invalidChars)
+		return fmt.Errorf(
+			"sqlite task %s has an invalid name. The name may not contain %s: %w",
+			t.Name,
+			invalidChars,
+			ErrInvalidConfigValue,
+		)
 	}
 
 	return nil
@@ -217,7 +232,7 @@ func (t JobTaskSqlite) GetPreTask() ExecutableTask {
 		name: t.Name,
 		env:  nil,
 		OnBackup: fmt.Sprintf(
-			"sqlite3 %s '.backup $RESTIC_JOB_DIR/%s'",
+			"sqlite3 '%s' '.backup $RESTIC_JOB_DIR/%s'",
 			t.Path, t.Filename(),
 		),
 		OnRestore:  "",
@@ -429,17 +444,6 @@ func (j Job) JobDir() string {
 	return cwd
 }
 
-/*
- * func NewTaskConfig(jobDir string, jobLogger *log.Logger, restic *ResticCmd, taskName string) TaskConfig {
- * 	return TaskConfig{
- * 		JobDir: jobDir,
- * 		Logger: GetChildLogger(jobLogger, taskName),
- * 		Restic: restic,
- * 		Env:    nil,
- * 	}
- * }
- */
-
 func (j Job) RunBackup() error {
 	logger := GetLogger(j.Name)
 	restic := j.NewRestic()
@@ -524,37 +528,3 @@ func (c Config) Validate() error {
 
 	return nil
 }
-
-/***
-
-job "My App" {
-	schedule = "* * * * *"
-	config {
-		repo = "s3://..."
-		passphrase = "foo"
-	}
-
-	task "Dump mysql" {
-		mysql {
-			hostname = "foo"
-			username = "bar"
-		}
-	}
-
-	task "Create biz file" {
-		on_backup {
-			body = <<EOF
-			echo foo > /biz.txt
-			EOF
-		}
-	}
-
-	task "Backup data files" {
-		files = [
-		"/foo/bar",
-		"/biz.txt",
-		]
-	}
-}
-
-***/
