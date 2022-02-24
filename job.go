@@ -247,7 +247,7 @@ func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 		t.BackupOpts = &BackupOpts{} // nolint:exhaustivestruct
 	}
 
-	if err := cfg.Restic.Backup(t.Files, *t.BackupOpts); err != nil {
+	if err := cfg.Restic.Backup(append(t.Files, cfg.JobDir), *t.BackupOpts); err != nil {
 		err = fmt.Errorf("failed backing up files: %w", err)
 		cfg.Logger.Fatal(err)
 
