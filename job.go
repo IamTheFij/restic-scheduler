@@ -475,8 +475,12 @@ func (j Job) RunBackup() error {
 	return nil
 }
 
+func (j Job) Logger() *log.Logger {
+	return GetLogger(j.Name)
+}
+
 func (j Job) RunRestore() error {
-	logger := GetLogger(j.Name)
+	logger := j.Logger()
 	restic := j.NewRestic()
 	jobDir := j.JobDir()
 
@@ -500,6 +504,12 @@ func (j Job) RunRestore() error {
 	return nil
 }
 
+func (j Job) Run() {
+	if err := j.RunBackup(); err != nil {
+		j.Logger().Fatalf("ERROR: Backup failed: %v", err)
+	}
+}
+
 func (j Job) NewRestic() *Restic {
 	return &Restic{
 		Logger:     GetLogger(j.Name),
@@ -512,6 +522,7 @@ func (j Job) NewRestic() *Restic {
 }
 
 type Config struct {
+	// GlobalConfig *ResticConfig `hcl:"global_config,block"`
 	Jobs []Job `hcl:"job,block"`
 }
 
