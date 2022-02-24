@@ -25,7 +25,7 @@ type TaskConfig struct {
 	JobDir string
 	Env    map[string]string
 	Logger *log.Logger
-	Restic *ResticCmd
+	Restic *Restic
 }
 
 // ResticConfig is all configuration to be sent to Restic.
@@ -500,8 +500,8 @@ func (j Job) RunRestore() error {
 	return nil
 }
 
-func (j Job) NewRestic() *ResticCmd {
-	return &ResticCmd{
+func (j Job) NewRestic() *Restic {
+	return &Restic{
 		Logger:     GetLogger(j.Name),
 		Repo:       j.Config.Repo,
 		Env:        j.Config.Env,

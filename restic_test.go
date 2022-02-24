@@ -148,24 +148,24 @@ func TestBuildEnv(t *testing.T) {
 
 	cases := []struct {
 		name     string
-		cmd      main.ResticCmd
+		cmd      main.Restic
 		expected []string
 	}{
 		{
 			name:     "No Env",
-			cmd:      main.ResticCmd{}, // nolint:exhaustivestruct
+			cmd:      main.Restic{}, // nolint:exhaustivestruct
 			expected: os.Environ(),
 		},
 		{
 			name: "SetEnv",
-			cmd: main.ResticCmd{ // nolint:exhaustivestruct
+			cmd: main.Restic{ // nolint:exhaustivestruct
 				Env: map[string]string{"TestKey": "Value"},
 			},
 			expected: append(os.Environ(), "TestKey=Value"),
 		},
 		{
 			name: "SetEnv",
-			cmd: main.ResticCmd{ // nolint:exhaustivestruct
+			cmd: main.Restic{ // nolint:exhaustivestruct
 				Passphrase: "Shhhhhhhh!!",
 			},
 			expected: append(os.Environ(), "RESTIC_PASSWORD=Shhhhhhhh!!"),

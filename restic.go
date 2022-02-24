@@ -9,6 +9,38 @@ import (
 	"time"
 )
 
+func maybeAddArgString(args []string, name, value string) []string {
+	if value != "" {
+		return append(args, name, value)
+	}
+
+	return args
+}
+
+func maybeAddArgInt(args []string, name string, value int) []string {
+	if value > 0 {
+		return append(args, name, fmt.Sprint(value))
+	}
+
+	return args
+}
+
+func maybeAddArgBool(args []string, name string, value bool) []string {
+	if value {
+		return append(args, name)
+	}
+
+	return args
+}
+
+func maybeAddArgsList(args []string, name string, value []string) []string {
+	for _, v := range value {
+		args = append(args, name, v)
+	}
+
+	return args
+}
+
 type CommandOptions interface {
 	ToArgs() []string
 }
@@ -19,115 +51,6 @@ func (NoOpts) ToArgs() []string {
 	return []string{}
 }
 
-type ResticGlobalOpts struct {
-	CaCertFile        string `hcl:"CaCertFile,optional"`
-	CacheDir          string `hcl:"CacheDir,optional"`
-	PasswordFile      string `hcl:"PasswordFile,optional"`
-	TLSClientCertFile string `hcl:"TlsClientCertFile,optional"`
-	LimitDownload     int    `hcl:"LimitDownload,optional"`
-	LimitUpload       int    `hcl:"LimitUpload,optional"`
-	VerboseLevel      int    `hcl:"VerboseLevel,optional"`
-	CleanupCache      bool   `hcl:"CleanupCache,optional"`
-	NoCache           bool   `hcl:"NoCache,optional"`
-	NoLock            bool   `hcl:"NoLock,optional"`
-}
-
-// nolint:cyclop
-func (glo ResticGlobalOpts) ToArgs() (args []string) {
-	if glo.CaCertFile != "" {
-		args = append(args, "--cacert", glo.CaCertFile)
-	}
-
-	if glo.CacheDir != "" {
-		args = append(args, "--cache-dir", glo.CacheDir)
-	}
-
-	if glo.PasswordFile != "" {
-		args = append(args, "--password-file", glo.PasswordFile)
-	}
-
-	if glo.TLSClientCertFile != "" {
-		args = append(args, "--tls-client-cert", glo.TLSClientCertFile)
-	}
-
-	if glo.LimitDownload > 0 {
-		args = append(args, "--limit-download", fmt.Sprint(glo.LimitDownload))
-	}
-
-	if glo.LimitUpload > 0 {
-		args = append(args, "--limit-upload", fmt.Sprint(glo.LimitUpload))
-	}
-
-	if glo.VerboseLevel > 0 {
-		args = append(args, "--verbose", fmt.Sprint(glo.VerboseLevel))
-	}
-
-	if glo.CleanupCache {
-		args = append(args, "--cleanup-cache")
-	}
-
-	if glo.NoCache {
-		args = append(args, "--no-cache")
-	}
-
-	if glo.NoLock {
-		args = append(args, "--no-lock")
-	}
-
-	return args
-}
-
-type ResticCmd struct {
-	Logger     *log.Logger
-	Repo       string
-	Env        map[string]string
-	Passphrase string
-	GlobalOpts *ResticGlobalOpts
-	Cwd        string
-}
-
-func (rcmd ResticCmd) BuildEnv() []string {
-	if rcmd.Env == nil {
-		rcmd.Env = map[string]string{}
-	}
-
-	if rcmd.Passphrase != "" {
-		rcmd.Env["RESTIC_PASSWORD"] = rcmd.Passphrase
-	}
-
-	envList := os.Environ()
-
-	for name, value := range rcmd.Env {
-		envList = append(envList, fmt.Sprintf("%s=%s", name, value))
-	}
-
-	return envList
-}
-
-func (rcmd ResticCmd) RunRestic(command string, options CommandOptions, commandArgs ...string) error {
-	args := []string{}
-	if rcmd.GlobalOpts != nil {
-		args = rcmd.GlobalOpts.ToArgs()
-	}
-
-	args = append(args, "--repo", rcmd.Repo, command)
-	args = append(args, options.ToArgs()...)
-	args = append(args, commandArgs...)
-
-	cmd := exec.Command("restic", args...)
-
-	cmd.Stdout = NewLogWriter(rcmd.Logger)
-	cmd.Stderr = cmd.Stdout
-	cmd.Env = rcmd.BuildEnv()
-	cmd.Dir = rcmd.Cwd
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error running restic %s: %w", command, err)
-	}
-
-	return nil
-}
-
 type BackupOpts struct {
 	Exclude []string `hcl:"Exclude,optional"`
 	Include []string `hcl:"Include,optional"`
@@ -136,27 +59,12 @@ type BackupOpts struct {
 }
 
 func (bo BackupOpts) ToArgs() (args []string) {
-	for _, exclude := range bo.Exclude {
-		args = append(args, "--exclude", exclude)
-	}
-
-	for _, include := range bo.Include {
-		args = append(args, "--include", include)
-	}
-
-	for _, tag := range bo.Tags {
-		args = append(args, "--tag", tag)
-	}
-
-	if bo.Host != "" {
-		args = append(args, "--host", bo.Host)
-	}
+	args = maybeAddArgsList(args, "--exclude", bo.Exclude)
+	args = maybeAddArgsList(args, "--include", bo.Include)
+	args = maybeAddArgsList(args, "--tag", bo.Tags)
+	args = maybeAddArgString(args, "--host", bo.Host)
 
 	return
-}
-
-func (rcmd ResticCmd) Backup(files []string, opts BackupOpts) error {
-	return rcmd.RunRestic("backup", opts, files...)
 }
 
 type RestoreOpts struct {
@@ -170,39 +78,15 @@ type RestoreOpts struct {
 }
 
 func (ro RestoreOpts) ToArgs() (args []string) {
-	for _, exclude := range ro.Exclude {
-		args = append(args, "--exclude", exclude)
-	}
-
-	for _, include := range ro.Include {
-		args = append(args, "--include", include)
-	}
-
-	for _, host := range ro.Host {
-		args = append(args, "--host", host)
-	}
-
-	for _, tag := range ro.Tags {
-		args = append(args, "--tag", tag)
-	}
-
-	if ro.Path != "" {
-		args = append(args, "--path", ro.Path)
-	}
-
-	if ro.Target != "" {
-		args = append(args, "--target", ro.Target)
-	}
-
-	if ro.Verify {
-		args = append(args, "--verify")
-	}
+	args = maybeAddArgsList(args, "--exclude", ro.Exclude)
+	args = maybeAddArgsList(args, "--include", ro.Include)
+	args = maybeAddArgsList(args, "--host", ro.Host)
+	args = maybeAddArgsList(args, "--tag", ro.Tags)
+	args = maybeAddArgString(args, "--path", ro.Path)
+	args = maybeAddArgString(args, "--target", ro.Target)
+	args = maybeAddArgBool(args, "--verify", ro.Verify)
 
 	return
-}
-
-func (rcmd ResticCmd) Restore(snapshot string, opts RestoreOpts) error {
-	return rcmd.RunRestic("restore", opts, snapshot)
 }
 
 type TagList []string
@@ -232,32 +116,13 @@ type ForgetOpts struct {
 	Prune bool `hcl:"Prune,optional"`
 }
 
-// nolint:funlen,cyclop
 func (fo ForgetOpts) ToArgs() (args []string) {
-	// Add keep-*
-	if fo.KeepLast > 0 {
-		args = append(args, "--keep-last", fmt.Sprint(fo.KeepLast))
-	}
-
-	if fo.KeepHourly > 0 {
-		args = append(args, "--keep-hourly", fmt.Sprint(fo.KeepHourly))
-	}
-
-	if fo.KeepDaily > 0 {
-		args = append(args, "--keep-daily", fmt.Sprint(fo.KeepDaily))
-	}
-
-	if fo.KeepWeekly > 0 {
-		args = append(args, "--keep-weekly", fmt.Sprint(fo.KeepWeekly))
-	}
-
-	if fo.KeepMonthly > 0 {
-		args = append(args, "--keep-monthly", fmt.Sprint(fo.KeepMonthly))
-	}
-
-	if fo.KeepYearly > 0 {
-		args = append(args, "--keep-yearly", fmt.Sprint(fo.KeepYearly))
-	}
+	args = maybeAddArgInt(args, "--keep-last", fo.KeepLast)
+	args = maybeAddArgInt(args, "--keep-hourly", fo.KeepHourly)
+	args = maybeAddArgInt(args, "--keep-daily", fo.KeepDaily)
+	args = maybeAddArgInt(args, "--keep-weekly", fo.KeepWeekly)
+	args = maybeAddArgInt(args, "--keep-monthly", fo.KeepMonthly)
+	args = maybeAddArgInt(args, "--keep-yearly", fo.KeepYearly)
 
 	// Add keep-within-*
 
@@ -295,22 +160,107 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 	}
 
 	// Add prune options
-	if fo.Prune {
-		args = append(args, "--prune")
-	}
+	args = maybeAddArgBool(args, "--prune", fo.Prune)
 
 	return args
 }
 
-func (rcmd ResticCmd) Forget(forgetOpts ForgetOpts) error {
+type ResticGlobalOpts struct {
+	CaCertFile        string `hcl:"CaCertFile,optional"`
+	CacheDir          string `hcl:"CacheDir,optional"`
+	PasswordFile      string `hcl:"PasswordFile,optional"`
+	TLSClientCertFile string `hcl:"TlsClientCertFile,optional"`
+	LimitDownload     int    `hcl:"LimitDownload,optional"`
+	LimitUpload       int    `hcl:"LimitUpload,optional"`
+	VerboseLevel      int    `hcl:"VerboseLevel,optional"`
+	CleanupCache      bool   `hcl:"CleanupCache,optional"`
+	NoCache           bool   `hcl:"NoCache,optional"`
+	NoLock            bool   `hcl:"NoLock,optional"`
+}
+
+func (glo ResticGlobalOpts) ToArgs() (args []string) {
+	args = maybeAddArgString(args, "--cacert", glo.CaCertFile)
+	args = maybeAddArgString(args, "--cache-dir", glo.CacheDir)
+	args = maybeAddArgString(args, "--password-file", glo.PasswordFile)
+	args = maybeAddArgString(args, "--tls-client-cert", glo.TLSClientCertFile)
+	args = maybeAddArgInt(args, "--limit-download", glo.LimitDownload)
+	args = maybeAddArgInt(args, "--limit-upload", glo.LimitUpload)
+	args = maybeAddArgInt(args, "--verbose", glo.VerboseLevel)
+	args = maybeAddArgBool(args, "--cleanup-cache", glo.CleanupCache)
+	args = maybeAddArgBool(args, "--no-cache", glo.NoCache)
+	args = maybeAddArgBool(args, "--no-lock", glo.NoLock)
+
+	return args
+}
+
+type Restic struct {
+	Logger     *log.Logger
+	Repo       string
+	Env        map[string]string
+	Passphrase string
+	GlobalOpts *ResticGlobalOpts
+	Cwd        string
+}
+
+func (rcmd Restic) BuildEnv() []string {
+	if rcmd.Env == nil {
+		rcmd.Env = map[string]string{}
+	}
+
+	if rcmd.Passphrase != "" {
+		rcmd.Env["RESTIC_PASSWORD"] = rcmd.Passphrase
+	}
+
+	envList := os.Environ()
+
+	for name, value := range rcmd.Env {
+		envList = append(envList, fmt.Sprintf("%s=%s", name, value))
+	}
+
+	return envList
+}
+
+func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs ...string) error {
+	args := []string{}
+	if rcmd.GlobalOpts != nil {
+		args = rcmd.GlobalOpts.ToArgs()
+	}
+
+	args = append(args, "--repo", rcmd.Repo, command)
+	args = append(args, options.ToArgs()...)
+	args = append(args, commandArgs...)
+
+	cmd := exec.Command("restic", args...)
+
+	cmd.Stdout = NewLogWriter(rcmd.Logger)
+	cmd.Stderr = cmd.Stdout
+	cmd.Env = rcmd.BuildEnv()
+	cmd.Dir = rcmd.Cwd
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("error running restic %s: %w", command, err)
+	}
+
+	return nil
+}
+
+func (rcmd Restic) Backup(files []string, opts BackupOpts) error {
+	return rcmd.RunRestic("backup", opts, files...)
+}
+
+func (rcmd Restic) Restore(snapshot string, opts RestoreOpts) error {
+	return rcmd.RunRestic("restore", opts, snapshot)
+}
+
+func (rcmd Restic) Forget(forgetOpts ForgetOpts) error {
 	return rcmd.RunRestic("forget", forgetOpts)
 }
 
-func (rcmd ResticCmd) Check() error {
+func (rcmd Restic) Check() error {
 	return rcmd.RunRestic("check", NoOpts{})
 }
 
-func (rcmd ResticCmd) EnsureInit() error {
+func (rcmd Restic) EnsureInit() error {
 	if err := rcmd.RunRestic("snapshots", NoOpts{}); err != nil {
 		return rcmd.RunRestic("init", NoOpts{})
 	}
