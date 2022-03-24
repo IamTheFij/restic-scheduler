@@ -174,7 +174,7 @@ func TestJobTaskScript(t *testing.T) {
 	}
 }
 
-func TestJobTaskMySQL(t *testing.T) {
+func TestJobTaskSql(t *testing.T) {
 	t.Parallel()
 
 	type TaskGenerator interface {

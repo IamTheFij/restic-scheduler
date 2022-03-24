@@ -6,8 +6,16 @@ import (
 	"time"
 
 	main "git.iamthefij.com/iamthefij/restic-scheduler"
-	"github.com/go-test/deep"
 )
+
+func TestNoOpts(t *testing.T) {
+	t.Parallel()
+
+	args := main.NoOpts{}.ToArgs()
+	expected := []string{}
+
+	AssertEqual(t, "no opts returned some opts", expected, args)
+}
 
 func TestGlobalOptions(t *testing.T) {
 	t.Parallel()
@@ -38,9 +46,7 @@ func TestGlobalOptions(t *testing.T) {
 		"--no-lock",
 	}
 
-	if diff := deep.Equal(args, expected); diff != nil {
-		t.Errorf("args didn't match %v", diff)
-	}
+	AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestBackupOpts(t *testing.T) {
@@ -61,9 +67,7 @@ func TestBackupOpts(t *testing.T) {
 		"--host", "steve",
 	}
 
-	if diff := deep.Equal(args, expected); diff != nil {
-		t.Errorf("args didn't match %v", diff)
-	}
+	AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestRestoreOpts(t *testing.T) {
@@ -90,9 +94,7 @@ func TestRestoreOpts(t *testing.T) {
 		"--verify",
 	}
 
-	if diff := deep.Equal(args, expected); diff != nil {
-		t.Errorf("args didn't match %v", diff)
-	}
+	AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestForgetOpts(t *testing.T) {
@@ -138,9 +140,7 @@ func TestForgetOpts(t *testing.T) {
 		"--prune",
 	}
 
-	if diff := deep.Equal(args, expected); diff != nil {
-		t.Errorf("args didn't match %v", diff)
-	}
+	AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestBuildEnv(t *testing.T) {
@@ -178,9 +178,7 @@ func TestBuildEnv(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			if diff := deep.Equal(c.expected, c.cmd.BuildEnv()); diff != nil {
-				t.Error(diff)
-			}
+			AssertEqual(t, "args didn't match", c.expected, c.cmd.BuildEnv())
 		})
 	}
 }

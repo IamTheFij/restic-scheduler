@@ -10,8 +10,8 @@ import (
 func AssertEqual(t *testing.T, message string, expected, actual interface{}) bool {
 	t.Helper()
 
-	if expected != actual {
-		t.Errorf("%s. expected: %v, actual: %v", message, expected, actual)
+	if diff := deep.Equal(expected, actual); diff != nil {
+		t.Errorf("%s: %v", message, diff)
 	}
 
 	return true
