@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -8,6 +10,19 @@ import (
 	"strings"
 	"time"
 )
+
+var ErrRestic = errors.New("restic error")
+var ErrRepoNotFound = errors.New("repository not found or uninitialized")
+
+func lineIn(needle string, haystack []string) bool {
+	for _, line := range haystack {
+		if line == needle {
+			return true
+		}
+	}
+
+	return false
+}
 
 func maybeAddArgString(args []string, name, value string) []string {
 	if value != "" {
@@ -43,6 +58,12 @@ func maybeAddArgsList(args []string, name string, value []string) []string {
 
 type CommandOptions interface {
 	ToArgs() []string
+}
+
+type GenericOpts []string
+
+func (o GenericOpts) ToArgs() []string {
+	return o
 }
 
 type NoOpts struct{}
@@ -220,7 +241,7 @@ func (rcmd Restic) BuildEnv() []string {
 	return envList
 }
 
-func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs ...string) error {
+func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs ...string) ([]string, error) {
 	args := []string{}
 	if rcmd.GlobalOpts != nil {
 		args = rcmd.GlobalOpts.ToArgs()
@@ -232,37 +253,87 @@ func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs
 
 	cmd := exec.Command("restic", args...)
 
-	cmd.Stdout = NewLogWriter(rcmd.Logger)
-	cmd.Stderr = cmd.Stdout
+	output := NewCapturedLogWriter(rcmd.Logger)
+	cmd.Stdout = output
+	cmd.Stderr = output
 	cmd.Env = rcmd.BuildEnv()
 	cmd.Dir = rcmd.Cwd
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error running restic %s: %w", command, err)
+		responseErr := ErrRestic
+		if lineIn("Is there a repository at the following location?", output.Lines) {
+			responseErr = ErrRepoNotFound
+		}
+
+		return output.Lines, fmt.Errorf("error running restic %s: %w", command, responseErr)
 	}
 
-	return nil
+	return output.Lines, nil
 }
 
 func (rcmd Restic) Backup(files []string, opts BackupOpts) error {
-	return rcmd.RunRestic("backup", opts, files...)
+	_, err := rcmd.RunRestic("backup", opts, files...)
+
+	return err
 }
 
 func (rcmd Restic) Restore(snapshot string, opts RestoreOpts) error {
-	return rcmd.RunRestic("restore", opts, snapshot)
+	_, err := rcmd.RunRestic("restore", opts, snapshot)
+
+	return err
 }
 
 func (rcmd Restic) Forget(forgetOpts ForgetOpts) error {
-	return rcmd.RunRestic("forget", forgetOpts)
+	_, err := rcmd.RunRestic("forget", forgetOpts)
+
+	return err
 }
 
 func (rcmd Restic) Check() error {
-	return rcmd.RunRestic("check", NoOpts{})
+	_, err := rcmd.RunRestic("check", NoOpts{})
+
+	return err
+}
+
+type Snapshot struct {
+	UID      int      `json:"uid"`
+	GID      int      `json:"gid"`
+	Time     string   `json:"time"`
+	Tree     string   `json:"tree"`
+	Hostname string   `json:"hostname"`
+	Username string   `json:"username"`
+	ID       string   `json:"id"`
+	ShortID  string   `json:"short_id"` // nolint:tagliatelle
+	Paths    []string `json:"paths"`
+	Tags     []string `json:"tags,omitempty"`
+}
+
+func (rcmd Restic) ReadSnapshots() ([]Snapshot, error) {
+	lines, err := rcmd.RunRestic("snapshots", GenericOpts{"--json"})
+	if err != nil {
+		return nil, err
+	}
+
+	snapshots := new([]Snapshot)
+
+	if err = json.Unmarshal([]byte(lines[0]), snapshots); err != nil {
+		return nil, fmt.Errorf("failed parsing snapshot results: %w", err)
+	}
+
+	return *snapshots, nil
+}
+
+func (rcmd Restic) Snapshots() error {
+	_, err := rcmd.RunRestic("snapshots", NoOpts{})
+
+	return err
 }
 
 func (rcmd Restic) EnsureInit() error {
-	if err := rcmd.RunRestic("snapshots", NoOpts{}); err != nil {
-		return rcmd.RunRestic("init", NoOpts{})
+	if err := rcmd.Snapshots(); errors.Is(err, ErrRepoNotFound) {
+		_, err := rcmd.RunRestic("init", NoOpts{})
+
+		return err
 	}
 
 	return nil

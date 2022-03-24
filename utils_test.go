@@ -12,9 +12,19 @@ func AssertEqual(t *testing.T, message string, expected, actual interface{}) boo
 
 	if diff := deep.Equal(expected, actual); diff != nil {
 		t.Errorf("%s: %v", message, diff)
+
+		return false
 	}
 
 	return true
+}
+
+func AssertEqualFail(t *testing.T, message string, expected, actual interface{}) {
+	t.Helper()
+
+	if !AssertEqual(t, message, expected, actual) {
+		t.FailNow()
+	}
 }
 
 func TestMergeEnvMap(t *testing.T) {

@@ -1,7 +1,10 @@
 package main_test
 
 import (
+	"errors"
+	"log"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -181,4 +184,106 @@ func TestBuildEnv(t *testing.T) {
 			AssertEqual(t, "args didn't match", c.expected, c.cmd.BuildEnv())
 		})
 	}
+}
+
+func TestResticInterface(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+	repoDir := t.TempDir()
+	cacheDir := t.TempDir()
+	restoreTarget := t.TempDir()
+
+	dataFile := filepath.Join(dataDir, "test.txt")
+	restoredDataFile := filepath.Join(restoreTarget, dataFile)
+
+	restic := main.Restic{
+		Logger:     log.New(os.Stderr, t.Name()+":", log.Lmsgprefix),
+		Repo:       repoDir,
+		Env:        map[string]string{},
+		Passphrase: "Correct.Horse.Battery.Staple",
+		// nolint:exhaustivestruct
+		GlobalOpts: &main.ResticGlobalOpts{
+			CacheDir: cacheDir,
+		},
+		Cwd: dataDir,
+	}
+
+	// Write test file to the data dir
+	err := os.WriteFile(dataFile, []byte("testing"), 0644)
+	AssertEqualFail(t, "unexpected error writing to test file", nil, err)
+
+	// Make sure no existing repo is found
+	_, err = restic.ReadSnapshots()
+	if err == nil || !errors.Is(err, main.ErrRepoNotFound) {
+		AssertEqualFail(t, "didn't get expected error for backup", main.ErrRepoNotFound, err)
+	}
+
+	// Try to backup when repo is not initialized
+	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) // nolint:exhaustivestruct
+	if !errors.Is(err, main.ErrRepoNotFound) {
+		AssertEqualFail(t, "unexpected error creating making backup", nil, err)
+	}
+
+	// Init repo
+	err = restic.EnsureInit()
+	AssertEqualFail(t, "unexpected error initializing repo", nil, err)
+
+	// Verify it can be reinitialized with no issues
+	err = restic.EnsureInit()
+	AssertEqualFail(t, "unexpected error reinitializing repo", nil, err)
+
+	// Backup for real this time
+	err = restic.Backup([]string{dataDir}, main.BackupOpts{Tags: []string{"test"}}) // nolint:exhaustivestruct
+	AssertEqualFail(t, "unexpected error creating making backup", nil, err)
+
+	// Check snapshots
+	expectedHostname, _ := os.Hostname()
+	snapshots, err := restic.ReadSnapshots()
+	AssertEqualFail(t, "unexpected error reading snapshots", nil, err)
+	AssertEqual(t, "unexpected number of snapshots", 1, len(snapshots))
+
+	AssertEqual(t, "unexpected snapshot value: hostname", expectedHostname, snapshots[0].Hostname)
+	AssertEqual(t, "unexpected snapshot value: paths", []string{dataDir}, snapshots[0].Paths)
+	AssertEqual(t, "unexpected snapshot value: tags", []string{"test"}, snapshots[0].Tags)
+
+	// Backup again
+	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) // nolint:exhaustivestruct
+	AssertEqualFail(t, "unexpected error creating making second backup", nil, err)
+
+	// Check for second backup
+	snapshots, err = restic.ReadSnapshots()
+	AssertEqualFail(t, "unexpected error reading second snapshots", nil, err)
+	AssertEqual(t, "unexpected number of snapshots", 2, len(snapshots))
+
+	// Forget one backup
+	err = restic.Forget(main.ForgetOpts{KeepLast: 1, Prune: true}) // nolint:exhaustivestruct
+	AssertEqualFail(t, "unexpected error forgetting snapshot", nil, err)
+
+	// Check forgotten snapshot
+	snapshots, err = restic.ReadSnapshots()
+	AssertEqualFail(t, "unexpected error reading post forget snapshots", nil, err)
+	AssertEqual(t, "unexpected number of snapshots", 1, len(snapshots))
+
+	// Check restic repo
+	err = restic.Check()
+	AssertEqualFail(t, "unexpected error checking repo", nil, err)
+
+	// Change the data file
+	err = os.WriteFile(dataFile, []byte("unexpected"), 0644)
+	AssertEqualFail(t, "unexpected error writing to test file", nil, err)
+
+	// Check that data wrote
+	value, err := os.ReadFile(dataFile)
+	AssertEqualFail(t, "unexpected error reading from test file", nil, err)
+	AssertEqualFail(t, "incorrect value in test file (we expect the unexpected!)", "unexpected", string(value))
+
+	// Restore files
+	err = restic.Restore("latest", main.RestoreOpts{Target: restoreTarget}) // nolint:exhaustivestruct
+	AssertEqualFail(t, "unexpected error restoring latest snapshot", nil, err)
+
+	// Check restored values
+	value, err = os.ReadFile(restoredDataFile)
+	AssertEqualFail(t, "unexpected error reading from test file", nil, err)
+	AssertEqualFail(t, "incorrect value in test file", "testing", string(value))
 }

@@ -484,7 +484,7 @@ func (j Job) RunRestore() error {
 	restic := j.NewRestic()
 	jobDir := j.JobDir()
 
-	if err := restic.RunRestic("snapshots", NoOpts{}); err != nil {
+	if _, err := restic.RunRestic("snapshots", NoOpts{}); errors.Is(err, ErrRepoNotFound) {
 		return fmt.Errorf("no repository or snapshots for job %s: %w", j.Name, err)
 	}
 

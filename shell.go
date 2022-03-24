@@ -30,17 +30,19 @@ func GetChildLogger(parent *log.Logger, name string) *log.Logger {
 	return GetLogger(childName)
 }
 
-type LogWriter struct {
+type CapturedLogWriter struct {
+	Lines  []string
 	logger *log.Logger
 }
 
-func NewLogWriter(logger *log.Logger) *LogWriter {
-	return &LogWriter{logger}
+func NewCapturedLogWriter(logger *log.Logger) *CapturedLogWriter {
+	return &CapturedLogWriter{Lines: []string{}, logger: logger}
 }
 
-func (w LogWriter) Write(content []byte) (n int, err error) {
+func (w *CapturedLogWriter) Write(content []byte) (n int, err error) {
 	message := string(content)
 	for _, line := range strings.Split(message, "\n") {
+		w.Lines = append(w.Lines, line)
 		w.logger.Printf(" %s", line)
 	}
 
@@ -51,7 +53,7 @@ func RunShell(script string, cwd string, env map[string]string, logger *log.Logg
 	cmd := exec.Command("sh", "-c", strings.TrimSpace(script)) // nolint:gosec
 
 	// Make both stderr and stdout go to logger
-	cmd.Stdout = NewLogWriter(logger)
+	cmd.Stdout = NewCapturedLogWriter(logger)
 	cmd.Stderr = cmd.Stdout
 
 	// Set working directory
