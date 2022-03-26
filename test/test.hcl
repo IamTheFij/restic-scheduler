@@ -25,6 +25,10 @@ job "TestBackup" {
       backup_opts {
         Tags = ["foo"]
       }
+
+      restore_opts {
+        Target = "."
+      }
     }
   }
 
