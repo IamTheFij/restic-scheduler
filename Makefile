@@ -1,4 +1,4 @@
-APP_NAME = restic-scheduler
+APP_NAME = resticscheduler
 VERSION ?= $(shell git describe --tags --dirty)
 GOFILES = *.go
 # Multi-arch targets are generated from this
