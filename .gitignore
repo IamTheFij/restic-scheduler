@@ -20,3 +20,4 @@ dist/
 
 # Built executable
 restic-scheduler
+data/
