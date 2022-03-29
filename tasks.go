@@ -210,7 +210,7 @@ func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 }
 
 type BackupFilesTask struct {
-	Paths       []string     `hcl:"files"`
+	Paths       []string     `hcl:"paths"`
 	BackupOpts  *BackupOpts  `hcl:"backup_opts,block"`
 	RestoreOpts *RestoreOpts `hcl:"restore_opts,block"`
 	name        string
@@ -222,7 +222,7 @@ func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 	}
 
 	if err := cfg.Restic.Backup(cfg.BackupPaths, *t.BackupOpts); err != nil {
-		err = fmt.Errorf("failed backing up files: %w", err)
+		err = fmt.Errorf("failed backing up paths: %w", err)
 		cfg.Logger.Fatal(err)
 
 		return err
@@ -238,7 +238,7 @@ func (t BackupFilesTask) RunRestore(cfg TaskConfig) error {
 
 	// TODO: Make the snapshot configurable
 	if err := cfg.Restic.Restore("latest", *t.RestoreOpts); err != nil {
-		err = fmt.Errorf("failed restoring files: %w", err)
+		err = fmt.Errorf("failed restoring paths: %w", err)
 		cfg.Logger.Fatal(err)
 
 		return err

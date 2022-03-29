@@ -147,17 +147,17 @@ func (j Job) AllTasks() []ExecutableTask {
 }
 
 func (j Job) BackupPaths() []string {
-	files := j.Backup.Paths
+	paths := j.Backup.Paths
 
 	for _, t := range j.MySQL {
-		files = append(files, t.DumpToPath)
+		paths = append(paths, t.DumpToPath)
 	}
 
 	for _, t := range j.Sqlite {
-		files = append(files, t.DumpToPath)
+		paths = append(paths, t.DumpToPath)
 	}
 
-	return files
+	return paths
 }
 
 func (j Job) RunBackup() error {

@@ -4,9 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
 )
 
 var (
@@ -14,10 +18,43 @@ var (
 	version = "dev"
 )
 
-func parseConfig(path string) ([]Job, error) {
+func ParseConfig(path string) ([]Job, error) {
 	var config Config
 
-	if err := hclsimple.DecodeFile(path, nil, &config); err != nil {
+	ctx := hcl.EvalContext{
+		Variables: nil,
+		Functions: map[string]function.Function{
+			"env": function.New(&function.Spec{
+				Params: []function.Parameter{{
+					Name: "var",
+					Type: cty.String,
+				}},
+				VarParam: nil,
+				Type:     function.StaticReturnType(cty.String),
+				Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+					return cty.StringVal(os.Getenv(args[0].AsString())), nil
+				},
+			}),
+			"readfile": function.New(&function.Spec{
+				Params: []function.Parameter{{
+					Name: "path",
+					Type: cty.String,
+				}},
+				VarParam: nil,
+				Type:     function.StaticReturnType(cty.String),
+				Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+					content, err := os.ReadFile(args[0].AsString())
+					if err != nil {
+						return cty.StringVal(""), err
+					}
+
+					return cty.StringVal(string(content)), nil
+				},
+			}),
+		},
+	}
+
+	if err := hclsimple.DecodeFile(path, &ctx, &config); err != nil {
 		return nil, fmt.Errorf("%s: Failed to decode file: %w", path, err)
 	}
 
@@ -36,11 +73,11 @@ func parseConfig(path string) ([]Job, error) {
 	return config.Jobs, nil
 }
 
-func readJobs(paths []string) ([]Job, error) {
+func ReadJobs(paths []string) ([]Job, error) {
 	allJobs := []Job{}
 
 	for _, path := range paths {
-		jobs, err := parseConfig(path)
+		jobs, err := ParseConfig(path)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +150,7 @@ func main() {
 		log.Fatalf("Requires a path to a job file, but found none")
 	}
 
-	jobs, err := readJobs(flag.Args())
+	jobs, err := ReadJobs(flag.Args())
 	if err != nil {
 		log.Fatalf("Failed to read jobs from files: %v", err)
 	}

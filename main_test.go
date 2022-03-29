@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	main "git.iamthefij.com/iamthefij/restic-scheduler"
 )
 
 const MinCoverage = 0.5
@@ -21,4 +23,18 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(testResult)
+}
+
+func TestReadJobs(t *testing.T) {
+	t.Parallel()
+
+	jobs, err := main.ReadJobs([]string{"./test/sample.hcl"})
+
+	if err != nil {
+		t.Errorf("Unexpected error reading jobs: %v", err)
+	}
+
+	if len(jobs) == 0 {
+		t.Error("Expected read jobs but found none")
+	}
 }
