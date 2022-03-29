@@ -189,6 +189,10 @@ func TestBuildEnv(t *testing.T) {
 func TestResticInterface(t *testing.T) {
 	t.Parallel()
 
+	if testing.Short() {
+		t.Skip("Skip integration test when running short tests")
+	}
+
 	dataDir := t.TempDir()
 	repoDir := t.TempDir()
 	cacheDir := t.TempDir()

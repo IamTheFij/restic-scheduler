@@ -7,6 +7,15 @@ import (
 	main "git.iamthefij.com/iamthefij/restic-scheduler"
 )
 
+func ValidResticConfig() main.ResticConfig {
+	return main.ResticConfig{
+		Passphrase: "shh",
+		Repo:       "./data",
+		Env:        nil,
+		GlobalOpts: nil,
+	}
+}
+
 func TestResticConfigValidate(t *testing.T) {
 	t.Parallel()
 
@@ -60,6 +69,186 @@ func TestResticConfigValidate(t *testing.T) {
 
 			if !errors.Is(actual, testCase.expectedErr) {
 				t.Errorf("expected error to wrap %v but found %v", testCase.expectedErr, actual)
+			}
+		})
+	}
+}
+
+func TestJobValidation(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name        string
+		job         main.Job
+		expectedErr error
+	}{
+		{
+			name: "Valid job",
+			job: main.Job{
+				Name:     "Valid job",
+				Schedule: "@daily",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "Invalid name",
+			job: main.Job{
+				Name:     "",
+				Schedule: "@daily",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			},
+			expectedErr: main.ErrMissingField,
+		},
+		{
+			name: "Invalid schedule",
+			job: main.Job{
+				Name:     "Test job",
+				Schedule: "shrug",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			},
+			expectedErr: main.ErrInvalidConfigValue,
+		},
+		{
+			name: "Invalid config",
+			job: main.Job{
+				Name:     "Test job",
+				Schedule: "@daily",
+				Config:   main.ResticConfig{}, // nolint:exhaustivestruct
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			},
+			expectedErr: main.ErrMutuallyExclusive,
+		},
+		{
+			name: "Invalid task",
+			job: main.Job{
+				Name:     "Test job",
+				Schedule: "@daily",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{{}},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			},
+			expectedErr: main.ErrMissingField,
+		},
+		{
+			name: "Invalid mysql",
+			job: main.Job{
+				Name:     "Test job",
+				Schedule: "@daily",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{{}},
+				Sqlite:   []main.JobTaskSqlite{},
+			},
+			expectedErr: main.ErrMissingField,
+		},
+		{
+			name: "Invalid sqlite",
+			job: main.Job{
+				Name:     "Test job",
+				Schedule: "@daily",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{{}},
+			},
+			expectedErr: main.ErrMissingField,
+		},
+	}
+
+	for _, c := range cases {
+		testCase := c
+
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := testCase.job.Validate()
+
+			if !errors.Is(actual, testCase.expectedErr) {
+				t.Errorf("expected %v but found %v", testCase.expectedErr, actual)
+			}
+		})
+	}
+}
+
+func TestConfigValidation(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name        string
+		config      main.Config
+		expectedErr error
+	}{
+		{
+			name: "Valid job",
+			config: main.Config{Jobs: []main.Job{{
+				Name:     "Valid job",
+				Schedule: "@daily",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			}}},
+			expectedErr: nil,
+		},
+		{
+			name:        "No jobs",
+			config:      main.Config{Jobs: []main.Job{}},
+			expectedErr: main.ErrNoJobsFound,
+		},
+		{
+			name: "Invalid name",
+			config: main.Config{Jobs: []main.Job{{
+				Name:     "",
+				Schedule: "@daily",
+				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			}}},
+			expectedErr: main.ErrMissingField,
+		},
+	}
+
+	for _, c := range cases {
+		testCase := c
+
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := testCase.config.Validate()
+
+			if !errors.Is(actual, testCase.expectedErr) {
+				t.Errorf("expected %v but found %v", testCase.expectedErr, actual)
 			}
 		})
 	}

@@ -10,12 +10,9 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-const WorkDirPerms = 0770
-
 var (
 	ErrNoJobsFound        = errors.New("no jobs found and at least one job is required")
 	ErrMissingField       = errors.New("missing config field")
-	ErrMissingBlock       = errors.New("missing config block")
 	ErrMutuallyExclusive  = errors.New("mutually exclusive values not valid")
 	ErrInvalidConfigValue = errors.New("invalid config value")
 
@@ -69,10 +66,6 @@ type Job struct {
 }
 
 func (j Job) validateTasks() error {
-	if len(j.Tasks) == 0 {
-		return fmt.Errorf("job %s is missing tasks: %w", j.Name, ErrMissingBlock)
-	}
-
 	for _, task := range j.Tasks {
 		if err := task.Validate(); err != nil {
 			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
@@ -88,7 +81,7 @@ func (j Job) Validate() error {
 	}
 
 	if _, err := cron.ParseStandard(j.Schedule); err != nil {
-		return fmt.Errorf("job %s has an invalid schedule: %w", j.Name, err)
+		return fmt.Errorf("job %s has an invalid schedule: %v: %w", j.Name, err, ErrInvalidConfigValue)
 	}
 
 	if err := j.Config.Validate(); err != nil {
@@ -109,6 +102,10 @@ func (j Job) Validate() error {
 		if err := sqlite.Validate(); err != nil {
 			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
 		}
+	}
+
+	if err := j.Backup.Validate(); err != nil {
+		return fmt.Errorf("job %s has an invalid backup config: %w", j.Name, err)
 	}
 
 	return nil
@@ -149,15 +146,8 @@ func (j Job) AllTasks() []ExecutableTask {
 	return allTasks
 }
 
-func (j Job) JobDir() string {
-	cwd := filepath.Join(JobBaseDir, j.Name)
-	_ = os.MkdirAll(cwd, WorkDirPerms)
-
-	return cwd
-}
-
 func (j Job) BackupPaths() []string {
-	files := j.Backup.Files
+	files := j.Backup.Paths
 
 	for _, t := range j.MySQL {
 		files = append(files, t.DumpToPath)

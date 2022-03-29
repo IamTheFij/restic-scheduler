@@ -16,50 +16,49 @@ job "MyApp" {
   mysql "DumpMainDB" {
     hostname = "foo"
     username = "bar"
+    dump_to = "/data/main.sql"
   }
 
   sqlite "DumpSqlite" {
-    path = "/db/path"
+    path = "/db/sqlite.db"
+    dump_to = "/data/sqlite.db.bak"
   }
 
-  task "RunSomePreScripts" {
-    script {
-      on_backup = <<EOF
-      echo foo > /biz.txt
-      EOF
+  task "Create biz file" {
 
-      on_restore = "/foo/bar.sh"
-    }
-
-    script {
+    pre_script {
       on_backup = <<EOF
       echo bar >> /biz.txt
       EOF
     }
-  }
 
-  task "ActuallyBackupSomeStuff" {
-    backup {
-      files =[
-        "/foo/bar",
-        "/biz.txt",
-      ]
-
-      backup_opts {
-        Tags = ["service"]
-      }
-
-      restore_opts {
-        Verify = true
-      }
-    }
-  }
-
-  task "RunSomePostScripts" {
-    script {
+    post_script {
       on_backup = <<EOF
       rm /biz.txt
       EOF
+    }
+  }
+
+  task "Run restore shell script" {
+    pre_script {
+      on_restore = "/foo/bar.sh"
+    }
+  }
+
+  backup {
+    files =[
+      "/data",
+      "/biz.txt",
+    ]
+
+    backup_opts {
+      Tags = ["service"]
+    }
+
+    restore_opts {
+      Verify = true
+      # Since paths are absolute, restore to root
+      Target = "/"
     }
   }
 

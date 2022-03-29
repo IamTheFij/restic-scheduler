@@ -83,17 +83,21 @@ func (t JobTaskMySQL) Paths() []string {
 }
 
 func (t JobTaskMySQL) Validate() error {
+	if t.DumpToPath == "" {
+		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
+	}
+
 	if s, err := os.Stat(t.DumpToPath); err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
-			return fmt.Errorf("Could not stat dump file path: %w", err)
+			return fmt.Errorf("task %s: invalid dump_to: could not stat path: %v: %w", t.Name, err, ErrInvalidConfigValue)
 		}
 	} else if s.Mode().IsDir() {
-		return fmt.Errorf("dump_to cannot be a directory: %w", ErrInvalidConfigValue)
+		return fmt.Errorf("task %s: dump_to cannot be a directory: %w", t.Name, ErrInvalidConfigValue)
 	}
 
 	if len(t.Tables) > 0 && t.Database == "" {
 		return fmt.Errorf(
-			"mysql task %s is invalid. Must specify a database to use tables: %w",
+			"task %s is invalid. Must specify a database to use tables: %w",
 			t.Name,
 			ErrMissingField,
 		)
@@ -170,12 +174,16 @@ func (t JobTaskSqlite) Paths() []string {
 }
 
 func (t JobTaskSqlite) Validate() error {
+	if t.DumpToPath == "" {
+		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
+	}
+
 	if s, err := os.Stat(t.DumpToPath); err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
-			return fmt.Errorf("Could not stat dump file path: %w", err)
+			return fmt.Errorf("task %s: invalid dump_to: could not stat path: %v: %w", t.Name, err, ErrInvalidConfigValue)
 		}
 	} else if s.Mode().IsDir() {
-		return fmt.Errorf("dump_to cannot be a directory: %w", ErrInvalidConfigValue)
+		return fmt.Errorf("task %s: dump_to cannot be a directory: %w", t.Name, ErrInvalidConfigValue)
 	}
 
 	return nil
@@ -202,7 +210,7 @@ func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 }
 
 type BackupFilesTask struct {
-	Files       []string     `hcl:"files"`
+	Paths       []string     `hcl:"files"`
 	BackupOpts  *BackupOpts  `hcl:"backup_opts,block"`
 	RestoreOpts *RestoreOpts `hcl:"restore_opts,block"`
 	name        string
@@ -247,6 +255,14 @@ func (t *BackupFilesTask) SetName(name string) {
 	t.name = name
 }
 
+func (t *BackupFilesTask) Validate() error {
+	if len(t.Paths) == 0 {
+		return fmt.Errorf("backup config doesn't include any paths: %w", ErrInvalidConfigValue)
+	}
+
+	return nil
+}
+
 // JobTask represents a single task within a backup job.
 type JobTask struct {
 	Name        string          `hcl:"name,label"`
@@ -255,6 +271,10 @@ type JobTask struct {
 }
 
 func (t JobTask) Validate() error {
+	if t.Name == "" {
+		return fmt.Errorf("task is missing a name: %w", ErrMissingField)
+	}
+
 	return nil
 }
 
