@@ -8,6 +8,7 @@ steps:
     environment:
       VERSION: ${DRONE_TAG:-${DRONE_COMMIT}}
     commands:
+      - apt-get install -y --no-install-recommends restic
       - make test
 
   - name: check
