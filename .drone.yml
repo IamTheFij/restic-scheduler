@@ -73,7 +73,7 @@ steps:
       password:
         from_secret: docker_password
       build_args:
-        - ARCH=arm
+        - BIN=./dist/resticscheduler-linux-arm
 
   - name: push image - arm64
     image: plugins/docker
@@ -86,7 +86,7 @@ steps:
       password:
         from_secret: docker_password
       build_args:
-        - ARCH=arm64
+        - BIN=./dist/resticscheduler-linux-arm64
 
   - name: push image - amd64
     image: plugins/docker
