@@ -57,5 +57,5 @@ $(TARGETS): $(GOFILES)
 $(TARGET_ALIAS):
 	$(MAKE) $(addprefix dist/,$@)
 
-$(addprefix docker-,$(TARGET_ALIAS)):
-	docker build --build-arg BIN=dist/$(@:docker-%=%) .
+# $(addprefix docker-,$(TARGET_ALIAS)):
+# 	docker build --build-arg BIN=dist/$(@:docker-%=%) .
