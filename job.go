@@ -61,8 +61,10 @@ type Job struct {
 	MySQL  []JobTaskMySQL  `hcl:"mysql,block"`
 	Sqlite []JobTaskSqlite `hcl:"sqlite,block"`
 
+	// Metrics and health
 	healthy bool
 	lastErr error
+	metrics ResticMetrics
 }
 
 func (j Job) validateTasks() error {
