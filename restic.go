@@ -241,6 +241,33 @@ func (rcmd Restic) BuildEnv() []string {
 	return envList
 }
 
+type ResticError struct {
+	OriginalError error
+	Command       string
+	Output        []string
+}
+
+func NewResticError(command string, output []string, originalError error) *ResticError {
+	return &ResticError{
+		OriginalError: originalError,
+		Command:       command,
+		Output:        output,
+	}
+}
+
+func (e *ResticError) Error() string {
+	return fmt.Sprintf(
+		"error running restic %s: %s\nOutput:\n%s",
+		e.Command,
+		e.OriginalError,
+		strings.Join(e.Output, "\n"),
+	)
+}
+
+func (e *ResticError) Unwrap() error {
+	return e.OriginalError
+}
+
 func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs ...string) ([]string, error) {
 	args := []string{}
 	if rcmd.GlobalOpts != nil {
@@ -265,7 +292,7 @@ func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs
 			responseErr = ErrRepoNotFound
 		}
 
-		return output.Lines, fmt.Errorf("error running restic %s: %w", command, responseErr)
+		return output.Lines, NewResticError(command, output.Lines, responseErr)
 	}
 
 	return output.Lines, nil

@@ -1,40 +1,102 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/robfig/cron/v3"
 )
 
+var jobResultsLock = sync.Mutex{}
+var jobResults = map[string]JobResult{}
+
+type JobResult struct {
+	JobName   string
+	JobType   string
+	Success   bool
+	LastError error
+	Message   string
+}
+
+func (r JobResult) Format() string {
+	return fmt.Sprintf("%s %s ok? %v\n\n%+v", r.JobName, r.JobType, r.Success, r.LastError)
+}
+
+func JobComplete(result JobResult) {
+	fmt.Printf("Completed job %+v\n", result)
+
+	jobResultsLock.Lock()
+	jobResults[result.JobName] = result
+	jobResultsLock.Unlock()
+}
+
+func writeJobResult(writer http.ResponseWriter, jobName string) {
+	if jobResult, ok := jobResults[jobName]; ok {
+		if !jobResult.Success {
+			writer.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		jobResult.Message = jobResult.LastError.Error()
+		if err := json.NewEncoder(writer).Encode(jobResult); err != nil {
+			_, _ = writer.Write([]byte(fmt.Sprintf("failed writing json for %s", jobResult.Format())))
+		}
+
+		writer.Header().Set("Content-Type", "application/json")
+	} else {
+		writer.WriteHeader(http.StatusNotFound)
+		_, _ = writer.Write([]byte("{\"Message\": \"Unknown job\"}"))
+	}
+}
+
+func healthHandleFunc(writer http.ResponseWriter, request *http.Request) {
+	query := request.URL.Query()
+	if jobName, ok := query["job"]; ok {
+		writeJobResult(writer, jobName[0])
+
+		return
+	}
+
+	_, _ = writer.Write([]byte("ok"))
+}
+
+func RunHTTPHandlers(addr string) error {
+	http.HandleFunc("/health", healthHandleFunc)
+
+	return fmt.Errorf("error on healthcheck: %w", http.ListenAndServe(addr, nil))
+}
+
 func ScheduleAndRunJobs(jobs []Job) error {
 	signalChan := make(chan os.Signal, 1)
 
-	signal.Notify(signalChan,
+	signal.Notify(
+		signalChan,
 		syscall.SIGINT,
 		syscall.SIGTERM,
 		syscall.SIGQUIT,
 	)
 
-	runner := cron.New()
+	scheduler := cron.New()
 
 	for _, job := range jobs {
 		fmt.Println("Scheduling", job.Name)
 
-		if _, err := runner.AddJob(job.Schedule, job); err != nil {
-			return fmt.Errorf("Error scheduling job %s: %w", job.Name, err)
+		if _, err := scheduler.AddJob(job.Schedule, job); err != nil {
+			return fmt.Errorf("error scheduling job %s: %w", job.Name, err)
 		}
 	}
 
-	runner.Start()
+	scheduler.Start()
 
 	switch <-signalChan {
 	case syscall.SIGINT:
 		fmt.Println("Stopping now...")
 
-		defer runner.Stop()
+		defer scheduler.Stop()
 
 		return nil
 	case syscall.SIGTERM:
@@ -44,7 +106,7 @@ func ScheduleAndRunJobs(jobs []Job) error {
 		fmt.Println("Stopping after running jobs complete...")
 
 		defer func() {
-			ctx := runner.Stop()
+			ctx := scheduler.Stop()
 			<-ctx.Done()
 		}()
 

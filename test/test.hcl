@@ -1,40 +1,37 @@
 job "TestBackup" {
-  schedule = "1 * * * *"
+  schedule = "* * * * *"
 
   config {
-    repo = "./backups"
+    repo = "test/data/backups"
     passphrase = "supersecret"
 
     options {
-      CacheDir = "./cache"
+      CacheDir = "test/data/cache"
     }
   }
 
-  task "before script" {
-    script {
-      on_backup = "echo before backup!"
+  task "create test data" {
+    pre_script {
+      on_backup = "echo test > test/data/data/test.txt"
     }
   }
 
-  task "backup" {
-    backup {
-      files = [
-        "./data"
-      ]
+  task "backup phases" {
+    pre_script {
+      on_backup = "echo 'pre-backup'"
+      on_restore = "echo 'pre-restore'"
+    }
 
-      backup_opts {
-        Tags = ["foo"]
-      }
-
-      restore_opts {
-        Target = "."
-      }
+    post_script {
+      on_backup = "echo 'post-backup'"
+      on_restore = "echo 'post-restore'"
     }
   }
 
-  task "after script" {
-    script {
-      on_backup = "echo after backup!"
+  backup {
+    paths = ["./test/data/data"]
+    restore_opts {
+      Target = "."
     }
   }
 

@@ -225,12 +225,25 @@ func (j Job) Healthy() (bool, error) {
 }
 
 func (j Job) Run() {
+	result := JobResult{
+		JobName:   j.Name,
+		JobType:   "backup",
+		Success:   true,
+		LastError: nil,
+		Message:   "",
+	}
+
 	if err := j.RunBackup(); err != nil {
 		j.healthy = false
 		j.lastErr = err
 
-		j.Logger().Printf("ERROR: Backup failed: %v", err)
+		j.Logger().Printf("ERROR: Backup failed: %s", err.Error())
+
+		result.Success = false
+		result.LastError = err
 	}
+
+	JobComplete(result)
 }
 
 func (j Job) NewRestic() *Restic {

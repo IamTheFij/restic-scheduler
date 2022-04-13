@@ -136,6 +136,7 @@ func main() {
 	backup := flag.String("backup", "", "Run backup jobs now. Names are comma separated and `all` will run all.")
 	restore := flag.String("restore", "", "Run restore jobs now. Names are comma separated and `all` will run all.")
 	once := flag.Bool("once", false, "Run jobs specified using -backup and -restore once and exit")
+	healthCheckAddr := flag.String("addr", "0.0.0.0:8080", "address to bind health check API")
 	flag.StringVar(&JobBaseDir, "base-dir", JobBaseDir, "Base dir to create intermediate job files like SQL dumps.")
 	flag.Parse()
 
@@ -173,6 +174,10 @@ func main() {
 	if *once {
 		return
 	}
+
+	go func() {
+		_ = RunHTTPHandlers(*healthCheckAddr)
+	}()
 
 	// TODO: Add healthcheck handler using Job.Healthy()
 	if err := ScheduleAndRunJobs(jobs); err != nil {
