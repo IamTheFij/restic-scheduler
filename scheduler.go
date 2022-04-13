@@ -9,6 +9,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron/v3"
 )
 
@@ -66,6 +67,7 @@ func healthHandleFunc(writer http.ResponseWriter, request *http.Request) {
 
 func RunHTTPHandlers(addr string) error {
 	http.HandleFunc("/health", healthHandleFunc)
+	http.Handle("/metrics", promhttp.Handler())
 
 	return fmt.Errorf("error on healthcheck: %w", http.ListenAndServe(addr, nil))
 }

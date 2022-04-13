@@ -61,6 +61,7 @@ type Job struct {
 	MySQL  []JobTaskMySQL  `hcl:"mysql,block"`
 	Sqlite []JobTaskSqlite `hcl:"sqlite,block"`
 
+	// Metrics and health
 	healthy bool
 	lastErr error
 }
@@ -233,6 +234,8 @@ func (j Job) Run() {
 		Message:   "",
 	}
 
+	Metrics.JobStartTime.WithLabelValues(j.Name).SetToCurrentTime()
+
 	if err := j.RunBackup(); err != nil {
 		j.healthy = false
 		j.lastErr = err
@@ -241,6 +244,21 @@ func (j Job) Run() {
 
 		result.Success = false
 		result.LastError = err
+	}
+
+	snapshots, err := j.NewRestic().ReadSnapshots()
+	if err != nil {
+		result.LastError = err
+	} else {
+		Metrics.SnapshotCurrentCount.WithLabelValues(j.Name).Set(float64(len(snapshots)))
+		latestSnapshot := snapshots[len(snapshots)-1]
+		Metrics.SnapshotLatestTime.WithLabelValues(j.Name).Set(float64(latestSnapshot.Time.Unix()))
+	}
+
+	if result.Success {
+		Metrics.JobFailureCount.WithLabelValues(j.Name).Set(0.0)
+	} else {
+		Metrics.JobFailureCount.WithLabelValues(j.Name).Inc()
 	}
 
 	JobComplete(result)

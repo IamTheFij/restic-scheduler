@@ -323,16 +323,16 @@ func (rcmd Restic) Check() error {
 }
 
 type Snapshot struct {
-	UID      int      `json:"uid"`
-	GID      int      `json:"gid"`
-	Time     string   `json:"time"`
-	Tree     string   `json:"tree"`
-	Hostname string   `json:"hostname"`
-	Username string   `json:"username"`
-	ID       string   `json:"id"`
-	ShortID  string   `json:"short_id"` // nolint:tagliatelle
-	Paths    []string `json:"paths"`
-	Tags     []string `json:"tags,omitempty"`
+	UID      int       `json:"uid"`
+	GID      int       `json:"gid"`
+	Time     time.Time `json:"time"`
+	Tree     string    `json:"tree"`
+	Hostname string    `json:"hostname"`
+	Username string    `json:"username"`
+	ID       string    `json:"id"`
+	ShortID  string    `json:"short_id"` // nolint:tagliatelle
+	Paths    []string  `json:"paths"`
+	Tags     []string  `json:"tags,omitempty"`
 }
 
 func (rcmd Restic) ReadSnapshots() ([]Snapshot, error) {
