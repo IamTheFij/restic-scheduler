@@ -15,6 +15,7 @@ func NewBufferedLogger(prefix string) (*bytes.Buffer, *log.Logger) {
 
 	return &outputBuffer, logger
 }
+
 func TestJobTaskScript(t *testing.T) {
 	t.Parallel()
 
@@ -149,6 +150,7 @@ func TestJobTaskSql(t *testing.T) {
 			task: main.JobTaskMySQL{
 				Name:       "simple",
 				Hostname:   "host",
+				Port:       3306,
 				Username:   "user",
 				Password:   "pass",
 				Database:   "db",
@@ -156,10 +158,11 @@ func TestJobTaskSql(t *testing.T) {
 				DumpToPath: "./simple.sql",
 			},
 			validationErr: nil,
-			preBackup:     "mysqldump --result-file ./simple.sql --host host --user user --password pass db table1 table2",
-			postBackup:    "",
-			preRestore:    "",
-			postRestore:   "mysql --host host --user user --password pass < ./simple.sql",
+			preBackup: "mysqldump --result-file ./simple.sql --host host --port 3306" +
+				" --user user --password pass db table1 table2",
+			postBackup:  "",
+			preRestore:  "",
+			postRestore: "mysql --host host --user user --password pass < ./simple.sql",
 		},
 		// Sqlite
 		{

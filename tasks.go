@@ -69,6 +69,7 @@ func (t *JobTaskScript) SetName(name string) {
 
 // JobTaskMySQL is a sqlite backup task that performs required pre and post tasks.
 type JobTaskMySQL struct {
+	Port       int      `hcl:"port,optional"`
 	Name       string   `hcl:"name,label"`
 	Hostname   string   `hcl:"hostname,optional"`
 	Database   string   `hcl:"database,optional"`
@@ -111,6 +112,10 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 
 	if t.Hostname != "" {
 		command = append(command, "--host", t.Hostname)
+	}
+
+	if t.Port != 0 {
+		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
 	}
 
 	if t.Username != "" {
