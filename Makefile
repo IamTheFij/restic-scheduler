@@ -4,7 +4,9 @@ GOFILES = *.go
 # Multi-arch targets are generated from this
 TARGET_ALIAS = $(APP_NAME)-linux-amd64 $(APP_NAME)-linux-arm $(APP_NAME)-linux-arm64 $(APP_NAME)-darwin-amd64 $(APP_NAME)-darwin-arm64
 TARGETS = $(addprefix dist/,$(TARGET_ALIAS))
-#
+.QUOTE = "
+CURRENT_GOARCH = $(shell go env | awk -F "=" '/GOARCH/ { gsub(/$(.QUOTE)/,"", $$2); print $$2}')
+
 # Default make target will run tests
 .DEFAULT_GOAL = test
 
@@ -57,5 +59,5 @@ $(TARGETS): $(GOFILES)
 $(TARGET_ALIAS):
 	$(MAKE) $(addprefix dist/,$@)
 
-# $(addprefix docker-,$(TARGET_ALIAS)):
-# 	docker build --build-arg BIN=dist/$(@:docker-%=%) .
+docker-build: dist/$(APP_NAME)-linux-$(CURRENT_GOARCH)
+	docker build --platform=linux/$(CURRENT_GOARCH) . -t $(APP_NAME)
