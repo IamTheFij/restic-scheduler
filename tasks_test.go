@@ -160,7 +160,7 @@ func TestJobTaskSql(t *testing.T) {
 			},
 			validationErr: nil,
 			preBackup: "mysqldump --result-file ./simple.sql --host host --port 3306" +
-				" --user user --password pass --no-tablespaces db table1 table2",
+				" --user user --password=pass --no-tablespaces db table1 table2",
 			postBackup:  "",
 			preRestore:  "",
 			postRestore: "mysql --host host --user user --password pass < ./simple.sql",

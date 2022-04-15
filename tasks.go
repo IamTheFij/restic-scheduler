@@ -124,7 +124,7 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 	}
 
 	if t.Password != "" {
-		command = append(command, "--password", t.Password)
+		command = append(command, fmt.Sprintf("--password=%s", t.Password))
 	}
 
 	if t.NoTablespaces {
