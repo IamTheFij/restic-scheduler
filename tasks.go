@@ -69,14 +69,15 @@ func (t *JobTaskScript) SetName(name string) {
 
 // JobTaskMySQL is a sqlite backup task that performs required pre and post tasks.
 type JobTaskMySQL struct {
-	Port       int      `hcl:"port,optional"`
-	Name       string   `hcl:"name,label"`
-	Hostname   string   `hcl:"hostname,optional"`
-	Database   string   `hcl:"database,optional"`
-	Username   string   `hcl:"username,optional"`
-	Password   string   `hcl:"password,optional"`
-	Tables     []string `hcl:"tables,optional"`
-	DumpToPath string   `hcl:"dump_to"`
+	Port          int      `hcl:"port,optional"`
+	Name          string   `hcl:"name,label"`
+	Hostname      string   `hcl:"hostname,optional"`
+	Database      string   `hcl:"database,optional"`
+	Username      string   `hcl:"username,optional"`
+	Password      string   `hcl:"password,optional"`
+	Tables        []string `hcl:"tables,optional"`
+	NoTablespaces bool     `hcl:"no_tablespaces,optional"`
+	DumpToPath    string   `hcl:"dump_to"`
 }
 
 func (t JobTaskMySQL) Paths() []string {
@@ -126,8 +127,14 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 		command = append(command, "--password", t.Password)
 	}
 
+	if t.NoTablespaces {
+		command = append(command, "--no-tablespaces")
+	}
+
 	if t.Database != "" {
 		command = append(command, t.Database)
+	} else {
+		command = append(command, "--all-databases")
 	}
 
 	command = append(command, t.Tables...)
