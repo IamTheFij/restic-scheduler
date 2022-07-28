@@ -1,6 +1,15 @@
 FROM alpine:3
 
-RUN apk add --no-cache consul~=1.12 redis~=7.0 mariadb-client~=10.6 mariadb-connector-c~=3.1 sqlite~=3 bash~=5 restic~=0.13
+RUN apk add --no-cache \
+        bash~=5 \
+        consul~=1.12 \
+        mariadb-client~=10.6 \
+        mariadb-connector-c~=3.1 \
+        rclone~=1.58 \
+        redis~=7.0 \
+        restic~=0.13 \
+        sqlite~=3 \
+        ;
 
 ARG TARGETOS
 ARG TARGETARCH
