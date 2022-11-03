@@ -34,6 +34,9 @@ func TestGlobalOptions(t *testing.T) {
 		CleanupCache:      true,
 		NoCache:           true,
 		NoLock:            true,
+		Options: map[string]string{
+			"key": "a long value",
+		},
 	}.ToArgs()
 
 	expected := []string{
@@ -47,6 +50,7 @@ func TestGlobalOptions(t *testing.T) {
 		"--cleanup-cache",
 		"--no-cache",
 		"--no-lock",
+		"--option key='a long value'",
 	}
 
 	AssertEqual(t, "args didn't match", expected, args)

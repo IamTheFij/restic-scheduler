@@ -187,16 +187,17 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 }
 
 type ResticGlobalOpts struct {
-	CaCertFile        string `hcl:"CaCertFile,optional"`
-	CacheDir          string `hcl:"CacheDir,optional"`
-	PasswordFile      string `hcl:"PasswordFile,optional"`
-	TLSClientCertFile string `hcl:"TlsClientCertFile,optional"`
-	LimitDownload     int    `hcl:"LimitDownload,optional"`
-	LimitUpload       int    `hcl:"LimitUpload,optional"`
-	VerboseLevel      int    `hcl:"VerboseLevel,optional"`
-	CleanupCache      bool   `hcl:"CleanupCache,optional"`
-	NoCache           bool   `hcl:"NoCache,optional"`
-	NoLock            bool   `hcl:"NoLock,optional"`
+	CaCertFile        string            `hcl:"CaCertFile,optional"`
+	CacheDir          string            `hcl:"CacheDir,optional"`
+	PasswordFile      string            `hcl:"PasswordFile,optional"`
+	TLSClientCertFile string            `hcl:"TlsClientCertFile,optional"`
+	LimitDownload     int               `hcl:"LimitDownload,optional"`
+	LimitUpload       int               `hcl:"LimitUpload,optional"`
+	Options           map[string]string `hcl:"Options,optional"`
+	VerboseLevel      int               `hcl:"VerboseLevel,optional"`
+	CleanupCache      bool              `hcl:"CleanupCache,optional"`
+	NoCache           bool              `hcl:"NoCache,optional"`
+	NoLock            bool              `hcl:"NoLock,optional"`
 }
 
 func (glo ResticGlobalOpts) ToArgs() (args []string) {
@@ -210,6 +211,10 @@ func (glo ResticGlobalOpts) ToArgs() (args []string) {
 	args = maybeAddArgBool(args, "--cleanup-cache", glo.CleanupCache)
 	args = maybeAddArgBool(args, "--no-cache", glo.NoCache)
 	args = maybeAddArgBool(args, "--no-lock", glo.NoLock)
+
+	for key, value := range glo.Options {
+		args = append(args, fmt.Sprintf("--option %s='%s'", key, value))
+	}
 
 	return args
 }
