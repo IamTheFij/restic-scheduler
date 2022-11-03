@@ -213,7 +213,7 @@ func (glo ResticGlobalOpts) ToArgs() (args []string) {
 	args = maybeAddArgBool(args, "--no-lock", glo.NoLock)
 
 	for key, value := range glo.Options {
-		args = append(args, fmt.Sprintf("--option %s='%s'", key, value))
+		args = append(args, "--option", fmt.Sprintf("%s='%s'", key, value))
 	}
 
 	return args

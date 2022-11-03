@@ -50,7 +50,7 @@ func TestGlobalOptions(t *testing.T) {
 		"--cleanup-cache",
 		"--no-cache",
 		"--no-lock",
-		"--option key='a long value'",
+		"--option", "key='a long value'",
 	}
 
 	AssertEqual(t, "args didn't match", expected, args)
@@ -213,6 +213,9 @@ func TestResticInterface(t *testing.T) {
 		// nolint:exhaustivestruct
 		GlobalOpts: &main.ResticGlobalOpts{
 			CacheDir: cacheDir,
+			Options: map[string]string{
+				"s3.storage-class": "REDUCED_REDUNDANCY",
+			},
 		},
 		Cwd: dataDir,
 	}
