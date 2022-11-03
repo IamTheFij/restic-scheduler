@@ -280,6 +280,8 @@ type JobTask struct {
 	Name        string          `hcl:"name,label"`
 	PreScripts  []JobTaskScript `hcl:"pre_script,block"`
 	PostScripts []JobTaskScript `hcl:"post_script,block"`
+	MySQL       []JobTaskMySQL  `hcl:"mysql,block"`
+	Sqlite      []JobTaskSqlite `hcl:"sqlite,block"`
 }
 
 func (t JobTask) Validate() error {
@@ -292,6 +294,14 @@ func (t JobTask) Validate() error {
 
 func (t JobTask) GetPreTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
+
+	for _, task := range t.MySQL {
+		allTasks = append(allTasks, task.GetPreTask())
+	}
+
+	for _, task := range t.Sqlite {
+		allTasks = append(allTasks, task.GetPreTask())
+	}
 
 	for _, exTask := range t.PreScripts {
 		exTask.SetName(t.Name)
@@ -307,6 +317,14 @@ func (t JobTask) GetPostTasks() []ExecutableTask {
 	for _, exTask := range t.PostScripts {
 		exTask.SetName(t.Name)
 		allTasks = append(allTasks, exTask)
+	}
+
+	for _, task := range t.MySQL {
+		allTasks = append(allTasks, task.GetPostTask())
+	}
+
+	for _, task := range t.Sqlite {
+		allTasks = append(allTasks, task.GetPostTask())
 	}
 
 	return allTasks
