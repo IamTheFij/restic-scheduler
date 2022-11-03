@@ -344,7 +344,7 @@ func (rcmd Restic) ReadSnapshots() ([]Snapshot, error) {
 	snapshots := new([]Snapshot)
 
 	if err = json.Unmarshal([]byte(lines[0]), snapshots); err != nil {
-		return nil, fmt.Errorf("failed parsing snapshot results: %w", err)
+		return nil, fmt.Errorf("failed parsing snapshot results from %s: %w", lines[0], err)
 	}
 
 	return *snapshots, nil

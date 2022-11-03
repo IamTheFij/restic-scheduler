@@ -220,7 +220,7 @@ func TestResticInterface(t *testing.T) {
 	// Make sure no existing repo is found
 	_, err = restic.ReadSnapshots()
 	if err == nil || !errors.Is(err, main.ErrRepoNotFound) {
-		AssertEqualFail(t, "didn't get expected error for backup", main.ErrRepoNotFound, err)
+		AssertEqualFail(t, "didn't get expected error for backup", main.ErrRepoNotFound.Error(), err.Error())
 	}
 
 	// Try to backup when repo is not initialized
