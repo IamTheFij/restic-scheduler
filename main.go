@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -117,6 +118,7 @@ func FilterJobs(jobs []Job, names []string) ([]Job, error) {
 	}
 
 	filteredJobs := []Job{}
+
 	for _, job := range jobs {
 		if nameSet.Contains(job.Name) {
 			filteredJobs = append(filteredJobs, job)
@@ -133,24 +135,30 @@ func FilterJobs(jobs []Job, names []string) ([]Job, error) {
 	return filteredJobs, err
 }
 
-func RunBackupJobs(jobs []Job) error {
+func runBackupJobs(jobs []Job, names string) error {
+	namesSlice := strings.Split(names, ",")
+
+	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
 	for _, job := range jobs {
 		if err := job.RunBackup(); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return filterJobErr
 }
 
-func RunRestoreJobs(jobs []Job) error {
+func runRestoreJobs(jobs []Job, names string) error {
+	namesSlice := strings.Split(names, ",")
+
+	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
 	for _, job := range jobs {
 		if err := job.RunRestore(); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return filterJobErr
 }
 
 func main() {
@@ -169,6 +177,10 @@ func main() {
 		return
 	}
 
+	if _, err := exec.LookPath("restic"); err != nil {
+		log.Fatalf("Could not find restic in path. Make sure it's installed")
+	}
+
 	if flag.NArg() == 0 {
 		log.Fatalf("Requires a path to a job file, but found none")
 	}
@@ -183,25 +195,13 @@ func main() {
 	}
 
 	// Run specified backup jobs
-	backupJobNames := strings.Split(*backup, ",")
-	backupJobs, filterJobErr := FilterJobs(jobs, backupJobNames)
-	if err := RunBackupJobs(backupJobs); err != nil {
+	if err := runBackupJobs(jobs, *backup); err != nil {
 		log.Fatalf("Failed running backup jobs: %v", err)
 	}
 
-	if filterJobErr != nil {
-		log.Fatalf("Unkown backup job: %v", err)
-	}
-
 	// Run specified restore jobs
-	restoreJobNames := strings.Split(*restore, ",")
-	restoreJobs, filterJobErr := FilterJobs(jobs, restoreJobNames)
-	if err := RunRestoreJobs(restoreJobs); err != nil {
+	if err := runRestoreJobs(jobs, *restore); err != nil {
 		log.Fatalf("Failed running restore jobs: %v", err)
-	}
-
-	if filterJobErr != nil {
-		log.Fatalf("Unkown restore job: %v", err)
 	}
 
 	// Exit if only running once
