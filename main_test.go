@@ -1,8 +1,10 @@
 package main_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	main "git.iamthefij.com/iamthefij/restic-scheduler"
@@ -36,5 +38,67 @@ func TestReadJobs(t *testing.T) {
 
 	if len(jobs) == 0 {
 		t.Error("Expected read jobs but found none")
+	}
+}
+
+func TestRunJobs(t *testing.T) {
+	t.Parallel()
+
+	validJob := main.Job{
+		Name:     "Valid job",
+		Schedule: "@daily",
+		Config:   ValidResticConfig(),
+		Tasks:    []main.JobTask{},
+		Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+		Forget:   nil,
+		MySQL:    []main.JobTaskMySQL{},
+		Sqlite:   []main.JobTaskSqlite{},
+	}
+
+	cases := []struct {
+		name          string
+		jobs          []main.Job
+		names         []string
+		expected      []main.Job
+		expectedError error
+	}{
+		{
+			name:          "Found job",
+			jobs:          []main.Job{validJob},
+			names:         []string{"Valid job"},
+			expected:      []main.Job{validJob},
+			expectedError: nil,
+		},
+		{
+			name:          "Run all",
+			jobs:          []main.Job{validJob},
+			names:         []string{"all"},
+			expected:      []main.Job{validJob},
+			expectedError: nil,
+		},
+		{
+			name:          "Extra, missing job",
+			jobs:          []main.Job{validJob},
+			names:         []string{"Valid job", "Not Found"},
+			expected:      []main.Job{validJob},
+			expectedError: main.ErrJobNotFound,
+		},
+	}
+
+	for _, c := range cases {
+		testCase := c
+
+		t.Run(testCase.name+" backup", func(t *testing.T) {
+			t.Parallel()
+
+			jobs, err := main.FilterJobs(testCase.jobs, testCase.names)
+			if !reflect.DeepEqual(jobs, testCase.expected) {
+				t.Errorf("expected %v but found %v", testCase.expected, jobs)
+			}
+
+			if !errors.Is(err, testCase.expectedError) {
+				t.Errorf("expected %v but found %v", testCase.expectedError, err)
+			}
+		})
 	}
 }

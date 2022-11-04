@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -15,7 +16,8 @@ import (
 
 var (
 	// version of restic-scheduler being run.
-	version = "dev"
+	version        = "dev"
+	ErrJobNotFound = errors.New("jobs not found")
 )
 
 func ParseConfig(path string) ([]Job, error) {
@@ -92,6 +94,12 @@ func ReadJobs(paths []string) ([]Job, error) {
 
 type Set map[string]bool
 
+func (s Set) Contains(key string) bool {
+	_, contains := s[key]
+
+	return contains
+}
+
 func NewSetFrom(l []string) Set {
 	s := make(Set)
 	for _, l := range l {
@@ -101,30 +109,44 @@ func NewSetFrom(l []string) Set {
 	return s
 }
 
-func runBackupJobs(jobs []Job, names []string) error {
+/// FilterJobs filters a list of jobs by a list of names
+func FilterJobs(jobs []Job, names []string) ([]Job, error) {
 	nameSet := NewSetFrom(names)
-	_, runAll := nameSet["all"]
+	if nameSet.Contains("all") {
+		return jobs, nil
+	}
 
+	filteredJobs := []Job{}
 	for _, job := range jobs {
-		if _, found := nameSet[job.Name]; runAll || found {
-			if err := job.RunBackup(); err != nil {
-				return err
-			}
+		if nameSet.Contains(job.Name) {
+			filteredJobs = append(filteredJobs, job)
+
+			delete(nameSet, job.Name)
+		}
+	}
+
+	var err error
+	if len(nameSet) > 0 {
+		err = fmt.Errorf("%w: %v", ErrJobNotFound, nameSet)
+	}
+
+	return filteredJobs, err
+}
+
+func RunBackupJobs(jobs []Job) error {
+	for _, job := range jobs {
+		if err := job.RunBackup(); err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func runRestoreJobs(jobs []Job, names []string) error {
-	nameSet := NewSetFrom(names)
-	_, runAll := nameSet["all"]
-
+func RunRestoreJobs(jobs []Job) error {
 	for _, job := range jobs {
-		if _, found := nameSet[job.Name]; runAll || found {
-			if err := job.RunRestore(); err != nil {
-				return err
-			}
+		if err := job.RunRestore(); err != nil {
+			return err
 		}
 	}
 
@@ -161,13 +183,25 @@ func main() {
 	}
 
 	// Run specified backup jobs
-	if err := runBackupJobs(jobs, strings.Split(*backup, ",")); err != nil {
+	backupJobNames := strings.Split(*backup, ",")
+	backupJobs, filterJobErr := FilterJobs(jobs, backupJobNames)
+	if err := RunBackupJobs(backupJobs); err != nil {
 		log.Fatalf("Failed running backup jobs: %v", err)
 	}
 
+	if filterJobErr != nil {
+		log.Fatalf("Unkown backup job: %v", err)
+	}
+
 	// Run specified restore jobs
-	if err := runRestoreJobs(jobs, strings.Split(*restore, ",")); err != nil {
-		log.Fatalf("Failed running backup jobs: %v", err)
+	restoreJobNames := strings.Split(*restore, ",")
+	restoreJobs, filterJobErr := FilterJobs(jobs, restoreJobNames)
+	if err := RunRestoreJobs(restoreJobs); err != nil {
+		log.Fatalf("Failed running restore jobs: %v", err)
+	}
+
+	if filterJobErr != nil {
+		log.Fatalf("Unkown restore job: %v", err)
 	}
 
 	// Exit if only running once
