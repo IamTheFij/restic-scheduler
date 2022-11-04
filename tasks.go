@@ -230,7 +230,7 @@ type BackupFilesTask struct {
 
 func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 	if t.BackupOpts == nil {
-		t.BackupOpts = &BackupOpts{} // nolint:exhaustivestruct
+		t.BackupOpts = &BackupOpts{} //nolint:exhaustivestruct
 	}
 
 	if err := cfg.Restic.Backup(cfg.BackupPaths, *t.BackupOpts); err != nil {
@@ -245,7 +245,7 @@ func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 
 func (t BackupFilesTask) RunRestore(cfg TaskConfig) error {
 	if t.RestoreOpts == nil {
-		t.RestoreOpts = &RestoreOpts{} // nolint:exhaustivestruct
+		t.RestoreOpts = &RestoreOpts{} //nolint:exhaustivestruct
 	}
 
 	// TODO: Make the snapshot configurable

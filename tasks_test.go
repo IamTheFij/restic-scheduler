@@ -120,7 +120,7 @@ func TestJobTaskSql(t *testing.T) {
 	}{
 		{
 			name: "mysql simple",
-			// nolint:exhaustivestruct
+			//nolint:exhaustivestruct
 			task: main.JobTaskMySQL{
 				Name:       "simple",
 				DumpToPath: "./simple.sql",
@@ -133,7 +133,7 @@ func TestJobTaskSql(t *testing.T) {
 		},
 		{
 			name: "mysql tables no database",
-			// nolint:exhaustivestruct
+			//nolint:exhaustivestruct
 			task: main.JobTaskMySQL{
 				Name:       "name",
 				Tables:     []string{"table1", "table2"},

@@ -50,7 +50,7 @@ func (w *CapturedLogWriter) Write(content []byte) (n int, err error) {
 }
 
 func RunShell(script string, cwd string, env map[string]string, logger *log.Logger) error {
-	cmd := exec.Command("sh", "-c", strings.TrimSpace(script)) // nolint:gosec
+	cmd := exec.Command("sh", "-c", strings.TrimSpace(script)) //nolint:gosec
 
 	// Make both stderr and stdout go to logger
 	cmd.Stdout = NewCapturedLogWriter(logger)

@@ -110,7 +110,7 @@ func NewSetFrom(l []string) Set {
 	return s
 }
 
-/// FilterJobs filters a list of jobs by a list of names
+// FilterJobs filters a list of jobs by a list of names.
 func FilterJobs(jobs []Job, names []string) ([]Job, error) {
 	nameSet := NewSetFrom(names)
 	if nameSet.Contains("all") {

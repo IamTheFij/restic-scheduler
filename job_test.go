@@ -27,12 +27,12 @@ func TestResticConfigValidate(t *testing.T) {
 		{
 			name:        "missing passphrase",
 			expectedErr: main.ErrMutuallyExclusive,
-			config:      main.ResticConfig{}, // nolint:exhaustivestruct
+			config:      main.ResticConfig{}, //nolint:exhaustivestruct
 		},
 		{
 			name:        "passphrase no file",
 			expectedErr: nil,
-			// nolint:exhaustivestruct
+			//nolint:exhaustivestruct
 			config: main.ResticConfig{
 				Passphrase: "shh",
 			},
@@ -40,7 +40,7 @@ func TestResticConfigValidate(t *testing.T) {
 		{
 			name:        "file no passphrase",
 			expectedErr: nil,
-			// nolint:exhaustivestruct
+			//nolint:exhaustivestruct
 			config: main.ResticConfig{
 				GlobalOpts: &main.ResticGlobalOpts{
 					PasswordFile: "file",
@@ -50,7 +50,7 @@ func TestResticConfigValidate(t *testing.T) {
 		{
 			name:        "file and passphrase",
 			expectedErr: main.ErrMutuallyExclusive,
-			// nolint:exhaustivestruct
+			//nolint:exhaustivestruct
 			config: main.ResticConfig{
 				Passphrase: "shh",
 				GlobalOpts: &main.ResticGlobalOpts{
@@ -89,7 +89,7 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{},
@@ -103,7 +103,7 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{},
@@ -117,7 +117,7 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "shrug",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{},
@@ -129,9 +129,9 @@ func TestJobValidation(t *testing.T) {
 			job: main.Job{
 				Name:     "Test job",
 				Schedule: "@daily",
-				Config:   main.ResticConfig{}, // nolint:exhaustivestruct
+				Config:   main.ResticConfig{}, //nolint:exhaustivestruct
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{},
@@ -145,7 +145,7 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{{}},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{},
@@ -159,7 +159,7 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{{}},
 				Sqlite:   []main.JobTaskSqlite{},
@@ -173,7 +173,7 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{{}},
@@ -212,7 +212,7 @@ func TestConfigValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{},
 			}}},
@@ -230,7 +230,7 @@ func TestConfigValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, // nolint:exhaustivestruct
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustivestruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Sqlite:   []main.JobTaskSqlite{},

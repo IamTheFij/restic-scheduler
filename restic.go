@@ -335,7 +335,7 @@ type Snapshot struct {
 	Hostname string    `json:"hostname"`
 	Username string    `json:"username"`
 	ID       string    `json:"id"`
-	ShortID  string    `json:"short_id"` // nolint:tagliatelle
+	ShortID  string    `json:"short_id"` //nolint:tagliatelle
 	Paths    []string  `json:"paths"`
 	Tags     []string  `json:"tags,omitempty"`
 }
