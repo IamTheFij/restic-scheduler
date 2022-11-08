@@ -38,7 +38,7 @@ func InitMetrics() *ResticMetrics {
 		SnapshotCurrentCount: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name:        "restic_snapshot_current_total",
-				Help:        "time it took for the last job run",
+				Help:        "number of current snapshots",
 				Namespace:   "",
 				Subsystem:   "",
 				ConstLabels: nil,
@@ -58,6 +58,7 @@ func InitMetrics() *ResticMetrics {
 	}
 
 	prometheus.MustRegister(metrics.JobStartTime)
+	prometheus.MustRegister(metrics.JobFailureCount)
 	prometheus.MustRegister(metrics.SnapshotCurrentCount)
 	prometheus.MustRegister(metrics.SnapshotLatestTime)
 
