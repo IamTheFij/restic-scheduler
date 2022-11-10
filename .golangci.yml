@@ -1,16 +1,13 @@
 ---
 linters:
   enable:
-    - deadcode
     - errcheck
     - gosimple
     - govet
     - ineffassign
     - staticcheck
-    - structcheck
     - typecheck
     - unused
-    - varcheck
 
     - asciicheck
     - bidichk
@@ -26,7 +23,7 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustivestruct
+    - exhaustruct
     - exportloopref
     - forcetypeassert
     - funlen
@@ -47,7 +44,6 @@ linters:
     - goprintffuncname
     - gosec
     - grouper
-    - ifshort
     - importas
     # - ireturn
     - lll
@@ -91,22 +87,23 @@ linters:
     - interfacer
     - maligned
     - scopelint
+    - ifshort
+    - varcheck
+    - structcheck
+    - deadcode
+    - exhaustivestruct
 
 linters-settings:
-  # gosec:
-  #   excludes:
-  #     - G204
   gomnd:
     settings:
       mnd:
         ignored-functions: math.*
 
 issues:
+  fix: true
   exclude-rules:
     - path: _test\.go
       linters:
         - errcheck
         - gosec
         - funlen
-  # Enable autofix
-  fix: true

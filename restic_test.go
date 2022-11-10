@@ -160,19 +160,19 @@ func TestBuildEnv(t *testing.T) {
 	}{
 		{
 			name:     "No Env",
-			cmd:      main.Restic{}, //nolint:exhaustivestruct
+			cmd:      main.Restic{}, //nolint:exhaustruct
 			expected: os.Environ(),
 		},
 		{
 			name: "SetEnv",
-			cmd: main.Restic{ //nolint:exhaustivestruct
+			cmd: main.Restic{ //nolint:exhaustruct
 				Env: map[string]string{"TestKey": "Value"},
 			},
 			expected: append(os.Environ(), "TestKey=Value"),
 		},
 		{
 			name: "SetEnv",
-			cmd: main.Restic{ //nolint:exhaustivestruct
+			cmd: main.Restic{ //nolint:exhaustruct
 				Passphrase: "Shhhhhhhh!!",
 			},
 			expected: append(os.Environ(), "RESTIC_PASSWORD=Shhhhhhhh!!"),
@@ -210,7 +210,7 @@ func TestResticInterface(t *testing.T) {
 		Repo:       repoDir,
 		Env:        map[string]string{},
 		Passphrase: "Correct.Horse.Battery.Staple",
-		//nolint:exhaustivestruct
+		//nolint:exhaustruct
 		GlobalOpts: &main.ResticGlobalOpts{
 			CacheDir: cacheDir,
 			Options: map[string]string{
@@ -231,7 +231,7 @@ func TestResticInterface(t *testing.T) {
 	}
 
 	// Try to backup when repo is not initialized
-	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) //nolint:exhaustivestruct
+	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) //nolint:exhaustruct
 	if !errors.Is(err, main.ErrRepoNotFound) {
 		AssertEqualFail(t, "unexpected error creating making backup", nil, err)
 	}
@@ -245,7 +245,7 @@ func TestResticInterface(t *testing.T) {
 	AssertEqualFail(t, "unexpected error reinitializing repo", nil, err)
 
 	// Backup for real this time
-	err = restic.Backup([]string{dataDir}, main.BackupOpts{Tags: []string{"test"}}) //nolint:exhaustivestruct
+	err = restic.Backup([]string{dataDir}, main.BackupOpts{Tags: []string{"test"}}) //nolint:exhaustruct
 	AssertEqualFail(t, "unexpected error creating making backup", nil, err)
 
 	// Check snapshots
@@ -259,7 +259,7 @@ func TestResticInterface(t *testing.T) {
 	AssertEqual(t, "unexpected snapshot value: tags", []string{"test"}, snapshots[0].Tags)
 
 	// Backup again
-	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) //nolint:exhaustivestruct
+	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) //nolint:exhaustruct
 	AssertEqualFail(t, "unexpected error creating making second backup", nil, err)
 
 	// Check for second backup
@@ -268,7 +268,7 @@ func TestResticInterface(t *testing.T) {
 	AssertEqual(t, "unexpected number of snapshots", 2, len(snapshots))
 
 	// Forget one backup
-	err = restic.Forget(main.ForgetOpts{KeepLast: 1, Prune: true}) //nolint:exhaustivestruct
+	err = restic.Forget(main.ForgetOpts{KeepLast: 1, Prune: true}) //nolint:exhaustruct
 	AssertEqualFail(t, "unexpected error forgetting snapshot", nil, err)
 
 	// Check forgotten snapshot
@@ -290,7 +290,7 @@ func TestResticInterface(t *testing.T) {
 	AssertEqualFail(t, "incorrect value in test file (we expect the unexpected!)", "unexpected", string(value))
 
 	// Restore files
-	err = restic.Restore("latest", main.RestoreOpts{Target: restoreTarget}) //nolint:exhaustivestruct
+	err = restic.Restore("latest", main.RestoreOpts{Target: restoreTarget}) //nolint:exhaustruct
 	AssertEqualFail(t, "unexpected error restoring latest snapshot", nil, err)
 
 	// Check restored values
