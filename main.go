@@ -138,6 +138,10 @@ func FilterJobs(jobs []Job, names []string) ([]Job, error) {
 func runBackupJobs(jobs []Job, names string) error {
 	namesSlice := strings.Split(names, ",")
 
+	if len(namesSlice) == 0 {
+		return nil
+	}
+
 	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
 	for _, job := range jobs {
 		if err := job.RunBackup(); err != nil {
@@ -150,6 +154,10 @@ func runBackupJobs(jobs []Job, names string) error {
 
 func runRestoreJobs(jobs []Job, names string) error {
 	namesSlice := strings.Split(names, ",")
+
+	if len(namesSlice) == 0 {
+		return nil
+	}
 
 	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
 	for _, job := range jobs {
