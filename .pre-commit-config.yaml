@@ -16,3 +16,6 @@ repos:
       - id: go-fmt
       - id: go-imports
       - id: golangci-lint
+        args:
+          - --timeout=3m
+          - --verbose
