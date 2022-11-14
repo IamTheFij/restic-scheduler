@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/push"
 )
 
 type ResticMetrics struct {
@@ -9,12 +12,26 @@ type ResticMetrics struct {
 	JobFailureCount      *prometheus.GaugeVec
 	SnapshotCurrentCount *prometheus.GaugeVec
 	SnapshotLatestTime   *prometheus.GaugeVec
+	Registry             *prometheus.Registry
+}
+
+func (m ResticMetrics) PushToGateway(url string) error {
+	err := push.New(url, "batch").
+		Gatherer(m.Registry).
+		Add()
+
+	if err != nil {
+		return fmt.Errorf("error pushing to registry %s: %w", url, err)
+	}
+
+	return nil
 }
 
 func InitMetrics() *ResticMetrics {
 	labelNames := []string{"job"}
 
 	metrics := &ResticMetrics{
+		Registry: prometheus.NewRegistry(),
 		JobStartTime: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name:        "restic_job_start_time",
@@ -57,10 +74,10 @@ func InitMetrics() *ResticMetrics {
 		),
 	}
 
-	prometheus.MustRegister(metrics.JobStartTime)
-	prometheus.MustRegister(metrics.JobFailureCount)
-	prometheus.MustRegister(metrics.SnapshotCurrentCount)
-	prometheus.MustRegister(metrics.SnapshotLatestTime)
+	metrics.Registry.MustRegister(metrics.JobStartTime)
+	metrics.Registry.MustRegister(metrics.JobFailureCount)
+	metrics.Registry.MustRegister(metrics.SnapshotCurrentCount)
+	metrics.Registry.MustRegister(metrics.SnapshotLatestTime)
 
 	return metrics
 }

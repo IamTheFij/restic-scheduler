@@ -90,6 +90,10 @@ func ReadJobs(paths []string) ([]Job, error) {
 		}
 	}
 
+	if len(allJobs) == 0 {
+		return allJobs, fmt.Errorf("No jobs found in provided configuration: %w", ErrJobNotFound)
+	}
+
 	return allJobs, nil
 }
 
@@ -169,17 +173,58 @@ func runRestoreJobs(jobs []Job, names string) error {
 	return filterJobErr
 }
 
-func main() {
-	showVersion := flag.Bool("version", false, "Display the version and exit")
-	backup := flag.String("backup", "", "Run backup jobs now. Names are comma separated and `all` will run all.")
-	restore := flag.String("restore", "", "Run restore jobs now. Names are comma separated and `all` will run all.")
-	once := flag.Bool("once", false, "Run jobs specified using -backup and -restore once and exit")
-	healthCheckAddr := flag.String("addr", "0.0.0.0:8080", "address to bind health check API")
+type Flags struct {
+	showVersion        bool
+	backup             string
+	restore            string
+	once               bool
+	healthCheckAddr    string
+	metricsPushGateway string
+}
+
+func readFlags() Flags {
+	flags := Flags{} //nolint:exhaustruct
+	flag.BoolVar(&flags.showVersion, "version", false, "Display the version and exit")
+	flag.StringVar(&flags.backup, "backup", "", "Run backup jobs now. Names are comma separated. `all` will run all.")
+	flag.StringVar(&flags.restore, "restore", "", "Run restore jobs now. Names are comma separated. `all` will run all.")
+	flag.BoolVar(&flags.once, "once", false, "Run jobs specified using -backup and -restore once and exit")
+	flag.StringVar(&flags.healthCheckAddr, "addr", "0.0.0.0:8080", "address to bind health check API")
+	flag.StringVar(&flags.metricsPushGateway, "push-gateway", "", "url of push gateway service for batch runs (optional)")
 	flag.StringVar(&JobBaseDir, "base-dir", JobBaseDir, "Base dir to create intermediate job files like SQL dumps.")
 	flag.Parse()
 
+	return flags
+}
+
+func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs string) error {
+	// Run specified backup jobs
+	if err := runBackupJobs(jobs, backupJobs); err != nil {
+		return fmt.Errorf("Failed running backup jobs: %w", err)
+	}
+
+	// Run specified restore jobs
+	if err := runRestoreJobs(jobs, restoreJobs); err != nil {
+		return fmt.Errorf("Failed running restore jobs: %w", err)
+	}
+
+	return nil
+}
+
+func maybePushMetrics(metricsPushGateway string) error {
+	if metricsPushGateway != "" {
+		if err := Metrics.PushToGateway(metricsPushGateway); err != nil {
+			return fmt.Errorf("Failed pushing metrics after jobs run: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func main() {
+	flags := readFlags()
+
 	// Print version if flag is provided
-	if *showVersion {
+	if flags.showVersion {
 		fmt.Println("restic-scheduler version:", version)
 
 		return
@@ -198,27 +243,21 @@ func main() {
 		log.Fatalf("Failed to read jobs from files: %v", err)
 	}
 
-	if len(jobs) == 0 {
-		log.Fatal("No jobs found in provided configuration")
-	}
-
-	// Run specified backup jobs
-	if err := runBackupJobs(jobs, *backup); err != nil {
-		log.Fatalf("Failed running backup jobs: %v", err)
-	}
-
-	// Run specified restore jobs
-	if err := runRestoreJobs(jobs, *restore); err != nil {
-		log.Fatalf("Failed running restore jobs: %v", err)
+	if err := runSpecifiedJobs(jobs, flags.backup, flags.restore); err != nil {
+		log.Fatal(err)
 	}
 
 	// Exit if only running once
-	if *once {
+	if flags.once {
+		if err := maybePushMetrics(flags.metricsPushGateway); err != nil {
+			log.Fatal(err)
+		}
+
 		return
 	}
 
 	go func() {
-		_ = RunHTTPHandlers(*healthCheckAddr)
+		_ = RunHTTPHandlers(flags.healthCheckAddr)
 	}()
 
 	// TODO: Add healthcheck handler using Job.Healthy()
