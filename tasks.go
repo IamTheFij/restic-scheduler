@@ -285,6 +285,7 @@ type JobTask struct {
 }
 
 func (t JobTask) Validate() error {
+	// NOTE: Might make task types mutually exclusive because order is confusing even if deterministic
 	if t.Name == "" {
 		return fmt.Errorf("task is missing a name: %w", ErrMissingField)
 	}

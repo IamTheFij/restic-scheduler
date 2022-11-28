@@ -58,6 +58,8 @@ type Job struct {
 	Forget   *ForgetOpts     `hcl:"forget,block"`
 
 	// Meta Tasks
+	// NOTE: Now that these are also available within a task
+	// these could be removed to make task order more obvious
 	MySQL  []JobTaskMySQL  `hcl:"mysql,block"`
 	Sqlite []JobTaskSqlite `hcl:"sqlite,block"`
 
