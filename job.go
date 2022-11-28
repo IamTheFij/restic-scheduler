@@ -52,7 +52,7 @@ func (r ResticConfig) Validate() error {
 type Job struct {
 	Name     string          `hcl:"name,label"`
 	Schedule string          `hcl:"schedule"`
-	Config   ResticConfig    `hcl:"config,block"`
+	Config   *ResticConfig   `hcl:"config,block"`
 	Tasks    []JobTask       `hcl:"task,block"`
 	Backup   BackupFilesTask `hcl:"backup,block"`
 	Forget   *ForgetOpts     `hcl:"forget,block"`
@@ -73,6 +73,18 @@ func (j Job) validateTasks() error {
 		}
 	}
 
+	for _, mysql := range j.MySQL {
+		if err := mysql.Validate(); err != nil {
+			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
+		}
+	}
+
+	for _, sqlite := range j.Sqlite {
+		if err := sqlite.Validate(); err != nil {
+			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
+		}
+	}
+
 	return nil
 }
 
@@ -85,24 +97,16 @@ func (j Job) Validate() error {
 		return fmt.Errorf("job %s has an invalid schedule: %v: %w", j.Name, err, ErrInvalidConfigValue)
 	}
 
+	if j.Config == nil {
+		return fmt.Errorf("job %s is missing restic config: %w", j.Name, ErrMissingField)
+	}
+
 	if err := j.Config.Validate(); err != nil {
 		return fmt.Errorf("job %s has invalid config: %w", j.Name, err)
 	}
 
 	if err := j.validateTasks(); err != nil {
 		return err
-	}
-
-	for _, mysql := range j.MySQL {
-		if err := mysql.Validate(); err != nil {
-			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
-		}
-	}
-
-	for _, sqlite := range j.Sqlite {
-		if err := sqlite.Validate(); err != nil {
-			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
-		}
 	}
 
 	if err := j.Backup.Validate(); err != nil {
@@ -276,8 +280,8 @@ func (j Job) NewRestic() *Restic {
 }
 
 type Config struct {
-	// GlobalConfig *ResticConfig `hcl:"global_config,block"`
-	Jobs []Job `hcl:"job,block"`
+	DefaultConfig *ResticConfig `hcl:"default_config,block"`
+	Jobs          []Job         `hcl:"job,block"`
 }
 
 func (c Config) Validate() error {
@@ -286,6 +290,12 @@ func (c Config) Validate() error {
 	}
 
 	for _, job := range c.Jobs {
+		// Use default restic config if no job config is provided
+		// TODO: Maybe merge values here
+		if job.Config == nil {
+			job.Config = c.DefaultConfig
+		}
+
 		if err := job.Validate(); err != nil {
 			return err
 		}
