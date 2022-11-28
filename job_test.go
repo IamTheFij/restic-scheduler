@@ -7,8 +7,8 @@ import (
 	main "git.iamthefij.com/iamthefij/restic-scheduler"
 )
 
-func ValidResticConfig() main.ResticConfig {
-	return main.ResticConfig{
+func ValidResticConfig() *main.ResticConfig {
+	return &main.ResticConfig{
 		Passphrase: "shh",
 		Repo:       "./data",
 		Env:        nil,
@@ -129,7 +129,7 @@ func TestJobValidation(t *testing.T) {
 			job: main.Job{
 				Name:     "Test job",
 				Schedule: "@daily",
-				Config:   main.ResticConfig{}, //nolint:exhaustruct
+				Config:   &main.ResticConfig{}, //nolint:exhaustruct
 				Tasks:    []main.JobTask{},
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
@@ -207,15 +207,34 @@ func TestConfigValidation(t *testing.T) {
 	}{
 		{
 			name: "Valid job",
-			config: main.Config{Jobs: []main.Job{{
-				Name:     "Valid job",
-				Schedule: "@daily",
-				Config:   ValidResticConfig(),
-				Tasks:    []main.JobTask{},
-				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
-				MySQL:    []main.JobTaskMySQL{},
-				Sqlite:   []main.JobTaskSqlite{},
-			}}},
+			config: main.Config{
+				DefaultConfig: nil,
+				Jobs: []main.Job{{
+					Name:     "Valid job",
+					Schedule: "@daily",
+					Config:   ValidResticConfig(),
+					Tasks:    []main.JobTask{},
+					Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+					MySQL:    []main.JobTaskMySQL{},
+					Sqlite:   []main.JobTaskSqlite{},
+				}},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "Valid job with default config",
+			config: main.Config{
+				DefaultConfig: ValidResticConfig(),
+				Jobs: []main.Job{{
+					Name:     "Valid job",
+					Schedule: "@daily",
+					Config:   nil,
+					Tasks:    []main.JobTask{},
+					Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+					MySQL:    []main.JobTaskMySQL{},
+					Sqlite:   []main.JobTaskSqlite{},
+				}},
+			},
 			expectedErr: nil,
 		},
 		{
@@ -229,6 +248,20 @@ func TestConfigValidation(t *testing.T) {
 				Name:     "",
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
+				Tasks:    []main.JobTask{},
+				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+				Forget:   nil,
+				MySQL:    []main.JobTaskMySQL{},
+				Sqlite:   []main.JobTaskSqlite{},
+			}}},
+			expectedErr: main.ErrMissingField,
+		},
+		{
+			name: "Missing config",
+			config: main.Config{Jobs: []main.Job{{
+				Name:     "",
+				Schedule: "@daily",
+				Config:   nil,
 				Tasks:    []main.JobTask{},
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
