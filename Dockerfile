@@ -1,13 +1,14 @@
-FROM alpine:3.16
+FROM alpine:3.17
 
 RUN apk add --no-cache \
         bash~=5 \
-        consul~=1.12 \
+        consul~=1.14 \
+        nomad~=1.4.6 \
         mariadb-client~=10.6 \
-        mariadb-connector-c~=3.1 \
-        rclone~=1.58 \
+        mariadb-connector-c~=3.3 \
+        rclone~=1.60 \
         redis~=7.0 \
-        restic~=0.13 \
+        restic~=0.14 \
         sqlite~=3 \
         ;
 
