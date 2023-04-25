@@ -273,7 +273,11 @@ func (e *ResticError) Unwrap() error {
 	return e.OriginalError
 }
 
-func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs ...string) ([]string, error) {
+func (rcmd Restic) RunRestic(
+	command string,
+	options CommandOptions,
+	commandArgs ...string,
+) (*CapturedCommandLogWriter, error) {
 	args := []string{}
 	if rcmd.GlobalOpts != nil {
 		args = rcmd.GlobalOpts.ToArgs()
@@ -285,22 +289,22 @@ func (rcmd Restic) RunRestic(command string, options CommandOptions, commandArgs
 
 	cmd := exec.Command("restic", args...)
 
-	output := NewCapturedLogWriter(rcmd.Logger)
-	cmd.Stdout = output
-	cmd.Stderr = output
+	output := NewCapturedCommandLogWriter(rcmd.Logger)
+	cmd.Stdout = output.Stdout
+	cmd.Stderr = output.Stderr
 	cmd.Env = rcmd.BuildEnv()
 	cmd.Dir = rcmd.Cwd
 
 	if err := cmd.Run(); err != nil {
 		responseErr := ErrRestic
-		if lineIn("Is there a repository at the following location?", output.Lines) {
+		if lineIn("Is there a repository at the following location?", output.Stderr.Lines) {
 			responseErr = ErrRepoNotFound
 		}
 
-		return output.Lines, NewResticError(command, output.Lines, responseErr)
+		return output, NewResticError(command, output.AllLines(), responseErr)
 	}
 
-	return output.Lines, nil
+	return output, nil
 }
 
 func (rcmd Restic) Backup(files []string, opts BackupOpts) error {
@@ -341,15 +345,18 @@ type Snapshot struct {
 }
 
 func (rcmd Restic) ReadSnapshots() ([]Snapshot, error) {
-	lines, err := rcmd.RunRestic("snapshots", GenericOpts{"--json"})
+	output, err := rcmd.RunRestic("snapshots", GenericOpts{"--json"})
 	if err != nil {
 		return nil, err
 	}
 
-	snapshots := new([]Snapshot)
+	if len(output.Stdout.Lines) == 0 {
+		return nil, fmt.Errorf("no snapshot output to parse: %w", ErrRestic)
+	}
 
-	if err = json.Unmarshal([]byte(lines[0]), snapshots); err != nil {
-		return nil, fmt.Errorf("failed parsing snapshot results from %s: %w", lines[0], err)
+	snapshots := new([]Snapshot)
+	if err = json.Unmarshal([]byte(output.Stdout.Lines[0]), snapshots); err != nil {
+		return nil, fmt.Errorf("failed parsing snapshot results from %s: %w", output.Stdout.Lines[0], err)
 	}
 
 	return *snapshots, nil

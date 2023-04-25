@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 )
 
@@ -39,6 +40,7 @@ func NewCapturedLogWriter(logger *log.Logger) *CapturedLogWriter {
 	return &CapturedLogWriter{Lines: []string{}, logger: logger}
 }
 
+// Write writes the provided byte slice to the logger and stores each captured line.
 func (w *CapturedLogWriter) Write(content []byte) (n int, err error) {
 	message := string(content)
 	for _, line := range strings.Split(message, "\n") {
@@ -47,6 +49,33 @@ func (w *CapturedLogWriter) Write(content []byte) (n int, err error) {
 	}
 
 	return len(content), nil
+}
+
+// LinesMergedWith returns a slice of lines from this logger merged with another.
+func (w CapturedLogWriter) LinesMergedWith(other CapturedLogWriter) []string {
+	allLines := []string{}
+	allLines = append(allLines, w.Lines...)
+	allLines = append(allLines, other.Lines...)
+
+	sort.Strings(allLines)
+
+	return allLines
+}
+
+type CapturedCommandLogWriter struct {
+	Stdout *CapturedLogWriter
+	Stderr *CapturedLogWriter
+}
+
+func NewCapturedCommandLogWriter(logger *log.Logger) *CapturedCommandLogWriter {
+	return &CapturedCommandLogWriter{
+		Stdout: NewCapturedLogWriter(logger),
+		Stderr: NewCapturedLogWriter(logger),
+	}
+}
+
+func (cclw CapturedCommandLogWriter) AllLines() []string {
+	return cclw.Stdout.LinesMergedWith(*cclw.Stderr)
 }
 
 func RunShell(script string, cwd string, env map[string]string, logger *log.Logger) error {
