@@ -226,6 +226,7 @@ type BackupFilesTask struct {
 	BackupOpts  *BackupOpts  `hcl:"backup_opts,block"`
 	RestoreOpts *RestoreOpts `hcl:"restore_opts,block"`
 	name        string
+	snapshot    string
 }
 
 func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
@@ -248,8 +249,11 @@ func (t BackupFilesTask) RunRestore(cfg TaskConfig) error {
 		t.RestoreOpts = &RestoreOpts{} //nolint:exhaustruct
 	}
 
-	// TODO: Make the snapshot configurable
-	if err := cfg.Restic.Restore("latest", *t.RestoreOpts); err != nil {
+	if t.snapshot == "" {
+		t.snapshot = "latest"
+	}
+
+	if err := cfg.Restic.Restore(t.snapshot, *t.RestoreOpts); err != nil {
 		err = fmt.Errorf("failed restoring paths: %w", err)
 		cfg.Logger.Print(err)
 

@@ -160,7 +160,7 @@ func runBackupJobs(jobs []Job, names string) error {
 	return filterJobErr
 }
 
-func runRestoreJobs(jobs []Job, names string) error {
+func runRestoreJobs(jobs []Job, names string, snapshot string) error {
 	if names == "" {
 		return nil
 	}
@@ -173,7 +173,7 @@ func runRestoreJobs(jobs []Job, names string) error {
 
 	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
 	for _, job := range jobs {
-		if err := job.RunRestore(); err != nil {
+		if err := job.RunRestore(snapshot); err != nil {
 			return err
 		}
 	}
@@ -185,6 +185,7 @@ type Flags struct {
 	showVersion        bool
 	backup             string
 	restore            string
+	restoreSnapshot    string
 	once               bool
 	healthCheckAddr    string
 	metricsPushGateway string
@@ -199,19 +200,20 @@ func readFlags() Flags {
 	flag.StringVar(&flags.healthCheckAddr, "addr", "0.0.0.0:8080", "address to bind health check API")
 	flag.StringVar(&flags.metricsPushGateway, "push-gateway", "", "url of push gateway service for batch runs (optional)")
 	flag.StringVar(&JobBaseDir, "base-dir", JobBaseDir, "Base dir to create intermediate job files like SQL dumps.")
+	flag.StringVar(&flags.restoreSnapshot, "snapshot", "latest", "the snapshot to restore")
 	flag.Parse()
 
 	return flags
 }
 
-func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs string) error {
+func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs, snapshot string) error {
 	// Run specified backup jobs
 	if err := runBackupJobs(jobs, backupJobs); err != nil {
 		return fmt.Errorf("Failed running backup jobs: %w", err)
 	}
 
 	// Run specified restore jobs
-	if err := runRestoreJobs(jobs, restoreJobs); err != nil {
+	if err := runRestoreJobs(jobs, restoreJobs, snapshot); err != nil {
 		return fmt.Errorf("Failed running restore jobs: %w", err)
 	}
 
@@ -251,7 +253,7 @@ func main() {
 		log.Fatalf("Failed to read jobs from files: %v", err)
 	}
 
-	if err := runSpecifiedJobs(jobs, flags.backup, flags.restore); err != nil {
+	if err := runSpecifiedJobs(jobs, flags.backup, flags.restore, flags.restoreSnapshot); err != nil {
 		log.Fatal(err)
 	}
 

@@ -203,7 +203,7 @@ func (j Job) Logger() *log.Logger {
 	return GetLogger(j.Name)
 }
 
-func (j Job) RunRestore() error {
+func (j Job) RunRestore(snapshot string) error {
 	logger := j.Logger()
 	restic := j.NewRestic()
 
@@ -217,6 +217,10 @@ func (j Job) RunRestore() error {
 			Logger:      GetChildLogger(logger, exTask.Name()),
 			Restic:      restic,
 			Env:         nil,
+		}
+
+		if backupTask, ok := exTask.(BackupFilesTask); ok {
+			backupTask.snapshot = snapshot
 		}
 
 		if err := exTask.RunRestore(taskCfg); err != nil {
