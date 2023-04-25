@@ -29,7 +29,7 @@ build: $(APP_NAME)
 # Run all tests
 .PHONY: test
 test:
-	go test -coverprofile=coverage.out # -short
+	go test -v -coverprofile=coverage.out # -short
 	go tool cover -func=coverage.out
 
 # Installs pre-commit hooks
