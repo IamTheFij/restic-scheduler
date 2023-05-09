@@ -67,7 +67,10 @@ func healthHandleFunc(writer http.ResponseWriter, request *http.Request) {
 
 func RunHTTPHandlers(addr string) error {
 	http.HandleFunc("/health", healthHandleFunc)
-	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/metrics", promhttp.HandlerFor(
+		Metrics.Registry,
+		promhttp.HandlerOpts{Registry: Metrics.Registry}, //nolint:exhaustruct
+	))
 
 	return fmt.Errorf("error on http server: %w", http.ListenAndServe(addr, nil)) //#nosec: g114
 }
