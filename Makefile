@@ -2,7 +2,7 @@ APP_NAME = resticscheduler
 VERSION ?= $(shell git describe --tags --dirty)
 GOFILES = *.go
 # Multi-arch targets are generated from this
-TARGET_ALIAS = $(APP_NAME)-linux-amd64 $(APP_NAME)-linux-arm $(APP_NAME)-linux-arm64 $(APP_NAME)-darwin-amd64 $(APP_NAME)-darwin-arm64
+TARGET_ALIAS = $(APP_NAME)-linux-amd64 $(APP_NAME)-linux-arm $(APP_NAME)-linux-arm64
 TARGETS = $(addprefix dist/,$(TARGET_ALIAS))
 .QUOTE = "
 CURRENT_GOARCH = $(shell go env | awk -F "=" '/GOARCH/ { gsub(/$(.QUOTE)/,"", $$2); print $$2}')
