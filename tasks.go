@@ -89,11 +89,16 @@ func (t JobTaskMySQL) Validate() error {
 		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
 	}
 
-	if s, err := os.Stat(t.DumpToPath); err != nil {
+	if stat, err := os.Stat(t.DumpToPath); err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
-			return fmt.Errorf("task %s: invalid dump_to: could not stat path: %v: %w", t.Name, err, ErrInvalidConfigValue)
+			return fmt.Errorf(
+				"task %s: invalid dump_to: could not stat path: %s: %w",
+				t.Name,
+				t.DumpToPath,
+				ErrInvalidConfigValue,
+			)
 		}
-	} else if s.Mode().IsDir() {
+	} else if stat.Mode().IsDir() {
 		return fmt.Errorf("task %s: dump_to cannot be a directory: %w", t.Name, ErrInvalidConfigValue)
 	}
 
@@ -190,11 +195,16 @@ func (t JobTaskSqlite) Validate() error {
 		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
 	}
 
-	if s, err := os.Stat(t.DumpToPath); err != nil {
+	if stat, err := os.Stat(t.DumpToPath); err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
-			return fmt.Errorf("task %s: invalid dump_to: could not stat path: %v: %w", t.Name, err, ErrInvalidConfigValue)
+			return fmt.Errorf(
+				"task %s: invalid dump_to: could not stat path: %s: %w",
+				t.Name,
+				t.DumpToPath,
+				ErrInvalidConfigValue,
+			)
 		}
-	} else if s.Mode().IsDir() {
+	} else if stat.Mode().IsDir() {
 		return fmt.Errorf("task %s: dump_to cannot be a directory: %w", t.Name, ErrInvalidConfigValue)
 	}
 

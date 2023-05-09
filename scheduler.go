@@ -69,7 +69,7 @@ func RunHTTPHandlers(addr string) error {
 	http.HandleFunc("/health", healthHandleFunc)
 	http.Handle("/metrics", promhttp.Handler())
 
-	return fmt.Errorf("error on healthcheck: %w", http.ListenAndServe(addr, nil)) //#nosec: g114
+	return fmt.Errorf("error on http server: %w", http.ListenAndServe(addr, nil)) //#nosec: g114
 }
 
 func ScheduleAndRunJobs(jobs []Job) error {

@@ -96,7 +96,7 @@ func (j Job) Validate() error {
 	}
 
 	if _, err := cron.ParseStandard(j.Schedule); err != nil {
-		return fmt.Errorf("job %s has an invalid schedule: %v: %w", j.Name, err, ErrInvalidConfigValue)
+		return fmt.Errorf("job %s has an invalid schedule: %w: %w", j.Name, err, ErrInvalidConfigValue)
 	}
 
 	if j.Config == nil {
