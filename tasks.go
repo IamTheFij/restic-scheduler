@@ -165,7 +165,11 @@ func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 	}
 
 	if t.Password != "" {
-		command = append(command, "--password", t.Password)
+		command = append(command, fmt.Sprintf("--password=%s", t.Password))
+	}
+
+	if t.Database != "" {
+		command = append(command, t.Database)
 	}
 
 	command = append(command, "<", t.DumpToPath)
