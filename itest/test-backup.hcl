@@ -14,6 +14,15 @@ job "IntegrationTest" {
     dump_to = "/tmp/mysql.sql"
   }
 
+  postgres "Postgres" {
+    hostname = env("PGSQL_HOST")
+    database = "main"
+    username = env("PGSQL_USER")
+    password = env("PGSQL_PASS")
+    create = true
+    dump_to = "/tmp/psql.sql"
+  }
+
   sqlite "SQLite" {
     path = "/data/test_database.db"
     dump_to = "/data/test_database.db.bak"

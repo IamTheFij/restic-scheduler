@@ -60,8 +60,9 @@ type Job struct {
 	// Meta Tasks
 	// NOTE: Now that these are also available within a task
 	// these could be removed to make task order more obvious
-	MySQL  []JobTaskMySQL  `hcl:"mysql,block"`
-	Sqlite []JobTaskSqlite `hcl:"sqlite,block"`
+	MySQL    []JobTaskMySQL    `hcl:"mysql,block"`
+	Postgres []JobTaskPostgres `hcl:"postgres,block"`
+	Sqlite   []JobTaskSqlite   `hcl:"sqlite,block"`
 
 	// Metrics and health
 	healthy bool
@@ -77,6 +78,12 @@ func (j Job) validateTasks() error {
 
 	for _, mysql := range j.MySQL {
 		if err := mysql.Validate(); err != nil {
+			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
+		}
+	}
+
+	for _, pg := range j.Postgres {
+		if err := pg.Validate(); err != nil {
 			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
 		}
 	}
@@ -126,6 +133,10 @@ func (j Job) AllTasks() []ExecutableTask {
 		allTasks = append(allTasks, mysql.GetPreTask())
 	}
 
+	for _, pg := range j.Postgres {
+		allTasks = append(allTasks, pg.GetPreTask())
+	}
+
 	for _, sqlite := range j.Sqlite {
 		allTasks = append(allTasks, sqlite.GetPreTask())
 	}
@@ -146,6 +157,10 @@ func (j Job) AllTasks() []ExecutableTask {
 		allTasks = append(allTasks, mysql.GetPostTask())
 	}
 
+	for _, pg := range j.Postgres {
+		allTasks = append(allTasks, pg.GetPostTask())
+	}
+
 	for _, sqlite := range j.Sqlite {
 		allTasks = append(allTasks, sqlite.GetPostTask())
 	}
@@ -157,6 +172,10 @@ func (j Job) BackupPaths() []string {
 	paths := j.Backup.Paths
 
 	for _, t := range j.MySQL {
+		paths = append(paths, t.DumpToPath)
+	}
+
+	for _, t := range j.Postgres {
 		paths = append(paths, t.DumpToPath)
 	}
 

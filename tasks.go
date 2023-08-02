@@ -67,7 +67,7 @@ func (t *JobTaskScript) SetName(name string) {
 	t.name = name
 }
 
-// JobTaskMySQL is a sqlite backup task that performs required pre and post tasks.
+// JobTaskMySQL is a MySQL backup task that performs required pre and post tasks.
 type JobTaskMySQL struct {
 	Port          int      `hcl:"port,optional"`
 	Name          string   `hcl:"name,label"`
@@ -187,6 +187,144 @@ func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 	}
 }
 
+// JobTaskPostgres is a postgres backup task that performs required pre and post tasks.
+type JobTaskPostgres struct {
+	Port          int      `hcl:"port,optional"`
+	Name          string   `hcl:"name,label"`
+	Hostname      string   `hcl:"hostname,optional"`
+	Database      string   `hcl:"database,optional"`
+	Username      string   `hcl:"username,optional"`
+	Password      string   `hcl:"password,optional"`
+	Tables        []string `hcl:"tables,optional"`
+	DumpToPath    string   `hcl:"dump_to"`
+	NoTablespaces bool     `hcl:"no_tablespaces,optional"`
+	Clean         bool     `hcl:"clean,optional"`
+	Create        bool     `hcl:"create,optional"`
+}
+
+func (t JobTaskPostgres) Paths() []string {
+	return []string{t.DumpToPath}
+}
+
+func (t JobTaskPostgres) Validate() error {
+	if t.DumpToPath == "" {
+		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
+	}
+
+	if stat, err := os.Stat(t.DumpToPath); err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf(
+				"task %s: invalid dump_to: could not stat path: %s: %w",
+				t.Name,
+				t.DumpToPath,
+				ErrInvalidConfigValue,
+			)
+		}
+	} else if stat.Mode().IsDir() {
+		return fmt.Errorf("task %s: dump_to cannot be a directory: %w", t.Name, ErrInvalidConfigValue)
+	}
+
+	if len(t.Tables) > 0 && t.Database == "" {
+		return fmt.Errorf(
+			"task %s is invalid. Must specify a database to use tables: %w",
+			t.Name,
+			ErrMissingField,
+		)
+	}
+
+	return nil
+}
+
+//nolint:cyclop
+func (t JobTaskPostgres) GetPreTask() ExecutableTask {
+	command := []string{"pg_dump"}
+	if t.Database == "" {
+		command = []string{"pg_dumpall"}
+	}
+
+	command = append(command, "--file", t.DumpToPath)
+
+	if t.Hostname != "" {
+		command = append(command, "--host", t.Hostname)
+	}
+
+	if t.Port != 0 {
+		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
+	}
+
+	if t.Username != "" {
+		command = append(command, "--username", t.Username)
+	}
+
+	if t.NoTablespaces {
+		command = append(command, "--no-tablespaces")
+	}
+
+	if t.Clean {
+		command = append(command, "--clean")
+	}
+
+	if t.Create {
+		command = append(command, "--create")
+	}
+
+	for _, table := range t.Tables {
+		command = append(command, "--table", table)
+	}
+
+	if t.Database != "" {
+		command = append(command, t.Database)
+	}
+
+	env := map[string]string{}
+	if t.Password != "" {
+		env["PGPASSWORD"] = t.Password
+	}
+
+	return JobTaskScript{
+		name:      t.Name,
+		env:       env,
+		Cwd:       ".",
+		OnBackup:  strings.Join(command, " "),
+		OnRestore: "",
+	}
+}
+
+func (t JobTaskPostgres) GetPostTask() ExecutableTask {
+	command := []string{"psql"}
+
+	if t.Hostname != "" {
+		command = append(command, "--host", t.Hostname)
+	}
+
+	if t.Port != 0 {
+		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
+	}
+
+	if t.Username != "" {
+		command = append(command, "--username", t.Username)
+	}
+
+	if t.Database != "" {
+		command = append(command, t.Database)
+	}
+
+	command = append(command, "<", t.DumpToPath)
+
+	env := map[string]string{}
+	if t.Password != "" {
+		env["PGPASSWORD"] = t.Password
+	}
+
+	return JobTaskScript{
+		name:      t.Name,
+		env:       env,
+		Cwd:       ".",
+		OnBackup:  "",
+		OnRestore: strings.Join(command, " "),
+	}
+}
+
 // JobTaskSqlite is a sqlite backup task that performs required pre and post tasks.
 type JobTaskSqlite struct {
 	Name       string `hcl:"name,label"`
@@ -299,11 +437,12 @@ func (t *BackupFilesTask) Validate() error {
 
 // JobTask represents a single task within a backup job.
 type JobTask struct {
-	Name        string          `hcl:"name,label"`
-	PreScripts  []JobTaskScript `hcl:"pre_script,block"`
-	PostScripts []JobTaskScript `hcl:"post_script,block"`
-	MySQL       []JobTaskMySQL  `hcl:"mysql,block"`
-	Sqlite      []JobTaskSqlite `hcl:"sqlite,block"`
+	Name        string            `hcl:"name,label"`
+	PreScripts  []JobTaskScript   `hcl:"pre_script,block"`
+	PostScripts []JobTaskScript   `hcl:"post_script,block"`
+	MySQL       []JobTaskMySQL    `hcl:"mysql,block"`
+	Postgres    []JobTaskPostgres `hcl:"postgres,block"`
+	Sqlite      []JobTaskSqlite   `hcl:"sqlite,block"`
 }
 
 func (t JobTask) Validate() error {

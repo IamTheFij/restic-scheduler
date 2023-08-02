@@ -8,6 +8,12 @@ services:
       MYSQL_ROOT_PASSWORD: shhh
       MYSQL_DATABASE: main
 
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: shhh
+      POSTGRES_DB: main
+
   bootstrap:
     image: resticscheduler
     entrypoint: /bootstrap-tests.sh
@@ -15,6 +21,9 @@ services:
       MYSQL_HOST: mysql
       MYSQL_USER: root
       MYSQL_PWD: shhh
+      PGSQL_HOST: postgres
+      PGSQL_USER: postgres
+      PGSQL_PASS: shhh
     volumes:
       - ./bootstrap-tests.sh:/bootstrap-tests.sh
       - ./data:/data
@@ -25,6 +34,9 @@ services:
       MYSQL_HOST: mysql
       MYSQL_USER: root
       MYSQL_PWD: shhh
+      PGSQL_HOST: postgres
+      PGSQL_USER: postgres
+      PGSQL_PASS: shhh
     volumes:
       - ./repo:/repo
       - ./data:/data
@@ -37,6 +49,9 @@ services:
       MYSQL_HOST: mysql
       MYSQL_USER: root
       MYSQL_PWD: shhh
+      PGSQL_HOST: postgres
+      PGSQL_USER: postgres
+      PGSQL_PASS: shhh
     volumes:
       - ./validate-tests.sh:/validate-tests.sh
       - ./data:/data

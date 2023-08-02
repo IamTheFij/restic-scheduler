@@ -92,6 +92,7 @@ func TestJobValidation(t *testing.T) {
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
+				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{},
 			},
 			expectedErr: nil,
@@ -106,6 +107,7 @@ func TestJobValidation(t *testing.T) {
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
+				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{},
 			},
 			expectedErr: main.ErrMissingField,
@@ -120,6 +122,7 @@ func TestJobValidation(t *testing.T) {
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
+				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{},
 			},
 			expectedErr: main.ErrInvalidConfigValue,
@@ -134,6 +137,7 @@ func TestJobValidation(t *testing.T) {
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
+				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{},
 			},
 			expectedErr: main.ErrMutuallyExclusive,
@@ -148,6 +152,7 @@ func TestJobValidation(t *testing.T) {
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
+				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{},
 			},
 			expectedErr: main.ErrMissingField,
@@ -162,6 +167,7 @@ func TestJobValidation(t *testing.T) {
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{{}},
+				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{},
 			},
 			expectedErr: main.ErrMissingField,
@@ -176,6 +182,7 @@ func TestJobValidation(t *testing.T) {
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
+				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{{}},
 			},
 			expectedErr: main.ErrMissingField,
@@ -216,6 +223,7 @@ func TestConfigValidation(t *testing.T) {
 					Tasks:    []main.JobTask{},
 					Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 					MySQL:    []main.JobTaskMySQL{},
+					Postgres: []main.JobTaskPostgres{},
 					Sqlite:   []main.JobTaskSqlite{},
 				}},
 			},
@@ -232,6 +240,7 @@ func TestConfigValidation(t *testing.T) {
 					Tasks:    []main.JobTask{},
 					Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 					MySQL:    []main.JobTaskMySQL{},
+					Postgres: []main.JobTaskPostgres{},
 					Sqlite:   []main.JobTaskSqlite{},
 				}},
 			},
@@ -257,6 +266,7 @@ func TestConfigValidation(t *testing.T) {
 					Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 					Forget:   nil,
 					MySQL:    []main.JobTaskMySQL{},
+					Postgres: []main.JobTaskPostgres{},
 					Sqlite:   []main.JobTaskSqlite{},
 				}},
 			},
@@ -274,6 +284,7 @@ func TestConfigValidation(t *testing.T) {
 					Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 					Forget:   nil,
 					MySQL:    []main.JobTaskMySQL{},
+					Postgres: []main.JobTaskPostgres{},
 					Sqlite:   []main.JobTaskSqlite{},
 				}}},
 			expectedErr: main.ErrMissingField,

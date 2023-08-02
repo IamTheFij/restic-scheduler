@@ -165,6 +165,28 @@ func TestJobTaskSql(t *testing.T) {
 			preRestore:  "",
 			postRestore: "mysql --host host --port 3306 --user user --password=pass db < ./simple.sql",
 		},
+		{
+			name: "psql all",
+			task: main.JobTaskPostgres{
+				Name:          "simple",
+				Hostname:      "host",
+				Port:          6543,
+				Username:      "user",
+				Password:      "pass",
+				Database:      "db",
+				NoTablespaces: true,
+				Create:        true,
+				Clean:         true,
+				Tables:        []string{"table1", "table2"},
+				DumpToPath:    "./simple.sql",
+			},
+			validationErr: nil,
+			preBackup: "pg_dump --file ./simple.sql --host host --port 6543 --username user --no-tablespaces" +
+				" --clean --create --table table1 --table table2 db",
+			postBackup:  "",
+			preRestore:  "",
+			postRestore: "psql --host host --port 6543 --username user db < ./simple.sql",
+		},
 		// Sqlite
 		{
 			name: "sqlite simple",

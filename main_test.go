@@ -52,6 +52,7 @@ func TestRunJobs(t *testing.T) {
 		Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 		Forget:   nil,
 		MySQL:    []main.JobTaskMySQL{},
+		Postgres: []main.JobTaskPostgres{},
 		Sqlite:   []main.JobTaskSqlite{},
 	}
 
