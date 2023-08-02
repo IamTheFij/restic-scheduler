@@ -32,6 +32,10 @@ test:
 	go test -v -coverprofile=coverage.out # -short
 	go tool cover -func=coverage.out
 
+.PHONY: itest
+itest: docker-build
+	./itest/run.sh
+
 # Installs pre-commit hooks
 .PHONY: install-hooks
 install-hooks:
