@@ -20,6 +20,7 @@ dist/
 
 # Built executable
 restic-scheduler
+resticscheduler
 data/
 
 # Itest temp dirs
