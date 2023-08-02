@@ -1,0 +1,35 @@
+---
+version: 3.9
+
+services:
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: shhh
+      MYSQL_DATABASE: main
+
+  bootstrap:
+    image: alpine
+    command: /bootstrap-tests.sh
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PWD: shhh
+    volumes:
+      - ./bootstrap-tests.sh:/bootstrap-tests.sh
+      - ./data:/data
+
+  main:
+    build:
+      context: ..
+    command:
+    volumes:
+      - ./repo:/repo
+      - ./data:/data
+      - ./test-backup.hcl:/test-backup.hcl
+
+  validate:
+    image: alpine
+    command: /validate-tests.sh
+    volumes:
+      ./validate-tests.sh:/validate-tests.sh
