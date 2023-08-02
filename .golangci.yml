@@ -16,7 +16,6 @@ linters:
     - contextcheck
     - cyclop
     - decorder
-    - depguard
     - dupl
     - durationcheck
     - errchkjson
