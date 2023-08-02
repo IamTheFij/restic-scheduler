@@ -163,7 +163,7 @@ func TestJobTaskSql(t *testing.T) {
 				" --user user --password=pass --no-tablespaces db table1 table2",
 			postBackup:  "",
 			preRestore:  "",
-			postRestore: "mysql --host host --user user --password=pass db < ./simple.sql",
+			postRestore: "mysql --host host --port 3306 --user user --password=pass db < ./simple.sql",
 		},
 		// Sqlite
 		{

@@ -160,6 +160,10 @@ func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 		command = append(command, "--host", t.Hostname)
 	}
 
+	if t.Port != 0 {
+		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
+	}
+
 	if t.Username != "" {
 		command = append(command, "--user", t.Username)
 	}
