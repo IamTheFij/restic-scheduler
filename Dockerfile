@@ -18,4 +18,6 @@ ARG TARGETOS
 ARG TARGETARCH
 COPY ./dist/resticscheduler-$TARGETOS-$TARGETARCH /bin/resticscheduler
 
+HEALTHCHECK CMD ["wget", "-O", "-", "http://localhost:8080/health"]
+
 ENTRYPOINT [ "/bin/resticscheduler" ]
