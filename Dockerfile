@@ -9,7 +9,7 @@ RUN apk add --no-cache \
         postgresql15-client~=15 \
         rclone~=1.62 \
         redis~=7 \
-        restic~=0.14 \
+        restic~=0.15 \
         sqlite~=3 \
         tzdata~=2023c \
         ;
