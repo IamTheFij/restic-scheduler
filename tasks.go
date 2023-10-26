@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -403,6 +404,23 @@ func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 func (t BackupFilesTask) RunRestore(cfg TaskConfig) error {
 	if t.RestoreOpts == nil {
 		t.RestoreOpts = &RestoreOpts{} //nolint:exhaustruct
+	}
+
+	// If all backup paths are absolute and target is empty, use root as the restore target
+	if t.RestoreOpts.Target == "" {
+		allAbs := true
+
+		for _, backupPath := range t.Paths {
+			if !path.IsAbs(backupPath) {
+				allAbs = false
+
+				break
+			}
+		}
+
+		if allAbs {
+			t.RestoreOpts.Target = "/"
+		}
 	}
 
 	if t.snapshot == "" {
