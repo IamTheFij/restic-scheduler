@@ -32,6 +32,7 @@ func TestGlobalOptions(t *testing.T) {
 		LimitUpload:       1,
 		VerboseLevel:      1,
 		CleanupCache:      true,
+		InsecureTLS:       true,
 		NoCache:           true,
 		NoLock:            true,
 		Options: map[string]string{
@@ -48,6 +49,7 @@ func TestGlobalOptions(t *testing.T) {
 		"--limit-upload", "1",
 		"--verbose", "1",
 		"--cleanup-cache",
+		"--insecure-tls",
 		"--no-cache",
 		"--no-lock",
 		"--option", "key='a long value'",

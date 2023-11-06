@@ -193,9 +193,10 @@ type ResticGlobalOpts struct {
 	TLSClientCertFile string            `hcl:"TlsClientCertFile,optional"`
 	LimitDownload     int               `hcl:"LimitDownload,optional"`
 	LimitUpload       int               `hcl:"LimitUpload,optional"`
-	Options           map[string]string `hcl:"Options,optional"`
 	VerboseLevel      int               `hcl:"VerboseLevel,optional"`
+	Options           map[string]string `hcl:"Options,optional"`
 	CleanupCache      bool              `hcl:"CleanupCache,optional"`
+	InsecureTLS       bool              `hcl:"InsecureTls,optional"`
 	NoCache           bool              `hcl:"NoCache,optional"`
 	NoLock            bool              `hcl:"NoLock,optional"`
 }
@@ -209,6 +210,7 @@ func (glo ResticGlobalOpts) ToArgs() (args []string) {
 	args = maybeAddArgInt(args, "--limit-upload", glo.LimitUpload)
 	args = maybeAddArgInt(args, "--verbose", glo.VerboseLevel)
 	args = maybeAddArgBool(args, "--cleanup-cache", glo.CleanupCache)
+	args = maybeAddArgBool(args, "--insecure-tls", glo.InsecureTLS)
 	args = maybeAddArgBool(args, "--no-cache", glo.NoCache)
 	args = maybeAddArgBool(args, "--no-lock", glo.NoLock)
 
