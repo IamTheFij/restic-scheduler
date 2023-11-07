@@ -280,8 +280,10 @@ func (j Job) Run() {
 		result.LastError = err
 	} else {
 		Metrics.SnapshotCurrentCount.WithLabelValues(j.Name).Set(float64(len(snapshots)))
-		latestSnapshot := snapshots[len(snapshots)-1]
-		Metrics.SnapshotLatestTime.WithLabelValues(j.Name).Set(float64(latestSnapshot.Time.Unix()))
+		if len(snapshots) > 0 {
+			latestSnapshot := snapshots[len(snapshots)-1]
+			Metrics.SnapshotLatestTime.WithLabelValues(j.Name).Set(float64(latestSnapshot.Time.Unix()))
+		}
 	}
 
 	if result.Success {
