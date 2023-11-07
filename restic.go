@@ -13,7 +13,7 @@ import (
 
 var (
 	ErrRestic       = errors.New("restic error")
-	ErrRepoNotFound = errors.New("repository not found or uninitialized")
+	ErrRepoNotFound = errors.Join(errors.New("repository not found or uninitialized"), ErrRestic)
 )
 
 func lineIn(needle string, haystack []string) bool {
@@ -315,7 +315,7 @@ func (rcmd Restic) RunRestic(
 			responseErr = ErrRepoNotFound
 		}
 
-		return output, NewResticError(command, output.AllLines(), responseErr)
+		return output, NewResticError(command, output.AllLines(), errors.Join(err, responseErr))
 	}
 
 	return output, nil
