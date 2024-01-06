@@ -13,8 +13,10 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-var jobResultsLock = sync.Mutex{}
-var jobResults = map[string]JobResult{}
+var (
+	jobResultsLock = sync.Mutex{}
+	jobResults     = map[string]JobResult{}
+)
 
 type JobResult struct {
 	JobName   string

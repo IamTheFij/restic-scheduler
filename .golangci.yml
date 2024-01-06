@@ -31,10 +31,8 @@ linters:
     - gocognit
     - goconst
     - gocritic
-    # - gocyclo  # Using cyclop
     - godot
-    # - goerr113  # Using errorlint
-    - gofmt
+    - gofumpt
     - goheader
     - goimports
     - gomnd
@@ -44,7 +42,6 @@ linters:
     - gosec
     - grouper
     - importas
-    # - ireturn
     - lll
     - maintidx
     - makezero
@@ -59,11 +56,9 @@ linters:
     - paralleltest
     - prealloc
     - predeclared
-    # - promlinter  # Not common enough
     - revive
     - rowserrcheck
     - sqlclosecheck
-    # - stylecheck  # Using revive
     - tagliatelle
     - tenv
     - testpackage
@@ -71,16 +66,10 @@ linters:
     - tparallel
     - unconvert
     - unparam
-    - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
     - wsl
-
-  disable:
-    - gochecknoglobals
-    - godox
-    - forbidigo
 
 linters-settings:
   gomnd:

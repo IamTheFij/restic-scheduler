@@ -294,7 +294,8 @@ func TestConfigValidation(t *testing.T) {
 					MySQL:    []main.JobTaskMySQL{},
 					Postgres: []main.JobTaskPostgres{},
 					Sqlite:   []main.JobTaskSqlite{},
-				}}},
+				}},
+			},
 			expectedErr: main.ErrMissingField,
 		},
 	}

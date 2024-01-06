@@ -19,7 +19,6 @@ func (m ResticMetrics) PushToGateway(url string) error {
 	err := push.New(url, "batch").
 		Gatherer(m.Registry).
 		Add()
-
 	if err != nil {
 		return fmt.Errorf("error pushing to registry %s: %w", url, err)
 	}

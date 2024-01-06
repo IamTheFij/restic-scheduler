@@ -31,7 +31,6 @@ func TestReadJobs(t *testing.T) {
 	t.Parallel()
 
 	jobs, err := main.ReadJobs([]string{"./test/sample.hcl"})
-
 	if err != nil {
 		t.Errorf("Unexpected error reading jobs: %v", err)
 	}

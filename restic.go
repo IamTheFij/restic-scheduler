@@ -11,8 +11,10 @@ import (
 	"time"
 )
 
-var ErrRestic = errors.New("restic error")
-var ErrRepoNotFound = errors.New("repository not found or uninitialized")
+var (
+	ErrRestic       = errors.New("restic error")
+	ErrRepoNotFound = errors.New("repository not found or uninitialized")
+)
 
 func lineIn(needle string, haystack []string) bool {
 	for _, line := range haystack {

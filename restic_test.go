@@ -237,7 +237,7 @@ func TestResticInterface(t *testing.T) {
 	}
 
 	// Write test file to the data dir
-	err := os.WriteFile(dataFile, []byte("testing"), 0644)
+	err := os.WriteFile(dataFile, []byte("testing"), 0o644)
 	AssertEqualFail(t, "unexpected error writing to test file", nil, err)
 
 	// Make sure no existing repo is found
@@ -297,7 +297,7 @@ func TestResticInterface(t *testing.T) {
 	AssertEqualFail(t, "unexpected error checking repo", nil, err)
 
 	// Change the data file
-	err = os.WriteFile(dataFile, []byte("unexpected"), 0644)
+	err = os.WriteFile(dataFile, []byte("unexpected"), 0o644)
 	AssertEqualFail(t, "unexpected error writing to test file", nil, err)
 
 	// Check that data wrote
