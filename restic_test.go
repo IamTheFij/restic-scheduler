@@ -152,6 +152,20 @@ func TestForgetOpts(t *testing.T) {
 	AssertEqual(t, "args didn't match", expected, args)
 }
 
+func TestUnlockOpts(t *testing.T) {
+	t.Parallel()
+
+	args := main.UnlockOpts{
+		RemoveAll: true,
+	}.ToArgs()
+
+	expected := []string{
+		"--remove-all",
+	}
+
+	AssertEqual(t, "args didn't match", expected, args)
+}
+
 func TestBuildEnv(t *testing.T) {
 	t.Parallel()
 
@@ -299,4 +313,8 @@ func TestResticInterface(t *testing.T) {
 	value, err = os.ReadFile(restoredDataFile)
 	AssertEqualFail(t, "unexpected error reading from test file", nil, err)
 	AssertEqualFail(t, "incorrect value in test file", "testing", string(value))
+
+	// Try to unlock the repo (repo shouldn't really be locked, but this should still run without error
+	err = restic.Unlock(main.UnlockOpts{}) //nolint:exhaustruct
+	AssertEqualFail(t, "unexpected error unlocking repo", nil, err)
 }

@@ -72,6 +72,16 @@ func (NoOpts) ToArgs() []string {
 	return []string{}
 }
 
+type UnlockOpts struct {
+	RemoveAll bool `hcl:"RemoveAll,optional"`
+}
+
+func (uo UnlockOpts) ToArgs() (args []string) {
+	args = maybeAddArgBool(args, "--remove-all", uo.RemoveAll)
+
+	return
+}
+
 type BackupOpts struct {
 	Exclude []string `hcl:"Exclude,optional"`
 	Include []string `hcl:"Include,optional"`
@@ -329,6 +339,12 @@ func (rcmd Restic) Forget(forgetOpts ForgetOpts) error {
 
 func (rcmd Restic) Check() error {
 	_, err := rcmd.RunRestic("check", NoOpts{})
+
+	return err
+}
+
+func (rcmd Restic) Unlock(unlockOpts UnlockOpts) error {
+	_, err := rcmd.RunRestic("unlock", unlockOpts)
 
 	return err
 }

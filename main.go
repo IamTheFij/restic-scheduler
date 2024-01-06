@@ -189,10 +189,32 @@ func runRestoreJobs(jobs []Job, names string, snapshot string) error {
 	return filterJobErr
 }
 
+func runUnlockJobs(jobs []Job, names string) error {
+	if names == "" {
+		return nil
+	}
+
+	namesSlice := strings.Split(names, ",")
+
+	if len(namesSlice) == 0 {
+		return nil
+	}
+
+	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
+	for _, job := range jobs {
+		if err := job.NewRestic().Unlock(UnlockOpts{RemoveAll: true}); err != nil {
+			return err
+		}
+	}
+
+	return filterJobErr
+}
+
 type Flags struct {
 	showVersion        bool
 	backup             string
 	restore            string
+	unlock             string
 	restoreSnapshot    string
 	once               bool
 	healthCheckAddr    string
@@ -204,6 +226,7 @@ func readFlags() Flags {
 	flag.BoolVar(&flags.showVersion, "version", false, "Display the version and exit")
 	flag.StringVar(&flags.backup, "backup", "", "Run backup jobs now. Names are comma separated. `all` will run all.")
 	flag.StringVar(&flags.restore, "restore", "", "Run restore jobs now. Names are comma separated. `all` will run all.")
+	flag.StringVar(&flags.unlock, "unlock", "", "Unlock job repos now. Names are comma separated. `all` will run all.")
 	flag.BoolVar(&flags.once, "once", false, "Run jobs specified using -backup and -restore once and exit")
 	flag.StringVar(&flags.healthCheckAddr, "addr", "0.0.0.0:8080", "address to bind health check API")
 	flag.StringVar(&flags.metricsPushGateway, "push-gateway", "", "url of push gateway service for batch runs (optional)")
@@ -214,7 +237,12 @@ func readFlags() Flags {
 	return flags
 }
 
-func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs, snapshot string) error {
+func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs, unlockJobs, snapshot string) error {
+	// Run specified job unlocks
+	if err := runUnlockJobs(jobs, unlockJobs); err != nil {
+		return fmt.Errorf("Failed running unlock for jobs: %w", err)
+	}
+
 	// Run specified backup jobs
 	if err := runBackupJobs(jobs, backupJobs); err != nil {
 		return fmt.Errorf("Failed running backup jobs: %w", err)
@@ -261,7 +289,7 @@ func main() {
 		log.Fatalf("Failed to read jobs from files: %v", err)
 	}
 
-	if err := runSpecifiedJobs(jobs, flags.backup, flags.restore, flags.restoreSnapshot); err != nil {
+	if err := runSpecifiedJobs(jobs, flags.backup, flags.restore, flags.unlock, flags.restoreSnapshot); err != nil {
 		log.Fatal(err)
 	}
 
