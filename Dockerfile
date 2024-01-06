@@ -11,7 +11,7 @@ RUN apk add --no-cache \
         redis~=7 \
         restic~=0.15 \
         sqlite~=3 \
-        tzdata~=2023c \
+        tzdata~=2023 \
         ;
 
 ARG TARGETOS
