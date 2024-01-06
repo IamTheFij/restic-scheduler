@@ -13,7 +13,7 @@ steps:
       - make test
 
   - name: check
-    image: iamthefij/drone-pre-commit:personal
+    image: iamthefij/drone-pre-commit@sha256:30fa17489b86d7a4c3ad9c3ce2e152c25d82b8671e5609d322c6cae0baed89cd
 
 ---
 kind: pipeline
