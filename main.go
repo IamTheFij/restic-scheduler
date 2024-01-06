@@ -29,8 +29,12 @@ func ParseConfig(path string) ([]Job, error) {
 		Functions: map[string]function.Function{
 			"env": function.New(&function.Spec{
 				Params: []function.Parameter{{
-					Name: "var",
-					Type: cty.String,
+					Name:             "var",
+					Type:             cty.String,
+					AllowNull:        false,
+					AllowUnknown:     false,
+					AllowDynamicType: false,
+					AllowMarked:      false,
 				}},
 				VarParam: nil,
 				Type:     function.StaticReturnType(cty.String),
@@ -40,8 +44,12 @@ func ParseConfig(path string) ([]Job, error) {
 			}),
 			"readfile": function.New(&function.Spec{
 				Params: []function.Parameter{{
-					Name: "path",
-					Type: cty.String,
+					Name:             "path",
+					Type:             cty.String,
+					AllowNull:        false,
+					AllowUnknown:     false,
+					AllowDynamicType: false,
+					AllowMarked:      false,
 				}},
 				VarParam: nil,
 				Type:     function.StaticReturnType(cty.String),
