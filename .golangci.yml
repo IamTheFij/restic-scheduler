@@ -81,16 +81,6 @@ linters:
     - gochecknoglobals
     - godox
     - forbidigo
-    # Deprecated
-    - golint
-    - interfacer
-    - maligned
-    - scopelint
-    - ifshort
-    - varcheck
-    - structcheck
-    - deadcode
-    - exhaustivestruct
 
 linters-settings:
   gomnd:

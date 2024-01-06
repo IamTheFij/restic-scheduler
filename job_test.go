@@ -148,7 +148,9 @@ func TestJobValidation(t *testing.T) {
 				Name:     "Test job",
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
-				Tasks:    []main.JobTask{{}},                             //nolint:exhaustruct
+				Tasks: []main.JobTask{
+					{}, //nolint:exhaustruct
+				},
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
@@ -166,7 +168,9 @@ func TestJobValidation(t *testing.T) {
 				Tasks:    []main.JobTask{},
 				Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
-				MySQL:    []main.JobTaskMySQL{{}}, //nolint:exhaustruct
+				MySQL: []main.JobTaskMySQL{
+					{}, //nolint:exhaustruct
+				},
 				Postgres: []main.JobTaskPostgres{},
 				Sqlite:   []main.JobTaskSqlite{},
 			},
@@ -183,7 +187,9 @@ func TestJobValidation(t *testing.T) {
 				Forget:   nil,
 				MySQL:    []main.JobTaskMySQL{},
 				Postgres: []main.JobTaskPostgres{},
-				Sqlite:   []main.JobTaskSqlite{{}}, //nolint:exhaustruct
+				Sqlite: []main.JobTaskSqlite{
+					{}, //nolint:exhaustruct
+				},
 			},
 			expectedErr: main.ErrMissingField,
 		},
