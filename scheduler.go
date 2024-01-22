@@ -115,9 +115,9 @@ func ScheduleAndRunJobs(jobs []Job) error {
 		defer func() {
 			ctx := scheduler.Stop()
 			<-ctx.Done()
-		}()
 
-		fmt.Println("All jobs successfully stopped")
+			fmt.Println("All jobs successfully stopped")
+		}()
 
 		return nil
 	}
