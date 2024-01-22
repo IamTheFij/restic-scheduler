@@ -117,6 +117,8 @@ func ScheduleAndRunJobs(jobs []Job) error {
 			<-ctx.Done()
 		}()
 
+		fmt.Println("All jobs successfully stopped")
+
 		return nil
 	}
 
