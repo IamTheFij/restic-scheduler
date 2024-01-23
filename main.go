@@ -258,6 +258,8 @@ func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs, unlockJobs, snapshot 
 
 func maybePushMetrics(metricsPushGateway string) error {
 	if metricsPushGateway != "" {
+		fmt.Println("Pushing metrics to push gateway")
+
 		if err := Metrics.PushToGateway(metricsPushGateway); err != nil {
 			return fmt.Errorf("Failed pushing metrics after jobs run: %w", err)
 		}
