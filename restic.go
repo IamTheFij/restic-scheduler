@@ -48,32 +48,41 @@ func maybeAddArgsList(args []string, name string, value []string) []string {
 	return args
 }
 
+// CommandOptions interface dictates a ToArgs() method should return each commandline arg as a string slice.
 type CommandOptions interface {
+	// ToArgs returns the structs arguments as a slice of strings.
 	ToArgs() []string
 }
 
+// GenericOpts allows passing an arbitrary string slice as a set of command line options compatible with CommandOptions.
 type GenericOpts []string
 
+// ToArgs returns the structs arguments as a slice of strings.
 func (o GenericOpts) ToArgs() []string {
 	return o
 }
 
+// NoOpts is a struct that fulfils the CommandOptions interface but provides no arguments.
 type NoOpts struct{}
 
+// ToArgs returns the structs arguments as a slice of strings.
 func (NoOpts) ToArgs() []string {
 	return []string{}
 }
 
+// UnlockOpts holds optional arguments for unlock command.
 type UnlockOpts struct {
 	RemoveAll bool `hcl:"RemoveAll,optional"`
 }
 
+// ToArgs returns the structs arguments as a slice of strings.
 func (uo UnlockOpts) ToArgs() (args []string) {
 	args = maybeAddArgBool(args, "--remove-all", uo.RemoveAll)
 
 	return
 }
 
+// BackupOpts holds optional arguments for the Restic backup command.
 type BackupOpts struct {
 	Exclude []string `hcl:"Exclude,optional"`
 	Include []string `hcl:"Include,optional"`
@@ -81,6 +90,7 @@ type BackupOpts struct {
 	Host    string   `hcl:"Host,optional"`
 }
 
+// ToArgs returns the structs arguments as a slice of strings.
 func (bo BackupOpts) ToArgs() (args []string) {
 	args = maybeAddArgsList(args, "--exclude", bo.Exclude)
 	args = maybeAddArgsList(args, "--include", bo.Include)
@@ -100,6 +110,7 @@ type RestoreOpts struct {
 	Verify  bool     `hcl:"Verify,optional"`
 }
 
+// ToArgs returns the structs arguments as a slice of strings.
 func (ro RestoreOpts) ToArgs() (args []string) {
 	args = maybeAddArgsList(args, "--exclude", ro.Exclude)
 	args = maybeAddArgsList(args, "--include", ro.Include)
@@ -139,6 +150,7 @@ type ForgetOpts struct {
 	Prune bool `hcl:"Prune,optional"`
 }
 
+// ToArgs returns the structs arguments as a slice of strings.
 func (fo ForgetOpts) ToArgs() (args []string) {
 	args = maybeAddArgInt(args, "--keep-last", fo.KeepLast)
 	args = maybeAddArgInt(args, "--keep-hourly", fo.KeepHourly)
@@ -203,6 +215,7 @@ type ResticGlobalOpts struct {
 	NoLock            bool              `hcl:"NoLock,optional"`
 }
 
+// ToArgs returns the structs arguments as a slice of strings.
 func (glo ResticGlobalOpts) ToArgs() (args []string) {
 	args = maybeAddArgString(args, "--cacert", glo.CaCertFile)
 	args = maybeAddArgString(args, "--cache-dir", glo.CacheDir)
