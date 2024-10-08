@@ -16,16 +16,6 @@ var (
 	ErrRepoNotFound = errors.Join(errors.New("repository not found or uninitialized"), ErrRestic)
 )
 
-func lineIn(needle string, haystack []string) bool {
-	for _, line := range haystack {
-		if line == needle {
-			return true
-		}
-	}
-
-	return false
-}
-
 func maybeAddArgString(args []string, name, value string) []string {
 	if value != "" {
 		return append(args, name, value)
