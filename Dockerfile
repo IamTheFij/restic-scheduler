@@ -16,8 +16,8 @@ RUN apk add --no-cache \
 
 ARG TARGETOS
 ARG TARGETARCH
-COPY ./dist/resticscheduler-$TARGETOS-$TARGETARCH /bin/resticscheduler
+COPY ./dist/restic-scheduler-$TARGETOS-$TARGETARCH /bin/restic-scheduler
 
 HEALTHCHECK CMD ["wget", "-O", "-", "http://localhost:8080/health"]
 
-ENTRYPOINT [ "/bin/resticscheduler" ]
+ENTRYPOINT [ "/bin/restic-scheduler" ]

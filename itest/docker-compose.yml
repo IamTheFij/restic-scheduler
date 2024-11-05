@@ -15,7 +15,7 @@ services:
       POSTGRES_DB: main
 
   bootstrap:
-    image: resticscheduler
+    image: restic-scheduler
     entrypoint: /bootstrap-tests.sh
     environment:
       MYSQL_HOST: mysql
@@ -29,7 +29,7 @@ services:
       - ./data:/data
 
   main:
-    image: resticscheduler
+    image: restic-scheduler
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: root
@@ -43,7 +43,7 @@ services:
       - ./test-backup.hcl:/test-backup.hcl
 
   validate:
-    image: resticscheduler
+    image: restic-scheduler
     entrypoint: /validate-tests.sh
     environment:
       MYSQL_HOST: mysql

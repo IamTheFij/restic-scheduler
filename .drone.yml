@@ -65,7 +65,7 @@ steps:
   - name: push images
     image: thegeeklab/drone-docker-buildx
     settings:
-      repo: iamthefij/resticscheduler
+      repo: iamthefij/restic-scheduler
       auto_tag: true
       platforms:
         - linux/amd64

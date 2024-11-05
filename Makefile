@@ -1,4 +1,4 @@
-APP_NAME = resticscheduler
+APP_NAME = restic-scheduler
 VERSION ?= $(shell git describe --tags --dirty)
 GOFILES = *.go
 # Multi-arch targets are generated from this
@@ -54,7 +54,7 @@ clean:
 ## Multi-arch targets
 $(TARGETS): $(GOFILES)
 	mkdir -p ./dist
-	GOOS=$(word 2, $(subst -, ,$(@))) GOARCH=$(word 3, $(subst -, ,$(@))) CGO_ENABLED=0 \
+	GOOS=$(word 3, $(subst -, ,$(@))) GOARCH=$(word 4, $(subst -, ,$(@))) CGO_ENABLED=0 \
 		 go build -ldflags '-X "main.version=$(VERSION)"' -a -installsuffix nocgo \
 		 -o $@
 
