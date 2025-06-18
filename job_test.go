@@ -65,6 +65,7 @@ func TestResticConfigValidate(t *testing.T) {
 
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+
 			actual := testCase.config.Validate()
 
 			if !errors.Is(actual, testCase.expectedErr) {

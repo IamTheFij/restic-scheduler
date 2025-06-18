@@ -7,7 +7,7 @@ import (
 	"github.com/go-test/deep"
 )
 
-func AssertEqual(t *testing.T, message string, expected, actual interface{}) bool {
+func AssertEqual(t *testing.T, message string, expected, actual any) bool {
 	t.Helper()
 
 	if diff := deep.Equal(expected, actual); diff != nil {
@@ -19,7 +19,7 @@ func AssertEqual(t *testing.T, message string, expected, actual interface{}) boo
 	return true
 }
 
-func AssertEqualFail(t *testing.T, message string, expected, actual interface{}) {
+func AssertEqualFail(t *testing.T, message string, expected, actual any) {
 	t.Helper()
 
 	if !AssertEqual(t, message, expected, actual) {
@@ -76,6 +76,7 @@ func TestMergeEnvMap(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
+
 			actual := main.MergeEnvMap(c.parent, c.child)
 			if diff := deep.Equal(c.expected, actual); diff != nil {
 				t.Error(diff)

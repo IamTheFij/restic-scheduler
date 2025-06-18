@@ -46,7 +46,7 @@ func writeJobResult(writer http.ResponseWriter, jobName string) {
 
 		jobResult.Message = jobResult.LastError.Error()
 		if err := json.NewEncoder(writer).Encode(jobResult); err != nil {
-			_, _ = writer.Write([]byte(fmt.Sprintf("failed writing json for %s", jobResult.Format())))
+			_, _ = writer.Write(fmt.Appendf(nil, "failed writing json for %s", jobResult.Format()))
 		}
 
 		writer.Header().Set("Content-Type", "application/json")

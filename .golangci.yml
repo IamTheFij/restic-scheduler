@@ -1,87 +1,52 @@
----
+version: "2"
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - typecheck
-    - unused
-
-    - asciicheck
-    - bidichk
-    - bodyclose
-    - containedctx
-    - contextcheck
-    - cyclop
-    - decorder
-    - dupl
-    - durationcheck
-    - errchkjson
     - errname
     - errorlint
     - exhaustive
-    - exhaustruct
-    - exportloopref
-    - forcetypeassert
-    - funlen
-    - gci
-    - gochecknoinits
-    - gocognit
-    - goconst
-    - gocritic
-    - godot
-    - gofumpt
-    - goheader
-    - goimports
-    - gomnd
-    - gomoddirectives
-    - gomodguard
     - goprintffuncname
-    - gosec
-    - grouper
-    - importas
-    - lll
-    - maintidx
-    - makezero
     - misspell
-    - nakedret
-    - nestif
-    - nilerr
-    - nilnil
-    - nlreturn
-    - noctx
-    - nolintlint
-    - paralleltest
-    - prealloc
-    - predeclared
-    - revive
-    - rowserrcheck
-    - sqlclosecheck
+    - mnd
     - tagliatelle
-    - tenv
     - testpackage
     - thelper
     - tparallel
     - unconvert
-    - unparam
-    - wastedassign
-    - whitespace
     - wrapcheck
     - wsl
-
-linters-settings:
-  gomnd:
-    settings:
-      mnd:
-        ignored-functions: math.*
-
-issues:
-  fix: true
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
-        - funlen
+  disable:
+    - gochecknoglobals
+  settings:
+    gosec:
+      excludes:
+        - G204
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+          yaml: snake
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - gosec
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

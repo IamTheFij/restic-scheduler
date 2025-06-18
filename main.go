@@ -99,7 +99,7 @@ func ReadJobs(paths []string) ([]Job, error) {
 	}
 
 	if len(allJobs) == 0 {
-		return allJobs, fmt.Errorf("No jobs found in provided configuration: %w", ErrJobNotFound)
+		return allJobs, fmt.Errorf("no jobs found in provided configuration: %w", ErrJobNotFound)
 	}
 
 	return allJobs, nil
@@ -240,17 +240,17 @@ func readFlags() Flags {
 func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs, unlockJobs, snapshot string) error {
 	// Run specified job unlocks
 	if err := runUnlockJobs(jobs, unlockJobs); err != nil {
-		return fmt.Errorf("Failed running unlock for jobs: %w", err)
+		return fmt.Errorf("failed running unlock for jobs: %w", err)
 	}
 
 	// Run specified backup jobs
 	if err := runBackupJobs(jobs, backupJobs); err != nil {
-		return fmt.Errorf("Failed running backup jobs: %w", err)
+		return fmt.Errorf("failed running backup jobs: %w", err)
 	}
 
 	// Run specified restore jobs
 	if err := runRestoreJobs(jobs, restoreJobs, snapshot); err != nil {
-		return fmt.Errorf("Failed running restore jobs: %w", err)
+		return fmt.Errorf("failed running restore jobs: %w", err)
 	}
 
 	return nil
@@ -261,7 +261,7 @@ func maybePushMetrics(metricsPushGateway string) error {
 		fmt.Println("Pushing metrics to push gateway")
 
 		if err := Metrics.PushToGateway(metricsPushGateway); err != nil {
-			return fmt.Errorf("Failed pushing metrics after jobs run: %w", err)
+			return fmt.Errorf("failed pushing metrics after jobs run: %w", err)
 		}
 	}
 
