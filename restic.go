@@ -314,7 +314,12 @@ func (rcmd Restic) RunRestic(
 
 	if err := cmd.Run(); err != nil {
 		responseErr := ErrRestic
-		if lineIn("Is there a repository at the following location?", output.Stderr.Lines) {
+
+		// Check to see if the error is due to a missing repository
+		singleLineOutput := strings.Join(output.Stderr.Lines, "\n")
+		repositoryMissingMessage := "Is there a repository at the following location?"
+
+		if strings.Contains(singleLineOutput, repositoryMissingMessage) {
 			responseErr = ErrRepoNotFound
 		}
 
