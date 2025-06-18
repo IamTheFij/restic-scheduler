@@ -201,7 +201,7 @@ func (j Job) RunBackup() error {
 			BackupPaths: backupPaths,
 			Logger:      GetChildLogger(logger, exTask.Name()),
 			Restic:      restic,
-			Env:         nil,
+			Env:         j.Config.Env,
 		}
 
 		if err := exTask.RunBackup(taskCfg); err != nil {
@@ -235,7 +235,7 @@ func (j Job) RunRestore(snapshot string) error {
 			BackupPaths: nil,
 			Logger:      GetChildLogger(logger, exTask.Name()),
 			Restic:      restic,
-			Env:         nil,
+			Env:         j.Config.Env,
 		}
 
 		if backupTask, ok := exTask.(BackupFilesTask); ok {

@@ -4,6 +4,39 @@ job "IntegrationTest" {
   config {
     repo = "/repo"
     passphrase = "shh"
+
+    env = {
+      # Env to validate is usable in tasks
+      hello_prebackup = "Hello"
+      hello_prerestore = "HelloPreRestore"
+    }
+  }
+
+  task "Basic script task" {
+    pre_script {
+      env = {
+        # To verify that this value takes precedence over the config value
+        hello_prebackup = "HelloPreBackup"
+      }
+
+      on_backup = <<EOF
+      echo "$hello_prebackup" > /data/pre-backup.txt
+      EOF
+
+      on_restore = <<EOF
+      echo "$hello_prerestore" > /data/pre-restore.txt
+      echo "Pre" > /data/on-restore.txt
+      EOF
+    }
+
+    post_script {
+      on_backup = <<EOF
+      echo "Hello" > /data/post-backup.txt
+      EOF
+      on_restore = <<EOF
+      echo "Post" >> /data/on-restore.txt
+      EOF
+    }
   }
 
   mysql "MySQL" {

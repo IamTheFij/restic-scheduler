@@ -25,10 +25,10 @@ type ExecutableTask interface {
 
 // JobTaskScript is a sript to be executed as part of a job task.
 type JobTaskScript struct {
-	OnBackup  string `hcl:"on_backup,optional"`
-	OnRestore string `hcl:"on_restore,optional"`
-	Cwd       string `hcl:"cwd,optional"`
-	env       map[string]string
+	OnBackup  string            `hcl:"on_backup,optional"`
+	OnRestore string            `hcl:"on_restore,optional"`
+	Cwd       string            `hcl:"cwd,optional"`
+	Env       map[string]string `hcl:"env,optional"`
 	name      string
 }
 
@@ -37,7 +37,7 @@ func (t JobTaskScript) run(script string, cfg TaskConfig) error {
 		return nil
 	}
 
-	env := MergeEnvMap(cfg.Env, t.env)
+	env := MergeEnvMap(cfg.Env, t.Env)
 	if env == nil {
 		env = map[string]string{}
 	}
@@ -146,7 +146,7 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 
 	return JobTaskScript{
 		name:      t.Name,
-		env:       nil,
+		Env:       nil,
 		Cwd:       ".",
 		OnBackup:  strings.Join(command, " "),
 		OnRestore: "",
@@ -180,7 +180,7 @@ func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 
 	return JobTaskScript{
 		name:      t.Name,
-		env:       nil,
+		Env:       nil,
 		Cwd:       ".",
 		OnBackup:  "",
 		OnRestore: strings.Join(command, " "),
@@ -283,7 +283,7 @@ func (t JobTaskPostgres) GetPreTask() ExecutableTask {
 
 	return JobTaskScript{
 		name:      t.Name,
-		env:       env,
+		Env:       env,
 		Cwd:       ".",
 		OnBackup:  strings.Join(command, " "),
 		OnRestore: "",
@@ -318,7 +318,7 @@ func (t JobTaskPostgres) GetPostTask() ExecutableTask {
 
 	return JobTaskScript{
 		name:      t.Name,
-		env:       env,
+		Env:       env,
 		Cwd:       ".",
 		OnBackup:  "",
 		OnRestore: strings.Join(command, " "),
@@ -360,7 +360,7 @@ func (t JobTaskSqlite) Validate() error {
 func (t JobTaskSqlite) GetPreTask() ExecutableTask {
 	return JobTaskScript{
 		name:      t.Name,
-		env:       nil,
+		Env:       nil,
 		Cwd:       ".",
 		OnBackup:  fmt.Sprintf("sqlite3 '%s' '.backup %s'", t.Path, t.DumpToPath),
 		OnRestore: "",
@@ -370,7 +370,7 @@ func (t JobTaskSqlite) GetPreTask() ExecutableTask {
 func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 	return JobTaskScript{
 		name:      t.Name,
-		env:       nil,
+		Env:       nil,
 		Cwd:       ".",
 		OnBackup:  "",
 		OnRestore: fmt.Sprintf("cp '%s' '%s'", t.DumpToPath, t.Path),
