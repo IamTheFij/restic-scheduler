@@ -10,7 +10,7 @@ rm -fr ./repo/* ./data/*
 sleep 5
 
 echo Boostrap databases and data
-docker-compose up -d mysql postgres
+docker-compose up -d mariadb postgres
 docker-compose run --rm bootstrap
 sleep 1
 
@@ -19,7 +19,7 @@ docker-compose run --rm main -backup IntegrationTest -once /test-backup.hcl
 
 echo Clean data
 docker-compose down -v
-docker-compose up -d mysql postgres
+docker-compose up -d mariadb postgres
 rm -fr ./data/*
 sleep 15
 

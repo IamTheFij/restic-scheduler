@@ -25,10 +25,10 @@ test -f /data/test_database.db
 sqlite3 /data/test_database.db "select data from test_table where id = 1" | grep "^Test row"
 
 # Check MySql database
-until mysql --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" --execute "SHOW DATABASES;"; do
+until mariadb --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" --execute "SHOW DATABASES;"; do
   sleep 1
 done
-mysql --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" main <<EOF | grep "^Test row"
+mariadb --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" main <<EOF | grep "^Test row"
 select data from test_table where id = 1;
 EOF
 

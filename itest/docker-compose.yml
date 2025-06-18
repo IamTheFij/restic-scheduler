@@ -1,6 +1,6 @@
 ---
 services:
-  mysql:
+  mariadb:
     image: mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: shhh
@@ -16,7 +16,7 @@ services:
     image: restic-scheduler
     entrypoint: /bootstrap-tests.sh
     environment:
-      MYSQL_HOST: mysql
+      MYSQL_HOST: mariadb
       MYSQL_USER: root
       MYSQL_PWD: shhh
       PGSQL_HOST: postgres
@@ -29,7 +29,7 @@ services:
   main:
     image: restic-scheduler
     environment:
-      MYSQL_HOST: mysql
+      MYSQL_HOST: mariadb
       MYSQL_USER: root
       MYSQL_PWD: shhh
       PGSQL_HOST: postgres
@@ -44,7 +44,7 @@ services:
     image: restic-scheduler
     entrypoint: /validate-tests.sh
     environment:
-      MYSQL_HOST: mysql
+      MYSQL_HOST: mariadb
       MYSQL_USER: root
       MYSQL_PWD: shhh
       PGSQL_HOST: postgres
