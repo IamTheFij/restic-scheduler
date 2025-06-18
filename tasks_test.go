@@ -132,6 +132,20 @@ func TestJobTaskSql(t *testing.T) {
 			postRestore:   "mysql < ./simple.sql",
 		},
 		{
+			name: "mariadb simple",
+			//nolint:exhaustruct
+			task: main.JobTaskMySQL{
+				Name:       "simple",
+				DumpToPath: "./simple.sql",
+				UseMariaDB: true,
+			},
+			validationErr: nil,
+			preBackup:     "mariadb-dump --result-file ./simple.sql --all-databases",
+			postBackup:    "",
+			preRestore:    "",
+			postRestore:   "mariadb < ./simple.sql",
+		},
+		{
 			name: "mysql tables no database",
 			//nolint:exhaustruct
 			task: main.JobTaskMySQL{

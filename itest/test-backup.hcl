@@ -45,6 +45,7 @@ job "IntegrationTest" {
     username = env("MYSQL_USER")
     password = env("MYSQL_PWD")
     dump_to = "/tmp/mysql.sql"
+    use_mariadb = true
   }
 
   postgres "Postgres" {

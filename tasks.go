@@ -78,6 +78,23 @@ type JobTaskMySQL struct {
 	Tables        []string `hcl:"tables,optional"`
 	NoTablespaces bool     `hcl:"no_tablespaces,optional"`
 	DumpToPath    string   `hcl:"dump_to"`
+	UseMariaDB    bool     `hcl:"use_mariadb,optional"`
+}
+
+func (t JobTaskMySQL) mysqlCommand() string {
+	if t.UseMariaDB {
+		return "mariadb"
+	}
+
+	return "mysql"
+}
+
+func (t JobTaskMySQL) mysqldumpCmd() string {
+	if t.UseMariaDB {
+		return "mariadb-dump"
+	}
+
+	return "mysqldump"
 }
 
 func (t JobTaskMySQL) Paths() []string {
@@ -114,7 +131,7 @@ func (t JobTaskMySQL) Validate() error {
 }
 
 func (t JobTaskMySQL) GetPreTask() ExecutableTask {
-	command := []string{"mysqldump", "--result-file", t.DumpToPath}
+	command := []string{t.mysqldumpCmd(), "--result-file", t.DumpToPath}
 
 	if t.Hostname != "" {
 		command = append(command, "--host", t.Hostname)
@@ -154,7 +171,7 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 }
 
 func (t JobTaskMySQL) GetPostTask() ExecutableTask {
-	command := []string{"mysql"}
+	command := []string{t.mysqlCommand()}
 
 	if t.Hostname != "" {
 		command = append(command, "--host", t.Hostname)
