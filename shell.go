@@ -90,8 +90,9 @@ func RunShell(script string, cwd string, env map[string]string, logger *log.Logg
 	cmd := exec.Command("sh", "-c", strings.TrimSpace(script)) //nolint:gosec
 
 	// Make both stderr and stdout go to logger
-	cmd.Stdout = NewCapturedLogWriter(logger)
-	cmd.Stderr = cmd.Stdout
+	output := NewCapturedCommandLogWriter(logger)
+	cmd.Stdout = output.Stdout
+	cmd.Stderr = output.Stderr
 
 	// Set working directory
 	cmd.Dir = cwd
