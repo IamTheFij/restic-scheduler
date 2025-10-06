@@ -2,6 +2,23 @@ package main
 
 import "fmt"
 
+type Set map[string]bool
+
+func (s Set) Contains(key string) bool {
+	_, contains := s[key]
+
+	return contains
+}
+
+func NewSetFrom(l []string) Set {
+	s := make(Set)
+	for _, l := range l {
+		s[l] = true
+	}
+
+	return s
+}
+
 func MergeEnvMap(parent, child map[string]string) map[string]string {
 	result := map[string]string{}
 

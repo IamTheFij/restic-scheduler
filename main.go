@@ -36,23 +36,6 @@ func ReadJobs(paths []string) ([]Job, error) {
 	return allJobs, nil
 }
 
-type Set map[string]bool
-
-func (s Set) Contains(key string) bool {
-	_, contains := s[key]
-
-	return contains
-}
-
-func NewSetFrom(l []string) Set {
-	s := make(Set)
-	for _, l := range l {
-		s[l] = true
-	}
-
-	return s
-}
-
 // FilterJobs filters a list of jobs by a list of names.
 func FilterJobs(jobs []Job, names []string) ([]Job, error) {
 	nameSet := NewSetFrom(names)
