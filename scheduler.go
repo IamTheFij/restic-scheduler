@@ -39,18 +39,26 @@ func JobComplete(result JobResult) {
 }
 
 func writeJobResult(writer http.ResponseWriter, jobName string) {
+	writer.Header().Set("Content-Type", "application/json")
+
 	if jobResult, ok := jobResults[jobName]; ok {
 		if !jobResult.Success {
+			// Set a 503 status code if the last job run was not successful
 			writer.WriteHeader(http.StatusServiceUnavailable)
 		}
 
-		jobResult.Message = jobResult.LastError.Error()
-		if err := json.NewEncoder(writer).Encode(jobResult); err != nil {
-			_, _ = writer.Write(fmt.Appendf(nil, "failed writing json for %s", jobResult.Format()))
+		// Set message from LastError if available
+		if jobResult.LastError != nil {
+			jobResult.Message = jobResult.LastError.Error()
 		}
 
-		writer.Header().Set("Content-Type", "application/json")
+		// Write the job result as JSON
+		if err := json.NewEncoder(writer).Encode(jobResult); err != nil {
+			// If encoding fails, write an error message
+			_, _ = writer.Write(fmt.Appendf(nil, "failed writing json for %s", jobResult.Format()))
+		}
 	} else {
+		// Job not found
 		writer.WriteHeader(http.StatusNotFound)
 		_, _ = writer.Write([]byte("{\"Message\": \"Unknown job\"}"))
 	}
