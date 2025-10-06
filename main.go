@@ -133,6 +133,7 @@ type Flags struct {
 	once               bool
 	healthCheckAddr    string
 	metricsPushGateway string
+	seedMetrics        bool
 }
 
 func readFlags() Flags {
@@ -145,7 +146,8 @@ func readFlags() Flags {
 	flag.StringVar(&flags.healthCheckAddr, "addr", "0.0.0.0:8080", "address to bind health check API")
 	flag.StringVar(&flags.metricsPushGateway, "push-gateway", "", "url of push gateway service for batch runs (optional)")
 	flag.StringVar(&JobBaseDir, "base-dir", JobBaseDir, "Base dir to create intermediate job files like SQL dumps.")
-	flag.StringVar(&flags.restoreSnapshot, "snapshot", "latest", "the snapshot to restore")
+	flag.StringVar(&flags.restoreSnapshot, "snapshot", "latest", "the snapshot to restore.")
+	flag.BoolVar(&flags.seedMetrics, "seed-metrics", false, "Seed exported metrics before starting by reading latest snapshots.")
 	flag.Parse()
 
 	return flags
@@ -182,6 +184,12 @@ func maybePushMetrics(metricsPushGateway string) error {
 	return nil
 }
 
+func seedMetrics(jobs []Job) {
+	for _, job := range jobs {
+		job.SeedMetrics()
+	}
+}
+
 func main() {
 	flags := readFlags()
 
@@ -216,6 +224,10 @@ func main() {
 		}
 
 		return
+	}
+
+	if flags.seedMetrics {
+		seedMetrics(jobs)
 	}
 
 	go func() {

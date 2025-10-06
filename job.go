@@ -304,6 +304,24 @@ func (j Job) Run() {
 	JobComplete(result)
 }
 
+// SeedMetrics sets exported metrics for this job based on retrieved snapshots.
+// This is useful on first start to ensure that metrics exist for alerting systems
+func (j Job) SeedMetrics() {
+	snapshots, err := j.NewRestic().ReadSnapshots()
+	if err == nil {
+		Metrics.SnapshotCurrentCount.WithLabelValues(j.Name).Set(float64(len(snapshots)))
+
+		if len(snapshots) > 0 {
+			latestSnapshot := snapshots[len(snapshots)-1]
+			snapshotTimestamp := float64(latestSnapshot.Time.Unix())
+			Metrics.JobStartTime.WithLabelValues(j.Name).Set(snapshotTimestamp)
+			Metrics.SnapshotLatestTime.WithLabelValues(j.Name).Set(snapshotTimestamp)
+		}
+	}
+
+	Metrics.JobFailureCount.WithLabelValues(j.Name).Set(0.0)
+}
+
 // NewRestic returns a configured Restic command for this job configuration.
 func (j Job) NewRestic() *Restic {
 	return &Restic{
