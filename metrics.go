@@ -7,6 +7,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/push"
 )
 
+// Metrics is the global metrics registry and collector.
+var Metrics = InitMetrics()
+
+// ResticMetrics contains Prometheus metrics for monitoring restic jobs and snapshots.
 type ResticMetrics struct {
 	JobStartTime         *prometheus.GaugeVec
 	JobFailureCount      *prometheus.GaugeVec
@@ -15,6 +19,7 @@ type ResticMetrics struct {
 	Registry             *prometheus.Registry
 }
 
+// PushToGateway pushes the current metrics to a Prometheus Pushgateway.
 func (m ResticMetrics) PushToGateway(url string) error {
 	err := push.New(url, "batch").
 		Gatherer(m.Registry).
@@ -26,6 +31,7 @@ func (m ResticMetrics) PushToGateway(url string) error {
 	return nil
 }
 
+// InitMetrics initializes and registers Prometheus metrics.
 func InitMetrics() *ResticMetrics {
 	labelNames := []string{"job"}
 
@@ -80,5 +86,3 @@ func InitMetrics() *ResticMetrics {
 
 	return metrics
 }
-
-var Metrics = InitMetrics()
