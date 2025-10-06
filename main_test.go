@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
 	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	"github.com/stretchr/testify/assert"
 )
 
 const MinCoverage = 0.5
@@ -92,9 +92,7 @@ func TestRunJobs(t *testing.T) {
 			t.Parallel()
 
 			jobs, err := main.FilterJobs(testCase.jobs, testCase.names)
-			if !reflect.DeepEqual(jobs, testCase.expected) {
-				t.Errorf("expected %v but found %v", testCase.expected, jobs)
-			}
+			_ = assert.Equal(t, jobs, testCase.expected)
 
 			if !errors.Is(err, testCase.expectedError) {
 				t.Errorf("expected %v but found %v", testCase.expectedError, err)
