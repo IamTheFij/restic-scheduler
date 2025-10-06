@@ -64,7 +64,8 @@ func writeJobResult(writer http.ResponseWriter, jobName string) {
 	}
 }
 
-func healthHandleFunc(writer http.ResponseWriter, request *http.Request) {
+// HealthHandleFunc handles health check requests
+func HealthHandleFunc(writer http.ResponseWriter, request *http.Request) {
 	query := request.URL.Query()
 	if jobName, ok := query["job"]; ok {
 		writeJobResult(writer, jobName[0])
@@ -76,7 +77,7 @@ func healthHandleFunc(writer http.ResponseWriter, request *http.Request) {
 }
 
 func RunHTTPHandlers(addr string) error {
-	http.HandleFunc("/health", healthHandleFunc)
+	http.HandleFunc("/health", HealthHandleFunc)
 	http.Handle("/metrics", promhttp.HandlerFor(
 		Metrics.Registry,
 		promhttp.HandlerOpts{Registry: Metrics.Registry}, //nolint:exhaustruct
