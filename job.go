@@ -232,14 +232,11 @@ func (j Job) RunRestore(snapshot string) error {
 
 	for _, exTask := range j.AllTasks() {
 		taskCfg := TaskConfig{
-			BackupPaths: nil,
-			Logger:      GetChildLogger(logger, exTask.Name()),
-			Restic:      restic,
-			Env:         j.Config.Env,
-		}
-
-		if backupTask, ok := exTask.(BackupFilesTask); ok {
-			backupTask.snapshot = snapshot
+			BackupPaths:     nil,
+			Logger:          GetChildLogger(logger, exTask.Name()),
+			Restic:          restic,
+			Env:             j.Config.Env,
+			RestoreSnapshot: snapshot,
 		}
 
 		if err := exTask.RunRestore(taskCfg); err != nil {
