@@ -281,7 +281,11 @@ func (j Job) Run() {
 
 	snapshots, err := j.NewRestic().ReadSnapshots()
 	if err != nil {
-		result.LastError = err
+		// Set the last error on the result only if an actual backup error doesn't already exist
+		// An error reading snapshots is less severe than a failure to backup.
+		if result.LastError == nil {
+			result.LastError = err
+		}
 	} else {
 		Metrics.SnapshotCurrentCount.WithLabelValues(j.Name).Set(float64(len(snapshots)))
 
