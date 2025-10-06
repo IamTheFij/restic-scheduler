@@ -60,10 +60,12 @@ func (t JobTaskScript) RunRestore(cfg TaskConfig) error {
 	return t.run(t.OnRestore, cfg)
 }
 
+// Name returns the name of this task.
 func (t JobTaskScript) Name() string {
 	return t.name
 }
 
+// SetName sets the name for the task.
 func (t *JobTaskScript) SetName(name string) {
 	t.name = name
 }
@@ -98,10 +100,12 @@ func (t JobTaskMySQL) mysqldumpCmd() string {
 	return "mysqldump"
 }
 
+// Paths returns all paths to be backed up from this task.
 func (t JobTaskMySQL) Paths() []string {
 	return []string{t.DumpToPath}
 }
 
+// Validate ensures that this tasks configuration is valid.
 func (t JobTaskMySQL) Validate() error {
 	if t.DumpToPath == "" {
 		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
@@ -131,6 +135,7 @@ func (t JobTaskMySQL) Validate() error {
 	return nil
 }
 
+// GetPreTask returns an ExecutableTask that should be run before backup.
 func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 	command := []string{t.mysqldumpCmd(), "--result-file", t.DumpToPath}
 
@@ -220,10 +225,12 @@ type JobTaskPostgres struct {
 	Create        bool     `hcl:"create,optional"`
 }
 
+// Paths returns all paths to be backed up from this task.
 func (t JobTaskPostgres) Paths() []string {
 	return []string{t.DumpToPath}
 }
 
+// Validate ensures that this tasks configuration is valid.
 func (t JobTaskPostgres) Validate() error {
 	if t.DumpToPath == "" {
 		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
@@ -253,7 +260,7 @@ func (t JobTaskPostgres) Validate() error {
 	return nil
 }
 
-//nolint:cyclop
+// GetPreTask returns an ExecutableTask that should be run before backup.
 func (t JobTaskPostgres) GetPreTask() ExecutableTask {
 	command := []string{"pg_dump"}
 	if t.Database == "" {
@@ -308,6 +315,7 @@ func (t JobTaskPostgres) GetPreTask() ExecutableTask {
 	}
 }
 
+// GetPostTask returns an ExecutableTask that should be run after backup.
 func (t JobTaskPostgres) GetPostTask() ExecutableTask {
 	command := []string{"psql"}
 
@@ -350,10 +358,12 @@ type JobTaskSqlite struct {
 	DumpToPath string `hcl:"dump_to"`
 }
 
+// Paths returns all paths to be backed up from this task.
 func (t JobTaskSqlite) Paths() []string {
 	return []string{t.DumpToPath}
 }
 
+// Validate ensures that this tasks configuration is valid.
 func (t JobTaskSqlite) Validate() error {
 	if t.DumpToPath == "" {
 		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
@@ -375,6 +385,7 @@ func (t JobTaskSqlite) Validate() error {
 	return nil
 }
 
+// GetPreTask returns an ExecutableTask that should be run before backup.
 func (t JobTaskSqlite) GetPreTask() ExecutableTask {
 	return JobTaskScript{
 		name:      t.Name,
@@ -385,6 +396,7 @@ func (t JobTaskSqlite) GetPreTask() ExecutableTask {
 	}
 }
 
+// GetPostTask returns an ExecutableTask that should be run after backup.
 func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 	return JobTaskScript{
 		name:      t.Name,
@@ -395,6 +407,7 @@ func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 	}
 }
 
+// BackupFilesTask is the main task for executing a backup to a remote.
 type BackupFilesTask struct {
 	Paths       []string     `hcl:"paths"`
 	BackupOpts  *BackupOpts  `hcl:"backup_opts,block"`
@@ -402,6 +415,7 @@ type BackupFilesTask struct {
 	name        string
 }
 
+// RunBackup runs the backup task sending data to the repository.
 func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 	if t.BackupOpts == nil {
 		t.BackupOpts = &BackupOpts{} //nolint:exhaustruct
@@ -417,6 +431,7 @@ func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 	return nil
 }
 
+// RunRestore runs the restore task for the backup, pulling the data from the repository.
 func (t BackupFilesTask) RunRestore(cfg TaskConfig) error {
 	if t.RestoreOpts == nil {
 		t.RestoreOpts = &RestoreOpts{} //nolint:exhaustruct
@@ -436,14 +451,17 @@ func (t BackupFilesTask) RunRestore(cfg TaskConfig) error {
 	return nil
 }
 
+// Name returns the name of this task.
 func (t BackupFilesTask) Name() string {
 	return t.name
 }
 
+// SetName sets the name for the task.
 func (t *BackupFilesTask) SetName(name string) {
 	t.name = name
 }
 
+// Validate ensures that this tasks configuration is valid.
 func (t *BackupFilesTask) Validate() error {
 	if len(t.Paths) == 0 {
 		return fmt.Errorf("backup config doesn't include any paths: %w", ErrInvalidConfigValue)
@@ -462,6 +480,7 @@ type JobTask struct {
 	Sqlite      []JobTaskSqlite   `hcl:"sqlite,block"`
 }
 
+// Validate ensures that this tasks configuration is valid.
 func (t JobTask) Validate() error {
 	// NOTE: Might make task types mutually exclusive because order is confusing even if deterministic
 	if t.Name == "" {
@@ -471,6 +490,7 @@ func (t JobTask) Validate() error {
 	return nil
 }
 
+// GetPreTasks returns all ExecutableTasks that should be run before backup.
 func (t JobTask) GetPreTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
 
@@ -490,6 +510,7 @@ func (t JobTask) GetPreTasks() []ExecutableTask {
 	return allTasks
 }
 
+// GetPostTasks returns all ExecutableTasks that should be run after backup.
 func (t JobTask) GetPostTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
 
