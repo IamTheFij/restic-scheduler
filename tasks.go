@@ -139,24 +139,13 @@ func (t JobTaskMySQL) Validate() error {
 func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 	command := []string{t.mysqldumpCmd(), "--result-file", t.DumpToPath}
 
-	if t.Hostname != "" {
-		command = append(command, "--host", t.Hostname)
-	}
-
-	if t.Port != 0 {
-		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
-	}
-
-	if t.Username != "" {
-		command = append(command, "--user", t.Username)
-	}
+	command = maybeAddArgString(command, "--host", t.Hostname)
+	command = maybeAddArgInt(command, "--port", t.Port)
+	command = maybeAddArgString(command, "--user", t.Username)
+	command = maybeAddArgBool(command, "--no-tablespaces", t.NoTablespaces)
 
 	if t.Password != "" {
 		command = append(command, fmt.Sprintf("--password=%s", t.Password))
-	}
-
-	if t.NoTablespaces {
-		command = append(command, "--no-tablespaces")
 	}
 
 	if t.Database != "" {
@@ -176,20 +165,13 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 	}
 }
 
+// GetPostTask returns an ExecutableTask that should be run after backup.
 func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 	command := []string{t.mysqlCommand()}
 
-	if t.Hostname != "" {
-		command = append(command, "--host", t.Hostname)
-	}
-
-	if t.Port != 0 {
-		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
-	}
-
-	if t.Username != "" {
-		command = append(command, "--user", t.Username)
-	}
+	command = maybeAddArgString(command, "--host", t.Hostname)
+	command = maybeAddArgInt(command, "--port", t.Port)
+	command = maybeAddArgString(command, "--user", t.Username)
 
 	if t.Password != "" {
 		command = append(command, fmt.Sprintf("--password=%s", t.Password))
@@ -268,34 +250,13 @@ func (t JobTaskPostgres) GetPreTask() ExecutableTask {
 	}
 
 	command = append(command, "--file", t.DumpToPath)
-
-	if t.Hostname != "" {
-		command = append(command, "--host", t.Hostname)
-	}
-
-	if t.Port != 0 {
-		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
-	}
-
-	if t.Username != "" {
-		command = append(command, "--username", t.Username)
-	}
-
-	if t.NoTablespaces {
-		command = append(command, "--no-tablespaces")
-	}
-
-	if t.Clean {
-		command = append(command, "--clean")
-	}
-
-	if t.Create {
-		command = append(command, "--create")
-	}
-
-	for _, table := range t.Tables {
-		command = append(command, "--table", table)
-	}
+	command = maybeAddArgString(command, "--host", t.Hostname)
+	command = maybeAddArgInt(command, "--port", t.Port)
+	command = maybeAddArgString(command, "--username", t.Username)
+	command = maybeAddArgBool(command, "--no-tablespaces", t.NoTablespaces)
+	command = maybeAddArgBool(command, "--clean", t.Clean)
+	command = maybeAddArgBool(command, "--create", t.Create)
+	command = maybeAddArgsList(command, "--table", t.Tables)
 
 	if t.Database != "" {
 		command = append(command, t.Database)
@@ -319,17 +280,9 @@ func (t JobTaskPostgres) GetPreTask() ExecutableTask {
 func (t JobTaskPostgres) GetPostTask() ExecutableTask {
 	command := []string{"psql"}
 
-	if t.Hostname != "" {
-		command = append(command, "--host", t.Hostname)
-	}
-
-	if t.Port != 0 {
-		command = append(command, "--port", fmt.Sprintf("%d", t.Port))
-	}
-
-	if t.Username != "" {
-		command = append(command, "--username", t.Username)
-	}
+	command = maybeAddArgString(command, "--host", t.Hostname)
+	command = maybeAddArgInt(command, "--port", t.Port)
+	command = maybeAddArgString(command, "--username", t.Username)
 
 	if t.Database != "" {
 		command = append(command, t.Database)

@@ -41,3 +41,35 @@ func EnvMapToList(envMap map[string]string) []string {
 
 	return envList
 }
+
+func maybeAddArgString(args []string, name, value string) []string {
+	if value != "" {
+		return append(args, name, value)
+	}
+
+	return args
+}
+
+func maybeAddArgInt(args []string, name string, value int) []string {
+	if value > 0 {
+		return append(args, name, fmt.Sprint(value))
+	}
+
+	return args
+}
+
+func maybeAddArgBool(args []string, name string, value bool) []string {
+	if value {
+		return append(args, name)
+	}
+
+	return args
+}
+
+func maybeAddArgsList(args []string, name string, value []string) []string {
+	for _, v := range value {
+		args = append(args, name, v)
+	}
+
+	return args
+}

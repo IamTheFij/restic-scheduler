@@ -16,38 +16,6 @@ var (
 	ErrRepoNotFound = errors.Join(errors.New("repository not found or uninitialized"), ErrRestic)
 )
 
-func maybeAddArgString(args []string, name, value string) []string {
-	if value != "" {
-		return append(args, name, value)
-	}
-
-	return args
-}
-
-func maybeAddArgInt(args []string, name string, value int) []string {
-	if value > 0 {
-		return append(args, name, fmt.Sprint(value))
-	}
-
-	return args
-}
-
-func maybeAddArgBool(args []string, name string, value bool) []string {
-	if value {
-		return append(args, name)
-	}
-
-	return args
-}
-
-func maybeAddArgsList(args []string, name string, value []string) []string {
-	for _, v := range value {
-		args = append(args, name, v)
-	}
-
-	return args
-}
-
 // CommandOptions interface dictates a ToArgs() method should return each commandline arg as a string slice.
 type CommandOptions interface {
 	// ToArgs returns the structs arguments as a slice of strings.
