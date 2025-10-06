@@ -20,7 +20,7 @@ var (
 	JobBaseDir = filepath.Join(os.TempDir(), "restic_scheduler")
 )
 
-// ResticConfig is all configuration to be sent to Restic.
+// ResticConfig is all configuration to be sent to Restic for the job.
 type ResticConfig struct {
 	Repo       string            `hcl:"repo"`
 	Passphrase string            `hcl:"passphrase,optional"`
@@ -28,6 +28,7 @@ type ResticConfig struct {
 	GlobalOpts *ResticGlobalOpts `hcl:"options,block"`
 }
 
+// Validate ensures that the restic configuration is valid and does not contain conflicting values.
 func (r ResticConfig) Validate() error {
 	if r.Passphrase == "" && (r.GlobalOpts == nil || r.GlobalOpts.PasswordFile == "") {
 		return fmt.Errorf(
@@ -46,8 +47,7 @@ func (r ResticConfig) Validate() error {
 	return nil
 }
 
-// Job contains all configuration required to construct and run a backup
-// and restore job.
+// Job contains all configuration required to construct and run a backup and restore job.
 type Job struct {
 	Name     string          `hcl:"name,label"`
 	Schedule string          `hcl:"schedule"`
@@ -96,6 +96,7 @@ func (j Job) validateTasks() error {
 	return nil
 }
 
+// Validate ensures that a Job config and tasks are all valid.
 func (j Job) Validate() error {
 	if j.Name == "" {
 		return fmt.Errorf("job is missing name: %w", ErrMissingField)
@@ -124,6 +125,7 @@ func (j Job) Validate() error {
 	return nil
 }
 
+// AllTasks returns an ordered list of ExecutableTasks associated with the Job.
 func (j Job) AllTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
 
@@ -167,6 +169,7 @@ func (j Job) AllTasks() []ExecutableTask {
 	return allTasks
 }
 
+// BackupPaths returns all paths to backup defined in any tasks contained with the Job.
 func (j Job) BackupPaths() []string {
 	paths := j.Backup.Paths
 
@@ -185,6 +188,7 @@ func (j Job) BackupPaths() []string {
 	return paths
 }
 
+// RunBackup executes the backup for this current Job.
 func (j Job) RunBackup() error {
 	logger := GetLogger(j.Name)
 	restic := j.NewRestic()
@@ -217,10 +221,12 @@ func (j Job) RunBackup() error {
 	return nil
 }
 
+// Logger returns the logger for this job.
 func (j Job) Logger() *log.Logger {
 	return GetLogger(j.Name)
 }
 
+// RunRestore executes a restore of this job for a provided snapshot.
 func (j Job) RunRestore(snapshot string) error {
 	logger := j.Logger()
 	restic := j.NewRestic()
@@ -246,10 +252,12 @@ func (j Job) RunRestore(snapshot string) error {
 	return nil
 }
 
+// Healthy checks if the current job is healthy, returnning a bool and a possible error.
 func (j Job) Healthy() (bool, error) {
 	return j.healthy, j.lastErr
 }
 
+// Run runs the backup job with it's provided configuration.
 func (j Job) Run() {
 	result := JobResult{
 		JobName:   j.Name,
@@ -292,6 +300,7 @@ func (j Job) Run() {
 	JobComplete(result)
 }
 
+// NewRestic returns a configured Restic command for this job configuration.
 func (j Job) NewRestic() *Restic {
 	return &Restic{
 		Logger:     GetLogger(j.Name),
