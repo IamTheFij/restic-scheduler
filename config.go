@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,35 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 )
+
+var ErrNoJobsFound = errors.New("no jobs found and at least one job is required")
+
+// Config is the global configuration for the scheduler containing job configuration.
+type Config struct {
+	DefaultConfig *ResticConfig `hcl:"default_config,block"`
+	Jobs          []Job         `hcl:"job,block"`
+}
+
+// Validate ensures that the scheduler configuration is valid
+func (c Config) Validate() error {
+	if len(c.Jobs) == 0 {
+		return ErrNoJobsFound
+	}
+
+	for _, job := range c.Jobs {
+		// Use default restic config if no job config is provided
+		// TODO: Maybe merge values here
+		if job.Config == nil {
+			job.Config = c.DefaultConfig
+		}
+
+		if err := job.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 func ParseConfig(path string) ([]Job, error) {
 	var config Config

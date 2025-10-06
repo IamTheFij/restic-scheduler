@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	ErrNoJobsFound        = errors.New("no jobs found and at least one job is required")
 	ErrMissingField       = errors.New("missing config field")
 	ErrMutuallyExclusive  = errors.New("mutually exclusive values not valid")
 	ErrInvalidConfigValue = errors.New("invalid config value")
@@ -302,29 +301,4 @@ func (j Job) NewRestic() *Restic {
 		GlobalOpts: j.Config.GlobalOpts,
 		Cwd:        "",
 	}
-}
-
-type Config struct {
-	DefaultConfig *ResticConfig `hcl:"default_config,block"`
-	Jobs          []Job         `hcl:"job,block"`
-}
-
-func (c Config) Validate() error {
-	if len(c.Jobs) == 0 {
-		return ErrNoJobsFound
-	}
-
-	for _, job := range c.Jobs {
-		// Use default restic config if no job config is provided
-		// TODO: Maybe merge values here
-		if job.Config == nil {
-			job.Config = c.DefaultConfig
-		}
-
-		if err := job.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
