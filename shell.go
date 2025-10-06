@@ -14,6 +14,7 @@ var (
 	loggers     = map[string]*log.Logger{}
 )
 
+// GetLogger gets a logger by name or creates one if it doesn't exist yet.
 func GetLogger(name string) *log.Logger {
 	if logger, ok := loggers[name]; ok {
 		return logger
@@ -25,17 +26,20 @@ func GetLogger(name string) *log.Logger {
 	return logger
 }
 
+// GetChildLogger gets a logger appending the name to the parent logger name.
 func GetChildLogger(parent *log.Logger, name string) *log.Logger {
 	childName := fmt.Sprintf("%s%s", parent.Prefix(), name)
 
 	return GetLogger(childName)
 }
 
+// CapturedLogWriter is a writer that stores the written lines in an array.
 type CapturedLogWriter struct {
 	Lines  []string
 	logger *log.Logger
 }
 
+// NewCapturedLogWriter creates a new CapturedLogWriter instance.
 func NewCapturedLogWriter(logger *log.Logger) *CapturedLogWriter {
 	return &CapturedLogWriter{Lines: []string{}, logger: logger}
 }
@@ -62,11 +66,13 @@ func (w CapturedLogWriter) LinesMergedWith(other CapturedLogWriter) []string {
 	return allLines
 }
 
+// CapturedCommandLogWriter houses CapturedLogWriter instances for stderr and stdout.
 type CapturedCommandLogWriter struct {
 	Stdout *CapturedLogWriter
 	Stderr *CapturedLogWriter
 }
 
+// NewCapturedCommandLogWriter creates a new instance of NewCapturedCommandLogWriter wrapping the provided logger.
 func NewCapturedCommandLogWriter(logger *log.Logger) *CapturedCommandLogWriter {
 	return &CapturedCommandLogWriter{
 		Stdout: NewCapturedLogWriter(logger),
@@ -74,10 +80,12 @@ func NewCapturedCommandLogWriter(logger *log.Logger) *CapturedCommandLogWriter {
 	}
 }
 
+// AllLines returns merged output from the log writers.
 func (cclw CapturedCommandLogWriter) AllLines() []string {
 	return cclw.Stdout.LinesMergedWith(*cclw.Stderr)
 }
 
+// RunShell runs a given script string  in a given directory with the provided environment variables and logs to the provided logger.
 func RunShell(script string, cwd string, env map[string]string, logger *log.Logger) error {
 	cmd := exec.Command("sh", "-c", strings.TrimSpace(script)) //nolint:gosec
 
