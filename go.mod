@@ -1,6 +1,6 @@
 module git.iamthefij.com/iamthefij/restic-scheduler
 
-go 1.20
+go 1.25
 
 require (
 	github.com/go-test/deep v1.0.8
