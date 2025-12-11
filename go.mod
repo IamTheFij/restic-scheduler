@@ -3,7 +3,7 @@ module git.iamthefij.com/iamthefij/restic-scheduler
 go 1.25
 
 require (
-	github.com/go-test/deep v1.0.8
+	github.com/go-test/deep v1.1.1
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/robfig/cron/v3 v3.0.1
