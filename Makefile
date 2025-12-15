@@ -53,6 +53,7 @@ clean:
 
 ## Multi-arch targets
 $(TARGETS): $(GOFILES)
+	@echo Version: $(VERSION)
 	mkdir -p ./dist
 	GOOS=$(word 3, $(subst -, ,$(@))) GOARCH=$(word 4, $(subst -, ,$(@))) CGO_ENABLED=0 \
 		 go build -ldflags '-X "main.version=$(VERSION)"' -a -installsuffix nocgo \

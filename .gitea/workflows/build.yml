@@ -58,7 +58,7 @@ jobs:
 
       - name: Build binaries
         env:
-          VERSION: "${{ vars.REF_NAME }}"
+          VERSION: "${{ github.REF_NAME }}"
         run: make all
 
       # Package binaries and create release if this is a tagged build
