@@ -63,12 +63,12 @@ jobs:
 
       # Package binaries and create release if this is a tagged build
       - name: Compress binaries
-        if: "${{ github.event_name == 'tag' }}"
+        if: "${{ github.ref_type == 'tag' }}"
         run: find ./dist -type f -executable -execdir tar -czvf {}.tar.gz {} \;
 
       - name: Upload release
         uses: https://gitea.com/actions/gitea-release-action@v1
-        if: "${{ github.event_name == 'tag' }}"
+        if: "${{ github.ref_type == 'tag' }}"
         with:
           files: |-
             dist/*.tar.gz
