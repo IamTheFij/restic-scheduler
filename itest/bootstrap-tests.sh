@@ -17,10 +17,10 @@ VALUES ("Test row");
 EOF
 
 # Create MySql database
-until mariadb --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" --execute "SHOW DATABASES;"; do
+until mariadb --skip-ssl --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" --execute "SHOW DATABASES;"; do
   sleep 1
 done
-mysql --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" main <<EOF
+mariadb --skip-ssl --host "$MYSQL_HOST" --user "$MYSQL_USER" --password="$MYSQL_PWD" main <<EOF
 CREATE TABLE test_table (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
   data TEXT NOT NULL

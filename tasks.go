@@ -80,6 +80,7 @@ type JobTaskMySQL struct {
 	Password      string   `hcl:"password,optional"`
 	Tables        []string `hcl:"tables,optional"`
 	NoTablespaces bool     `hcl:"no_tablespaces,optional"`
+	SkipSSL       bool     `hcl:"skip_ssl,optional"`
 	DumpToPath    string   `hcl:"dump_to"`
 	UseMariaDB    bool     `hcl:"use_mariadb,optional"`
 }
@@ -139,6 +140,7 @@ func (t JobTaskMySQL) Validate() error {
 func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 	command := []string{t.mysqldumpCmd(), "--result-file", t.DumpToPath}
 
+	command = maybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
 	command = maybeAddArgString(command, "--host", t.Hostname)
 	command = maybeAddArgInt(command, "--port", t.Port)
 	command = maybeAddArgString(command, "--user", t.Username)
@@ -169,6 +171,7 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 	command := []string{t.mysqlCommand()}
 
+	command = maybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
 	command = maybeAddArgString(command, "--host", t.Hostname)
 	command = maybeAddArgInt(command, "--port", t.Port)
 	command = maybeAddArgString(command, "--user", t.Username)

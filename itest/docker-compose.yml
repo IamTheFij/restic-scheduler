@@ -1,13 +1,13 @@
 ---
 services:
   mariadb:
-    image: mariadb:11
+    image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: shhh
       MYSQL_DATABASE: main
 
   postgres:
-    image: postgres:17
+    image: postgres:14
     environment:
       POSTGRES_PASSWORD: shhh
       POSTGRES_DB: main
