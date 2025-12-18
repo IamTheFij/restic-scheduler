@@ -2,15 +2,15 @@ FROM ubuntu:rolling
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        bash \
-        mariadb-client \
-        libmariadb3 \
-        postgresql-client \
-        rclone \
-        redis-tools \
-        restic \
-        sqlite3 \
-        tzdata \
+        'bash=5.*' \
+        'mariadb-client=1:11.*'\
+        'libmariadb3=1:11.*' \
+        'postgresql-client-17=17.*' \
+        'rclone=1.60.*' \
+        'redis-tools=5:8.*' \
+        'restic=0.18.*' \
+        'sqlite3=3.*' \
+        'tzdata=202*' \
     && rm -rf /var/lib/apt/lists/*
 
 ARG TARGETOS
