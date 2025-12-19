@@ -7,7 +7,7 @@ services:
       MYSQL_DATABASE: main
 
   postgres:
-    image: postgres:18
+    image: postgres:14
     environment:
       POSTGRES_PASSWORD: shhh
       POSTGRES_DB: main
