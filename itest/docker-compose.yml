@@ -26,6 +26,19 @@ services:
       - ./bootstrap-tests.sh:/bootstrap-tests.sh
       - ./data:/data
 
+  db-wait:
+    image: restic-scheduler
+    entrypoint: /db-wait.sh
+    environment:
+      MYSQL_HOST: mariadb
+      MYSQL_USER: root
+      MYSQL_PWD: shhh
+      PGSQL_HOST: postgres
+      PGSQL_USER: postgres
+      PGSQL_PASS: shhh
+    volumes:
+      - ./db-wait.sh:/db-wait.sh
+
   main:
     image: restic-scheduler
     environment:

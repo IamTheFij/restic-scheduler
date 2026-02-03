@@ -50,6 +50,7 @@ clean:
 	rm -f ./$(APP_NAME)
 	rm -f ./coverage.out
 	rm -fr ./dist
+	rm -fr ./data/* ./itest/data/* ./itest/repo/*
 
 ## Multi-arch targets
 $(TARGETS): $(GOFILES)
