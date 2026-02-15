@@ -69,7 +69,7 @@ func NewCapturedLogWriter(logger *log.Logger) *CapturedLogWriter {
 // Write writes the provided byte slice to the logger and stores each captured line.
 func (w *CapturedLogWriter) Write(content []byte) (n int, err error) {
 	message := string(content)
-	for _, line := range strings.Split(message, "\n") {
+	for line := range strings.SplitSeq(message, "\n") {
 		w.Lines = append(w.Lines, line)
 		w.logger.Printf(" %s", line)
 	}
