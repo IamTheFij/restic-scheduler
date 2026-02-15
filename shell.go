@@ -7,21 +7,43 @@ import (
 	"os/exec"
 	"sort"
 	"strings"
+	"sync"
 )
 
 var (
 	loggerFlags = log.LstdFlags | log.Lmsgprefix
-	loggers     = map[string]*log.Logger{}
+	loggers     = loggerMap{}
 )
+
+// / loggerMap is a type that allows concurrent access to loggers
+// / using a sync.Map.
+type loggerMap struct {
+	m sync.Map
+}
+
+// store a logger in the sync map
+func (s *loggerMap) store(name string, logger *log.Logger) {
+	s.m.Store(name, logger)
+}
+
+// retrieve a logger from the sync map by name
+func (s *loggerMap) load(name string) (*log.Logger, bool) {
+	x, ok := s.m.Load(name)
+	if !ok || x == nil {
+		return nil, false
+	}
+
+	return x.(*log.Logger), true
+}
 
 // GetLogger gets a logger by name or creates one if it doesn't exist yet.
 func GetLogger(name string) *log.Logger {
-	if logger, ok := loggers[name]; ok {
+	if logger, ok := loggers.load(name); ok {
 		return logger
 	}
 
 	logger := log.New(os.Stderr, name+":", loggerFlags)
-	loggers[name] = logger
+	loggers.store(name, logger)
 
 	return logger
 }
