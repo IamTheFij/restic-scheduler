@@ -222,6 +222,11 @@ func main() {
 		_ = RunHTTPHandlers(flags.healthCheckAddr)
 	}()
 
+	for _, job := range jobs {
+		log.Printf("Refreshing metrics for job %s", job.Name)
+		job.RefreshMetrics()
+	}
+
 	// TODO: Add healthcheck handler using Job.Healthy()
 	if err := ScheduleAndRunJobs(jobs); err != nil {
 		log.Fatalf("failed running jobs: %v", err)

@@ -304,6 +304,22 @@ func (j Job) Run() {
 	JobComplete(result)
 }
 
+// RefreshMetrics updates the metrics for this job by reading the current snapshots from restic.
+func (j Job) RefreshMetrics() {
+	snapshots, err := j.NewRestic().ReadSnapshots()
+	if err != nil {
+		j.Logger().Printf("ERROR: Failed to read snapshots while refreshing metrics: %s", err.Error())
+		return
+	}
+
+	Metrics.SnapshotCurrentCount.WithLabelValues(j.Name).Set(float64(len(snapshots)))
+
+	if len(snapshots) > 0 {
+		latestSnapshot := snapshots[len(snapshots)-1]
+		Metrics.SnapshotLatestTime.WithLabelValues(j.Name).Set(float64(latestSnapshot.Time.Unix()))
+	}
+}
+
 // NewRestic returns a configured Restic command for this job configuration.
 func (j Job) NewRestic() *Restic {
 	return &Restic{
