@@ -1,5 +1,5 @@
 job "IntegrationTest" {
-  schedule = "@daily"
+  schedule = "* * * * *"
 
   config {
     repo = "/repo"

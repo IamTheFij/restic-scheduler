@@ -33,7 +33,8 @@ test:
 
 .PHONY: itest
 itest: docker-build
-	./itest/run.sh
+	./itest/run-once.sh
+	./itest/run-schedule.sh
 
 # Installs pre-commit hooks
 .PHONY: install-hooks

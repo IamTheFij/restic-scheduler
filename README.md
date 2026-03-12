@@ -19,7 +19,7 @@ You can also download the latest release from the [releases page](https://git.ia
 Finally, if you prefer to use Docker, you can run something like the following command:
 
 ```sh
-docker run -v /path/to/config:/config -v /path/to/data:/data iamthefij/restic-scheduler -config /config/jobs.hcl
+docker run -v /path/to/config:/config -v /path/to/data:/data iamthefij/restic-scheduler /config/jobs.hcl
 ```
 
 ### Prerequisites

@@ -41,6 +41,8 @@ services:
 
   main:
     image: restic-scheduler
+    command:
+      - /test-backup.hcl
     environment:
       MYSQL_HOST: mariadb
       MYSQL_USER: root
