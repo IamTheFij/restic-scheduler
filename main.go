@@ -182,13 +182,28 @@ func maybePushMetrics(metricsPushGateway string) error {
 	return nil
 }
 
+// printVersion prints the scheduler version and the restic binary version if installed on the system.
+func printVersion() {
+	fmt.Println("restic-scheduler version:", version)
+	// Also display restic binary version
+	if resticVerOut, err := exec.Command("restic", "version").Output(); err == nil {
+		fmt.Printf("restic binary version: %s\n", strings.TrimSpace(string(resticVerOut)))
+	} else {
+		if _, err := exec.LookPath("restic"); err != nil {
+			fmt.Printf("restic binary version: unknown, restic missing from $PATH")
+			return
+		} else {
+			fmt.Println("failed to get restic binary version:", err)
+		}
+	}
+}
+
 func main() {
 	flags := readFlags()
 
 	// Print version if flag is provided
 	if flags.showVersion {
-		fmt.Println("restic-scheduler version:", version)
-
+		printVersion()
 		return
 	}
 
