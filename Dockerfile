@@ -4,6 +4,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         'bash=5.*' \
         'ca-certificates=*' \
+        'curl=8.*' \
         'mariadb-client=1:11.*'\
         'libmariadb3=1:11.*' \
         'postgresql-client-17=17.*' \
