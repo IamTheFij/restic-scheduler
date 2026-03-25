@@ -38,7 +38,7 @@ test/$(APP_NAME)-linux-$(CURRENT_GOARCH):
 # Build container with itest binary for coverage
 .PHONY: itest-container
 itest-container: test/$(APP_NAME)-linux-$(CURRENT_GOARCH)
-	docker build --build-arg DIST=test --platform=linux/$(CURRENT_GOARCH) . -t $(APP_NAME)-itest
+	docker build --build-arg DIST=test --platform=linux/$(CURRENT_GOARCH) . --tag $(APP_NAME)-itest --target itest
 
 .PHONY: itest
 itest: itest-container
@@ -74,6 +74,10 @@ clean:
 	rm -fr ./dist
 	rm -fr ./data/* ./itest/data/* ./itest/repo/*
 	rm -f ./test/restic-scheduler-*
+
+.PHONY: clean-itest
+clean-itest:
+	./itest/clean-itest.sh
 
 ## Multi-arch targets
 $(TARGETS): $(GOFILES)

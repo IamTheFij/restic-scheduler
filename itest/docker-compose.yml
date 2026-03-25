@@ -14,7 +14,7 @@ services:
 
   bootstrap:
     image: restic-scheduler-itest
-    entrypoint: /bootstrap-tests.sh
+    entrypoint: /itest/bootstrap-tests.sh
     environment:
       MYSQL_HOST: mariadb
       MYSQL_USER: root
@@ -23,12 +23,11 @@ services:
       PGSQL_USER: postgres
       PGSQL_PASS: shhh
     volumes:
-      - ./bootstrap-tests.sh:/bootstrap-tests.sh
       - ./data:/data
 
   db-wait:
     image: restic-scheduler-itest
-    entrypoint: /db-wait.sh
+    entrypoint: /itest/db-wait.sh
     environment:
       MYSQL_HOST: mariadb
       MYSQL_USER: root
@@ -36,8 +35,6 @@ services:
       PGSQL_HOST: postgres
       PGSQL_USER: postgres
       PGSQL_PASS: shhh
-    volumes:
-      - ./db-wait.sh:/db-wait.sh
 
   main:
     image: restic-scheduler-itest
@@ -59,7 +56,7 @@ services:
 
   validate:
     image: restic-scheduler-itest
-    entrypoint: /validate-tests.sh
+    entrypoint: /itest/validate-tests.sh
     environment:
       MYSQL_HOST: mariadb
       MYSQL_USER: root
@@ -68,5 +65,4 @@ services:
       PGSQL_USER: postgres
       PGSQL_PASS: shhh
     volumes:
-      - ./validate-tests.sh:/validate-tests.sh
       - ./data:/data
