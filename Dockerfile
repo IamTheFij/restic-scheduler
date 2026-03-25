@@ -1,4 +1,4 @@
-FROM ubuntu:26.04
+FROM ubuntu:26.04 AS main
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -27,3 +27,6 @@ COPY --from=hashicorp/consul:2.0 /bin/consul /bin/
 HEALTHCHECK CMD ["curl", "--silent", "--show-error", "--fail", "-o", "/dev/null", "http://localhost:8080/health"]
 
 ENTRYPOINT [ "/bin/restic-scheduler" ]
+
+FROM main AS itest
+COPY ./itest /itest
