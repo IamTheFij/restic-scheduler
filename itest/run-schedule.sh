@@ -20,6 +20,9 @@ docker compose up -d main
 # Run for at least 1 minute
 timeout --signal=SIGINT 70s docker compose logs -f main || echo ok
 
+# Check container health
+docker compose ps | grep -q "(healthy)"
+
 echo "Clean data"
 rm -fr ./data/*
 docker compose down -v
