@@ -23,6 +23,6 @@ COPY ./dist/restic-scheduler-$TARGETOS-$TARGETARCH /bin/restic-scheduler
 COPY --from=hashicorp/nomad:1.11 /bin/nomad /bin/
 COPY --from=hashicorp/consul:1.22 /bin/consul /bin/
 
-HEALTHCHECK CMD ["wget", "-O", "-", "http://localhost:8080/health"]
+HEALTHCHECK CMD ["curl", "--silent", "--show-error", "--fail", "-o", "/dev/null", "http://localhost:8080/health"]
 
 ENTRYPOINT [ "/bin/restic-scheduler" ]
