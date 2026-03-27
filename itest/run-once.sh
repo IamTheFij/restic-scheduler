@@ -2,6 +2,8 @@
 set -ex
 
 cd "$(dirname "$0")"
+echo "Running in $(pwd)"
+ls -l
 mkdir -p ./repo ./data
 
 echo "Clean everything"
