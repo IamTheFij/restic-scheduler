@@ -7,7 +7,7 @@ RUN apt-get update && \
         'curl=8.*' \
         'mariadb-client=1:11.*'\
         'libmariadb3=1:11.*' \
-        'postgresql-client-17=17.*' \
+        'postgresql-client-18=18.*' \
         'rclone=1.60.*' \
         'redis-tools=5:8.*' \
         'restic=0.18.*' \
