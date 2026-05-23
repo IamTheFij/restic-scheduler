@@ -5,8 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 var (
@@ -215,7 +218,10 @@ func main() {
 		log.Fatalf("Requires a path to a job file, but found none")
 	}
 
-	jobs, err := ReadJobs(flag.Args())
+	// Capture the job file paths once here in main so reloads use the same input
+	jobPaths := flag.Args()
+
+	jobs, err := ReadJobs(jobPaths)
 	if err != nil {
 		log.Fatalf("Failed to read jobs from files: %v", err)
 	}
@@ -233,8 +239,15 @@ func main() {
 		return
 	}
 
+	// Create scheduler and start it with the initial job set.
+	sched := NewScheduler()
+	if err := sched.Start(jobs); err != nil {
+		log.Fatalf("failed to start scheduler: %v", err)
+	}
+
+	// Start HTTP handlers and provide the scheduler so /active can report live jobs.
 	go func() {
-		_ = RunHTTPHandlers(flags.healthCheckAddr)
+		_ = RunHTTPHandlers(flags.healthCheckAddr, sched)
 	}()
 
 	for _, job := range jobs {
@@ -242,8 +255,48 @@ func main() {
 		job.RefreshMetrics()
 	}
 
-	// TODO: Add healthcheck handler using Job.Healthy()
-	if err := ScheduleAndRunJobs(jobs); err != nil {
-		log.Fatalf("failed running jobs: %v", err)
+	// Main owns signal handling and config reload.
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	for {
+		sig := <-sigCh
+		switch sig {
+		case syscall.SIGHUP:
+			// Reload config and apply via scheduler.ReplaceJobs
+			log.Println("Received SIGHUP; reloading configuration...")
+
+			newJobs, readErr := ReadJobs(jobPaths)
+			if readErr != nil {
+				log.Printf("Failed to reload jobs: %v; keeping existing schedule", readErr)
+				continue
+			}
+
+			// Refresh metrics for the new job set before replacing to populate gauges.
+			for _, j := range newJobs {
+				log.Printf("Refreshing metrics for job %s", j.Name)
+				j.RefreshMetrics()
+			}
+
+			if err := sched.ReplaceJobs(newJobs); err != nil {
+				log.Printf("Failed to apply reloaded jobs: %v; keeping previous schedule", err)
+				continue
+			}
+
+			log.Println("Configuration reload successful")
+
+		case syscall.SIGINT:
+			// Immediate stop: do not wait for running jobs.
+			log.Println("Received SIGINT; stopping immediately")
+			sched.StopNow()
+
+			return
+		case syscall.SIGTERM, syscall.SIGQUIT:
+			// Graceful stop: wait for running jobs to finish.
+			log.Println("Received termination signal; stopping gracefully")
+			sched.StopGraceful()
+
+			return
+		}
 	}
 }
