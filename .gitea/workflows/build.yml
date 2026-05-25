@@ -65,7 +65,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Run Docker build
-        run: make docker-build
+        run: make itest-container
 
   release:
     runs-on: ubuntu-latest

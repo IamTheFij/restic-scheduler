@@ -80,6 +80,15 @@ To bind the health check and Prometheus metrics API to a specific address, use t
 restic-scheduler -addr 0.0.0.0:8080
 ```
 
+### Reloading configuration (SIGHUP)
+- The scheduler supports in-process configuration reloads driven by POSIX signals. When the process receives a `SIGHUP` the program will:
+  1. stop scheduling new runs,
+  2. wait for any currently running jobs to finish,
+  3. re-read the job HCL files the process was started with, and
+  4. start scheduling using the newly loaded job set — all without restarting the process.
+
+- Because reloads are performed in-process (not via a process restart), in-memory metrics and health state (Prometheus gauges and the job health map) are preserved across reloads. This prevents the metric spikes and resets you would see when the process is killed and restarted.
+
 #### Metrics Push Gateway
 
 To specify the URL of a Prometheus push gateway service for batch runs, use the `-push-gateway` flag:

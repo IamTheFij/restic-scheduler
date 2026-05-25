@@ -24,5 +24,8 @@ resticscheduler
 data/
 
 # Itest temp dirs
+coverage/
 itest/data
 itest/repo
+itest/test-backup.hcl.bak
+test/restic-scheduler-*
