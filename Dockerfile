@@ -15,9 +15,10 @@ RUN apt-get update && \
         'tzdata=202*' \
     && rm -rf /var/lib/apt/lists/*
 
+ARG DIST=dist
 ARG TARGETOS
 ARG TARGETARCH
-COPY ./dist/restic-scheduler-$TARGETOS-$TARGETARCH /bin/restic-scheduler
+COPY ./$DIST/restic-scheduler-$TARGETOS-$TARGETARCH /bin/restic-scheduler
 
 # Install nomad
 COPY --from=hashicorp/nomad:2.0 /bin/nomad /bin/

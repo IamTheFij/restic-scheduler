@@ -40,7 +40,7 @@ services:
       - ./db-wait.sh:/db-wait.sh
 
   main:
-    image: restic-scheduler
+    image: restic-scheduler-itest
     command:
       - /test-backup.hcl
     environment:
@@ -50,10 +50,12 @@ services:
       PGSQL_HOST: postgres
       PGSQL_USER: postgres
       PGSQL_PASS: shhh
+      GOCOVERDIR: /coverage
     volumes:
       - ./repo:/repo
       - ./data:/data
       - ./test-backup.hcl:/test-backup.hcl
+      - ../coverage:/coverage
 
   validate:
     image: restic-scheduler

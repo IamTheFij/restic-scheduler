@@ -31,10 +31,29 @@ test:
 	go test -v -coverprofile=coverage.out # -short
 	go tool cover -func=coverage.out
 
+# Itest binary with coverage flag
+test/$(APP_NAME)-linux-$(CURRENT_GOARCH):
+	go build -o test/$(APP_NAME)-linux-$(CURRENT_GOARCH) -cover
+
+# Build container with itest binary for coverage
+.PHONY: itest-container
+itest-container: test/$(APP_NAME)-linux-$(CURRENT_GOARCH)
+	docker build --build-arg DIST=test --platform=linux/$(CURRENT_GOARCH) . -t $(APP_NAME)-itest
+
 .PHONY: itest
-itest: docker-build
+itest: itest-container
+	# Clean coverage dir
+	mkdir -p ./coverage
+	rm ./coverage/*
+	# Run unit tests once so we can combine coverage
+	go test -cover -test.gocoverdir=coverage
+	# Run all itests
 	./itest/run-once.sh
 	./itest/run-schedule.sh
+	./itest/run-config-reload.sh
+	# Generate coverage text
+	go tool covdata textfmt -i coverage/ -o coverage.out
+	go tool cover -func=coverage.out
 
 # Installs pre-commit hooks
 .PHONY: install-hooks
@@ -49,9 +68,10 @@ check:
 .PHONY: clean
 clean:
 	rm -f ./$(APP_NAME)
-	rm -f ./coverage.out
+	rm -fr ./coverage ./coverage.out
 	rm -fr ./dist
 	rm -fr ./data/* ./itest/data/* ./itest/repo/*
+	rm -f ./test/restic-scheduler-*
 
 ## Multi-arch targets
 $(TARGETS): $(GOFILES)
@@ -64,6 +84,3 @@ $(TARGETS): $(GOFILES)
 .PHONY: $(TARGET_ALIAS)
 $(TARGET_ALIAS):
 	$(MAKE) $(addprefix dist/,$@)
-
-docker-build: dist/$(APP_NAME)-linux-$(CURRENT_GOARCH)
-	docker build --platform=linux/$(CURRENT_GOARCH) . -t $(APP_NAME)
