@@ -39,7 +39,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
 
       - run: |
           echo "go_version=$(go version)" >> $GITHUB_ENV
