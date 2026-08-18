@@ -178,16 +178,32 @@ func (j Job) AllTasks() []ExecutableTask {
 func (j Job) BackupPaths() []string {
 	paths := j.Backup.Paths
 
+	// Loop through tasks and extract database backup paths
+	for _, t := range j.Tasks {
+		for _, d := range t.MySQL {
+			paths = append(paths, d.Paths()...)
+		}
+
+		for _, d := range t.Postgres {
+			paths = append(paths, d.Paths()...)
+		}
+
+		for _, d := range t.Sqlite {
+			paths = append(paths, d.Paths()...)
+		}
+	}
+
+	// Loop through legacy database tasks and get their backup paths
 	for _, t := range j.MySQL {
-		paths = append(paths, t.DumpToPath)
+		paths = append(paths, t.Paths()...)
 	}
 
 	for _, t := range j.Postgres {
-		paths = append(paths, t.DumpToPath)
+		paths = append(paths, t.Paths()...)
 	}
 
 	for _, t := range j.Sqlite {
-		paths = append(paths, t.DumpToPath)
+		paths = append(paths, t.Paths()...)
 	}
 
 	return paths
