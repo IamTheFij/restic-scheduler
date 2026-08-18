@@ -419,10 +419,7 @@ func (t *BackupFilesTask) SetName(name string) {
 
 // Validate ensures that this tasks configuration is valid.
 func (t *BackupFilesTask) Validate() error {
-	if len(t.Paths) == 0 {
-		return fmt.Errorf("backup config doesn't include any paths: %w", ErrInvalidConfigValue)
-	}
-
+	// We don't need to validate paths because paths can be added by other tasks dynamically. Instead, we rely on typing here.
 	return nil
 }
 

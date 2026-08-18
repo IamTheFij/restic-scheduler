@@ -122,6 +122,11 @@ func (j Job) Validate() error {
 		return fmt.Errorf("job %s has an invalid backup config: %w", j.Name, err)
 	}
 
+	allBackupPaths := j.BackupPaths()
+	if len(allBackupPaths) == 0 {
+		return fmt.Errorf("job %s has no backup paths defined: %w", j.Name, ErrMissingField)
+	}
+
 	return nil
 }
 
