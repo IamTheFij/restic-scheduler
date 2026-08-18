@@ -13,7 +13,7 @@ services:
       POSTGRES_DB: main
 
   bootstrap:
-    image: restic-scheduler
+    image: restic-scheduler-itest
     entrypoint: /bootstrap-tests.sh
     environment:
       MYSQL_HOST: mariadb
@@ -27,7 +27,7 @@ services:
       - ./data:/data
 
   db-wait:
-    image: restic-scheduler
+    image: restic-scheduler-itest
     entrypoint: /db-wait.sh
     environment:
       MYSQL_HOST: mariadb
@@ -58,7 +58,7 @@ services:
       - ../coverage:/coverage
 
   validate:
-    image: restic-scheduler
+    image: restic-scheduler-itest
     entrypoint: /validate-tests.sh
     environment:
       MYSQL_HOST: mariadb
