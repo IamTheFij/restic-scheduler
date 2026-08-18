@@ -1,4 +1,4 @@
-package main
+package tasks
 
 import (
 	"errors"
@@ -8,6 +8,9 @@ import (
 	"path/filepath"
 
 	"github.com/robfig/cron/v3"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/restic"
+	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
 
 var (
@@ -20,12 +23,25 @@ var (
 	JobBaseDir = filepath.Join(os.TempDir(), "restic_scheduler")
 )
 
+// JobResult is a simple summary of the last run for a job.
+type JobResult struct {
+	JobName   string
+	JobType   string
+	Success   bool
+	LastError error
+	Message   string
+}
+
+func (r JobResult) Format() string {
+	return fmt.Sprintf("%s %s ok? %v\n\n%+v", r.JobName, r.JobType, r.Success, r.LastError)
+}
+
 // ResticConfig is all configuration to be sent to Restic for the job.
 type ResticConfig struct {
-	Repo       string            `hcl:"repo"`
-	Passphrase string            `hcl:"passphrase,optional"`
-	Env        map[string]string `hcl:"env,optional"`
-	GlobalOpts *ResticGlobalOpts `hcl:"options,block"`
+	Repo       string                   `hcl:"repo"`
+	Passphrase string                   `hcl:"passphrase,optional"`
+	Env        map[string]string        `hcl:"env,optional"`
+	GlobalOpts *restic.ResticGlobalOpts `hcl:"options,block"`
 }
 
 // Validate ensures that the restic configuration is valid and does not contain conflicting values.
@@ -49,12 +65,12 @@ func (r ResticConfig) Validate() error {
 
 // Job contains all configuration required to construct and run a backup and restore job.
 type Job struct {
-	Name     string          `hcl:"name,label"`
-	Schedule string          `hcl:"schedule"`
-	Config   *ResticConfig   `hcl:"config,block"`
-	Tasks    []JobTask       `hcl:"task,block"`
-	Backup   BackupFilesTask `hcl:"backup,block"`
-	Forget   *ForgetOpts     `hcl:"forget,block"`
+	Name     string             `hcl:"name,label"`
+	Schedule string             `hcl:"schedule"`
+	Config   *ResticConfig      `hcl:"config,block"`
+	Tasks    []JobTask          `hcl:"task,block"`
+	Backup   BackupFilesTask    `hcl:"backup,block"`
+	Forget   *restic.ForgetOpts `hcl:"forget,block"`
 
 	// Meta Tasks
 	// NOTE: Now that these are also available within a task
@@ -194,11 +210,14 @@ func (j Job) BackupPaths() []string {
 }
 
 // RunBackup executes the backup for this current Job.
-func (j Job) RunBackup() error {
-	logger := GetLogger(j.Name)
+func (j *Job) RunBackup() error {
+	logger := utils.GetLogger(j.Name)
 	restic := j.NewRestic()
 
 	if err := restic.EnsureInit(); err != nil {
+		j.healthy = false
+		j.lastErr = err
+
 		return fmt.Errorf("failed to init restic for job %s: %w", j.Name, err)
 	}
 
@@ -207,18 +226,24 @@ func (j Job) RunBackup() error {
 	for _, exTask := range j.AllTasks() {
 		taskCfg := TaskConfig{
 			BackupPaths: backupPaths,
-			Logger:      GetChildLogger(logger, exTask.Name()),
+			Logger:      utils.GetChildLogger(logger, exTask.Name()),
 			Restic:      restic,
 			Env:         j.Config.Env,
 		}
 
 		if err := exTask.RunBackup(taskCfg); err != nil {
+			j.healthy = false
+			j.lastErr = err
+
 			return fmt.Errorf("failed running job %s: %w", j.Name, err)
 		}
 	}
 
 	if j.Forget != nil {
 		if err := restic.Forget(*j.Forget); err != nil {
+			j.healthy = false
+			j.lastErr = err
+
 			return fmt.Errorf("failed forgetting and pruning job %s: %w", j.Name, err)
 		}
 	}
@@ -228,23 +253,23 @@ func (j Job) RunBackup() error {
 
 // Logger returns the logger for this job.
 func (j Job) Logger() *log.Logger {
-	return GetLogger(j.Name)
+	return utils.GetLogger(j.Name)
 }
 
 // RunRestore executes a restore of this job for a provided snapshot.
 func (j Job) RunRestore(snapshot string) error {
 	logger := j.Logger()
-	restic := j.NewRestic()
+	r := j.NewRestic()
 
-	if _, err := restic.RunRestic("snapshots", NoOpts{}); errors.Is(err, ErrRepoNotFound) {
+	if _, err := r.RunRestic("snapshots", restic.NoOpts{}); errors.Is(err, restic.ErrRepoNotFound) {
 		return fmt.Errorf("no repository or snapshots for job %s: %w", j.Name, err)
 	}
 
 	for _, exTask := range j.AllTasks() {
 		taskCfg := TaskConfig{
 			BackupPaths:     nil,
-			Logger:          GetChildLogger(logger, exTask.Name()),
-			Restic:          restic,
+			Logger:          utils.GetChildLogger(logger, exTask.Name()),
+			Restic:          r,
 			Env:             j.Config.Env,
 			RestoreSnapshot: snapshot,
 		}
@@ -262,73 +287,10 @@ func (j Job) Healthy() (bool, error) {
 	return j.healthy, j.lastErr
 }
 
-// Run runs the backup job with it's provided configuration.
-func (j Job) Run() {
-	result := JobResult{
-		JobName:   j.Name,
-		JobType:   "backup",
-		Success:   true,
-		LastError: nil,
-		Message:   "",
-	}
-
-	Metrics.JobStartTime.WithLabelValues(j.Name).SetToCurrentTime()
-
-	if err := j.RunBackup(); err != nil {
-		j.healthy = false
-		j.lastErr = err
-
-		j.Logger().Printf("ERROR: Backup failed: %s", err.Error())
-
-		result.Success = false
-		result.LastError = err
-	}
-
-	snapshots, err := j.NewRestic().ReadSnapshots()
-	if err != nil {
-		// Set the last error on the result only if an actual backup error doesn't already exist
-		// An error reading snapshots is less severe than a failure to backup.
-		if result.LastError == nil {
-			result.LastError = err
-		}
-	} else {
-		Metrics.SnapshotCurrentCount.WithLabelValues(j.Name).Set(float64(len(snapshots)))
-
-		if len(snapshots) > 0 {
-			latestSnapshot := snapshots[len(snapshots)-1]
-			Metrics.SnapshotLatestTime.WithLabelValues(j.Name).Set(float64(latestSnapshot.Time.Unix()))
-		}
-	}
-
-	if result.Success {
-		Metrics.JobFailureCount.WithLabelValues(j.Name).Set(0.0)
-	} else {
-		Metrics.JobFailureCount.WithLabelValues(j.Name).Inc()
-	}
-
-	JobComplete(result)
-}
-
-// RefreshMetrics updates the metrics for this job by reading the current snapshots from restic.
-func (j Job) RefreshMetrics() {
-	snapshots, err := j.NewRestic().ReadSnapshots()
-	if err != nil {
-		j.Logger().Printf("ERROR: Failed to read snapshots while refreshing metrics: %s", err.Error())
-		return
-	}
-
-	Metrics.SnapshotCurrentCount.WithLabelValues(j.Name).Set(float64(len(snapshots)))
-
-	if len(snapshots) > 0 {
-		latestSnapshot := snapshots[len(snapshots)-1]
-		Metrics.SnapshotLatestTime.WithLabelValues(j.Name).Set(float64(latestSnapshot.Time.Unix()))
-	}
-}
-
 // NewRestic returns a configured Restic command for this job configuration.
-func (j Job) NewRestic() *Restic {
-	return &Restic{
-		Logger:     GetLogger(j.Name),
+func (j Job) NewRestic() *restic.Restic {
+	return &restic.Restic{
+		Logger:     utils.GetLogger(j.Name),
 		Repo:       j.Config.Repo,
 		Env:        j.Config.Env,
 		Passphrase: j.Config.Passphrase,

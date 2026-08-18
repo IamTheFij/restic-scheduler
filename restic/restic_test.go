@@ -1,4 +1,4 @@
-package main_test
+package restic_test
 
 import (
 	"errors"
@@ -8,22 +8,23 @@ import (
 	"testing"
 	"time"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	"git.iamthefij.com/iamthefij/restic-scheduler/restic"
+	utils "git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
 
 func TestNoOpts(t *testing.T) {
 	t.Parallel()
 
-	args := main.NoOpts{}.ToArgs()
+	args := restic.NoOpts{}.ToArgs()
 	expected := []string{}
 
-	AssertEqual(t, "no opts returned some opts", expected, args)
+	utils.AssertEqual(t, "no opts returned some opts", expected, args)
 }
 
 func TestGlobalOptions(t *testing.T) {
 	t.Parallel()
 
-	args := main.ResticGlobalOpts{
+	args := restic.ResticGlobalOpts{
 		CaCertFile:        "file",
 		CacheDir:          "directory",
 		PasswordFile:      "file",
@@ -55,13 +56,13 @@ func TestGlobalOptions(t *testing.T) {
 		"--option", "key='a long value'",
 	}
 
-	AssertEqual(t, "args didn't match", expected, args)
+	utils.AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestBackupOpts(t *testing.T) {
 	t.Parallel()
 
-	args := main.BackupOpts{
+	args := restic.BackupOpts{
 		Exclude: []string{"file1", "file2"},
 		Include: []string{"directory"},
 		Tags:    []string{"thing"},
@@ -76,13 +77,13 @@ func TestBackupOpts(t *testing.T) {
 		"--host", "steve",
 	}
 
-	AssertEqual(t, "args didn't match", expected, args)
+	utils.AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestRestoreOpts(t *testing.T) {
 	t.Parallel()
 
-	args := main.RestoreOpts{
+	args := restic.RestoreOpts{
 		Exclude: []string{"file1", "file2"},
 		Include: []string{"directory"},
 		Host:    []string{"steve"},
@@ -103,13 +104,13 @@ func TestRestoreOpts(t *testing.T) {
 		"--verify",
 	}
 
-	AssertEqual(t, "args didn't match", expected, args)
+	utils.AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestForgetOpts(t *testing.T) {
 	t.Parallel()
 
-	args := main.ForgetOpts{
+	args := restic.ForgetOpts{
 		KeepLast:          1,
 		KeepHourly:        1,
 		KeepDaily:         1,
@@ -122,11 +123,11 @@ func TestForgetOpts(t *testing.T) {
 		KeepWithinWeekly:  1 * time.Second,
 		KeepWithinMonthly: 1 * time.Second,
 		KeepWithinYearly:  1 * time.Second,
-		Tags: []main.TagList{
+		Tags: []restic.TagList{
 			{"thing1", "thing2"},
 			{"otherthing"},
 		},
-		KeepTags: []main.TagList{{"thing"}},
+		KeepTags: []restic.TagList{{"thing"}},
 		Prune:    true,
 	}.ToArgs()
 
@@ -149,13 +150,13 @@ func TestForgetOpts(t *testing.T) {
 		"--prune",
 	}
 
-	AssertEqual(t, "args didn't match", expected, args)
+	utils.AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestUnlockOpts(t *testing.T) {
 	t.Parallel()
 
-	args := main.UnlockOpts{
+	args := restic.UnlockOpts{
 		RemoveAll: true,
 	}.ToArgs()
 
@@ -163,7 +164,7 @@ func TestUnlockOpts(t *testing.T) {
 		"--remove-all",
 	}
 
-	AssertEqual(t, "args didn't match", expected, args)
+	utils.AssertEqual(t, "args didn't match", expected, args)
 }
 
 func TestBuildEnv(t *testing.T) {
@@ -171,24 +172,24 @@ func TestBuildEnv(t *testing.T) {
 
 	cases := []struct {
 		name     string
-		cmd      main.Restic
+		cmd      restic.Restic
 		expected []string
 	}{
 		{
 			name:     "No Env",
-			cmd:      main.Restic{}, //nolint:exhaustruct
+			cmd:      restic.Restic{}, //nolint:exhaustruct
 			expected: os.Environ(),
 		},
 		{
 			name: "SetEnv",
-			cmd: main.Restic{ //nolint:exhaustruct
+			cmd: restic.Restic{ //nolint:exhaustruct
 				Env: map[string]string{"TestKey": "Value"},
 			},
 			expected: append(os.Environ(), "TestKey=Value"),
 		},
 		{
 			name: "SetEnv",
-			cmd: main.Restic{ //nolint:exhaustruct
+			cmd: restic.Restic{ //nolint:exhaustruct
 				Passphrase: "Shhhhhhhh!!",
 			},
 			expected: append(os.Environ(), "RESTIC_PASSWORD=Shhhhhhhh!!"),
@@ -201,7 +202,7 @@ func TestBuildEnv(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			AssertEqual(t, "args didn't match", c.expected, c.cmd.BuildEnv())
+			utils.AssertEqual(t, "args didn't match", c.expected, c.cmd.BuildEnv())
 		})
 	}
 }
@@ -221,13 +222,13 @@ func TestResticInterface(t *testing.T) {
 	dataFile := filepath.Join(dataDir, "test.txt")
 	restoredDataFile := filepath.Join(restoreTarget, dataFile)
 
-	restic := main.Restic{
+	r := restic.Restic{
 		Logger:     log.New(os.Stderr, t.Name()+":", log.Lmsgprefix),
 		Repo:       repoDir,
 		Env:        map[string]string{},
 		Passphrase: "Correct.Horse.Battery.Staple",
 		//nolint:exhaustruct
-		GlobalOpts: &main.ResticGlobalOpts{
+		GlobalOpts: &restic.ResticGlobalOpts{
 			CacheDir: cacheDir,
 			Options: map[string]string{
 				"s3.storage-class": "REDUCED_REDUNDANCY",
@@ -238,83 +239,83 @@ func TestResticInterface(t *testing.T) {
 
 	// Write test file to the data dir
 	err := os.WriteFile(dataFile, []byte("testing"), 0o644)
-	AssertEqualFail(t, "unexpected error writing to test file", nil, err)
+	utils.AssertEqualFail(t, "unexpected error writing to test file", nil, err)
 
 	// Make sure no existing repo is found
-	_, err = restic.ReadSnapshots()
-	if err == nil || !errors.Is(err, main.ErrRepoNotFound) {
-		AssertEqualFail(t, "didn't get expected error for backup", main.ErrRepoNotFound.Error(), err.Error())
+	_, err = r.ReadSnapshots()
+	if err == nil || !errors.Is(err, restic.ErrRepoNotFound) {
+		utils.AssertEqualFail(t, "didn't get expected error for backup", restic.ErrRepoNotFound.Error(), err.Error())
 	}
 
 	// Try to backup when repo is not initialized
-	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) //nolint:exhaustruct
-	if !errors.Is(err, main.ErrRepoNotFound) {
-		AssertEqualFail(t, "unexpected error creating making backup", nil, err)
+	err = r.Backup([]string{dataDir}, restic.BackupOpts{}) //nolint:exhaustruct
+	if !errors.Is(err, restic.ErrRepoNotFound) {
+		utils.AssertEqualFail(t, "unexpected error creating making backup", nil, err)
 	}
 
 	// Init repo
-	err = restic.EnsureInit()
-	AssertEqualFail(t, "unexpected error initializing repo", nil, err)
+	err = r.EnsureInit()
+	utils.AssertEqualFail(t, "unexpected error initializing repo", nil, err)
 
 	// Verify it can be reinitialized with no issues
-	err = restic.EnsureInit()
-	AssertEqualFail(t, "unexpected error reinitializing repo", nil, err)
+	err = r.EnsureInit()
+	utils.AssertEqualFail(t, "unexpected error reinitializing repo", nil, err)
 
 	// Backup for real this time
-	err = restic.Backup([]string{dataDir}, main.BackupOpts{Tags: []string{"test"}}) //nolint:exhaustruct
-	AssertEqualFail(t, "unexpected error creating making backup", nil, err)
+	err = r.Backup([]string{dataDir}, restic.BackupOpts{Tags: []string{"test"}}) //nolint:exhaustruct
+	utils.AssertEqualFail(t, "unexpected error creating making backup", nil, err)
 
 	// Check snapshots
 	expectedHostname, _ := os.Hostname()
-	snapshots, err := restic.ReadSnapshots()
-	AssertEqualFail(t, "unexpected error reading snapshots", nil, err)
-	AssertEqual(t, "unexpected number of snapshots", 1, len(snapshots))
+	snapshots, err := r.ReadSnapshots()
+	utils.AssertEqualFail(t, "unexpected error reading snapshots", nil, err)
+	utils.AssertEqual(t, "unexpected number of snapshots", 1, len(snapshots))
 
-	AssertEqual(t, "unexpected snapshot value: hostname", expectedHostname, snapshots[0].Hostname)
-	AssertEqual(t, "unexpected snapshot value: paths", []string{dataDir}, snapshots[0].Paths)
-	AssertEqual(t, "unexpected snapshot value: tags", []string{"test"}, snapshots[0].Tags)
+	utils.AssertEqual(t, "unexpected snapshot value: hostname", expectedHostname, snapshots[0].Hostname)
+	utils.AssertEqual(t, "unexpected snapshot value: paths", []string{dataDir}, snapshots[0].Paths)
+	utils.AssertEqual(t, "unexpected snapshot value: tags", []string{"test"}, snapshots[0].Tags)
 
 	// Backup again
-	err = restic.Backup([]string{dataDir}, main.BackupOpts{}) //nolint:exhaustruct
-	AssertEqualFail(t, "unexpected error creating making second backup", nil, err)
+	err = r.Backup([]string{dataDir}, restic.BackupOpts{}) //nolint:exhaustruct
+	utils.AssertEqualFail(t, "unexpected error creating making second backup", nil, err)
 
 	// Check for second backup
-	snapshots, err = restic.ReadSnapshots()
-	AssertEqualFail(t, "unexpected error reading second snapshots", nil, err)
-	AssertEqual(t, "unexpected number of snapshots", 2, len(snapshots))
+	snapshots, err = r.ReadSnapshots()
+	utils.AssertEqualFail(t, "unexpected error reading second snapshots", nil, err)
+	utils.AssertEqual(t, "unexpected number of snapshots", 2, len(snapshots))
 
 	// Forget one backup
-	err = restic.Forget(main.ForgetOpts{KeepLast: 1, Prune: true}) //nolint:exhaustruct
-	AssertEqualFail(t, "unexpected error forgetting snapshot", nil, err)
+	err = r.Forget(restic.ForgetOpts{KeepLast: 1, Prune: true}) //nolint:exhaustruct
+	utils.AssertEqualFail(t, "unexpected error forgetting snapshot", nil, err)
 
 	// Check forgotten snapshot
-	snapshots, err = restic.ReadSnapshots()
-	AssertEqualFail(t, "unexpected error reading post forget snapshots", nil, err)
-	AssertEqual(t, "unexpected number of snapshots", 1, len(snapshots))
+	snapshots, err = r.ReadSnapshots()
+	utils.AssertEqualFail(t, "unexpected error reading post forget snapshots", nil, err)
+	utils.AssertEqual(t, "unexpected number of snapshots", 1, len(snapshots))
 
 	// Check restic repo
-	err = restic.Check()
-	AssertEqualFail(t, "unexpected error checking repo", nil, err)
+	err = r.Check()
+	utils.AssertEqualFail(t, "unexpected error checking repo", nil, err)
 
 	// Change the data file
 	err = os.WriteFile(dataFile, []byte("unexpected"), 0o644)
-	AssertEqualFail(t, "unexpected error writing to test file", nil, err)
+	utils.AssertEqualFail(t, "unexpected error writing to test file", nil, err)
 
 	// Check that data wrote
 	value, err := os.ReadFile(dataFile)
-	AssertEqualFail(t, "unexpected error reading from test file", nil, err)
-	AssertEqualFail(t, "incorrect value in test file (we expect the unexpected!)", "unexpected", string(value))
+	utils.AssertEqualFail(t, "unexpected error reading from test file", nil, err)
+	utils.AssertEqualFail(t, "incorrect value in test file (we expect the unexpected!)", "unexpected", string(value))
 
 	// Restore files
-	err = restic.Restore("latest", main.RestoreOpts{Target: restoreTarget}) //nolint:exhaustruct
-	AssertEqualFail(t, "unexpected error restoring latest snapshot", nil, err)
+	err = r.Restore("latest", restic.RestoreOpts{Target: restoreTarget}) //nolint:exhaustruct
+	utils.AssertEqualFail(t, "unexpected error restoring latest snapshot", nil, err)
 
 	// Check restored values
 	value, err = os.ReadFile(restoredDataFile)
-	AssertEqualFail(t, "unexpected error reading from test file", nil, err)
-	AssertEqualFail(t, "incorrect value in test file", "testing", string(value))
+	utils.AssertEqualFail(t, "unexpected error reading from test file", nil, err)
+	utils.AssertEqualFail(t, "incorrect value in test file", "testing", string(value))
 
 	// Try to unlock the repo (repo shouldn't really be locked, but this should still run without error
-	err = restic.Unlock(main.UnlockOpts{}) //nolint:exhaustruct
-	AssertEqualFail(t, "unexpected error unlocking repo", nil, err)
+	err = r.Unlock(restic.UnlockOpts{}) //nolint:exhaustruct
+	utils.AssertEqualFail(t, "unexpected error unlocking repo", nil, err)
 }

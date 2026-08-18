@@ -10,6 +10,12 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/config"
+	"git.iamthefij.com/iamthefij/restic-scheduler/metrics"
+	"git.iamthefij.com/iamthefij/restic-scheduler/restic"
+	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
 
 var (
@@ -18,11 +24,11 @@ var (
 	ErrJobNotFound = errors.New("jobs not found")
 )
 
-func ReadJobs(paths []string) ([]Job, error) {
-	allJobs := []Job{}
+func ReadJobs(paths []string) ([]tasks.Job, error) {
+	allJobs := []tasks.Job{}
 
 	for _, path := range paths {
-		jobs, err := ParseConfig(path)
+		jobs, err := config.ParseConfig(path)
 		if err != nil {
 			return nil, err
 		}
@@ -40,13 +46,13 @@ func ReadJobs(paths []string) ([]Job, error) {
 }
 
 // FilterJobs filters a list of jobs by a list of names.
-func FilterJobs(jobs []Job, names []string) ([]Job, error) {
-	nameSet := NewSetFrom(names)
+func FilterJobs(jobs []tasks.Job, names []string) ([]tasks.Job, error) {
+	nameSet := utils.NewSetFrom(names)
 	if nameSet.Contains("all") {
 		return jobs, nil
 	}
 
-	filteredJobs := []Job{}
+	filteredJobs := []tasks.Job{}
 
 	for _, job := range jobs {
 		if nameSet.Contains(job.Name) {
@@ -64,7 +70,7 @@ func FilterJobs(jobs []Job, names []string) ([]Job, error) {
 	return filteredJobs, err
 }
 
-func runBackupJobs(jobs []Job, names string) error {
+func runBackupJobs(jobs []tasks.Job, names string) error {
 	if names == "" {
 		return nil
 	}
@@ -85,7 +91,7 @@ func runBackupJobs(jobs []Job, names string) error {
 	return filterJobErr
 }
 
-func runRestoreJobs(jobs []Job, names string, snapshot string) error {
+func runRestoreJobs(jobs []tasks.Job, names string, snapshot string) error {
 	if names == "" {
 		return nil
 	}
@@ -106,7 +112,7 @@ func runRestoreJobs(jobs []Job, names string, snapshot string) error {
 	return filterJobErr
 }
 
-func runUnlockJobs(jobs []Job, names string) error {
+func runUnlockJobs(jobs []tasks.Job, names string) error {
 	if names == "" {
 		return nil
 	}
@@ -119,7 +125,7 @@ func runUnlockJobs(jobs []Job, names string) error {
 
 	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
 	for _, job := range jobs {
-		if err := job.NewRestic().Unlock(UnlockOpts{RemoveAll: true}); err != nil {
+		if err := job.NewRestic().Unlock(restic.UnlockOpts{RemoveAll: true}); err != nil {
 			return err
 		}
 	}
@@ -147,14 +153,14 @@ func readFlags() Flags {
 	flag.BoolVar(&flags.once, "once", false, "Run jobs specified using -backup and -restore once and exit")
 	flag.StringVar(&flags.healthCheckAddr, "addr", "0.0.0.0:8080", "address to bind health check API")
 	flag.StringVar(&flags.metricsPushGateway, "push-gateway", "", "url of push gateway service for batch runs (optional)")
-	flag.StringVar(&JobBaseDir, "base-dir", JobBaseDir, "Base dir to create intermediate job files like SQL dumps.")
+	// flag.StringVar(&JobBaseDir, "base-dir", JobBaseDir, "Base dir to create intermediate job files like SQL dumps.")
 	flag.StringVar(&flags.restoreSnapshot, "snapshot", "latest", "the snapshot to restore")
 	flag.Parse()
 
 	return flags
 }
 
-func runSpecifiedJobs(jobs []Job, backupJobs, restoreJobs, unlockJobs, snapshot string) error {
+func runSpecifiedJobs(jobs []tasks.Job, backupJobs, restoreJobs, unlockJobs, snapshot string) error {
 	// Run specified job unlocks
 	if err := runUnlockJobs(jobs, unlockJobs); err != nil {
 		return fmt.Errorf("failed running unlock for jobs: %w", err)
@@ -177,7 +183,7 @@ func maybePushMetrics(metricsPushGateway string) error {
 	if metricsPushGateway != "" {
 		fmt.Println("Pushing metrics to push gateway")
 
-		if err := Metrics.PushToGateway(metricsPushGateway); err != nil {
+		if err := metrics.Metrics.PushToGateway(metricsPushGateway); err != nil {
 			return fmt.Errorf("failed pushing metrics after jobs run: %w", err)
 		}
 	}
@@ -250,8 +256,8 @@ func main() {
 		_ = RunHTTPHandlers(flags.healthCheckAddr, sched)
 	}()
 
-	for _, job := range jobs {
-		log.Printf("Refreshing metrics for job %s", job.Name)
+	for _, job := range sched.jobs {
+		log.Printf("Refreshing metrics for job %s", job.job.Name)
 		job.RefreshMetrics()
 	}
 
@@ -272,15 +278,15 @@ func main() {
 				continue
 			}
 
-			// Refresh metrics for the new job set before replacing to populate gauges.
-			for _, j := range newJobs {
-				log.Printf("Refreshing metrics for job %s", j.Name)
-				j.RefreshMetrics()
-			}
-
 			if err := sched.ReplaceJobs(newJobs); err != nil {
 				log.Printf("Failed to apply reloaded jobs: %v; keeping previous schedule", err)
 				continue
+			}
+
+			// Refresh metrics after replacing to populate metrics for new jobs
+			for _, job := range sched.jobs {
+				log.Printf("Refreshing metrics for job %s", job.job.Name)
+				job.RefreshMetrics()
 			}
 
 			log.Println("Configuration reload successful")

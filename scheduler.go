@@ -9,6 +9,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron/v3"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/metrics"
+	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
 )
 
 // In-memory job result storage (shared across scheduler instances)
@@ -17,11 +20,75 @@ var (
 	jobResults     = map[string]JobResult{}
 )
 
+type ScheduledJob struct {
+	job tasks.Job
+}
+
+// Run runs the backup job with it's provided configuration.
+func (j ScheduledJob) Run() {
+	result := JobResult{
+		JobName:   j.job.Name,
+		JobType:   "backup",
+		Success:   true,
+		LastError: nil,
+		Message:   "",
+	}
+
+	metrics.Metrics.JobStartTime.WithLabelValues(j.job.Name).SetToCurrentTime()
+
+	if err := j.job.RunBackup(); err != nil {
+		j.job.Logger().Printf("ERROR: Backup failed: %s", err.Error())
+
+		result.Success = false
+		result.LastError = err
+	}
+
+	snapshots, err := j.job.NewRestic().ReadSnapshots()
+	if err != nil {
+		// Set the last error on the result only if an actual backup error doesn't already exist
+		// An error reading snapshots is less severe than a failure to backup.
+		if result.LastError == nil {
+			result.LastError = err
+		}
+	} else {
+		metrics.Metrics.SnapshotCurrentCount.WithLabelValues(j.job.Name).Set(float64(len(snapshots)))
+
+		if len(snapshots) > 0 {
+			latestSnapshot := snapshots[len(snapshots)-1]
+			metrics.Metrics.SnapshotLatestTime.WithLabelValues(j.job.Name).Set(float64(latestSnapshot.Time.Unix()))
+		}
+	}
+
+	if result.Success {
+		metrics.Metrics.JobFailureCount.WithLabelValues(j.job.Name).Set(0.0)
+	} else {
+		metrics.Metrics.JobFailureCount.WithLabelValues(j.job.Name).Inc()
+	}
+
+	JobComplete(result)
+}
+
+// RefreshMetrics updates the metrics for this job by reading the current snapshots from restic.
+func (j ScheduledJob) RefreshMetrics() {
+	snapshots, err := j.job.NewRestic().ReadSnapshots()
+	if err != nil {
+		j.job.Logger().Printf("ERROR: Failed to read snapshots while refreshing metrics: %s", err.Error())
+		return
+	}
+
+	metrics.Metrics.SnapshotCurrentCount.WithLabelValues(j.job.Name).Set(float64(len(snapshots)))
+
+	if len(snapshots) > 0 {
+		latestSnapshot := snapshots[len(snapshots)-1]
+		metrics.Metrics.SnapshotLatestTime.WithLabelValues(j.job.Name).Set(float64(latestSnapshot.Time.Unix()))
+	}
+}
+
 // Scheduler manages a cron instance and a set of scheduled jobs.
 type Scheduler struct {
 	mu       sync.Mutex
 	cron     *cron.Cron
-	jobs     []Job
+	jobs     []ScheduledJob
 	jobNames []string
 	started  bool
 }
@@ -34,9 +101,14 @@ func NewScheduler() *Scheduler {
 // Start schedules the provided jobs and starts the internal cron instance.
 // It returns an error if scheduling any job fails. If the scheduler is already
 // started, Start will return an error.
-func (s *Scheduler) Start(jobs []Job) error {
+func (s *Scheduler) Start(jobs []tasks.Job) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	var schedJobs []ScheduledJob
+	for _, job := range jobs {
+		schedJobs = append(schedJobs, ScheduledJob{job: job})
+	}
 
 	if s.started {
 		return fmt.Errorf("scheduler already started")
@@ -45,21 +117,21 @@ func (s *Scheduler) Start(jobs []Job) error {
 	c := cron.New()
 	names := make([]string, 0, len(jobs))
 
-	for _, job := range jobs {
-		log.Printf("Scheduling %s", job.Name)
+	for _, sj := range schedJobs {
+		log.Printf("Scheduling %s", sj.job.Name)
 
-		if _, err := c.AddJob(job.Schedule, job); err != nil {
-			return fmt.Errorf("error scheduling job %s: %w", job.Name, err)
+		if _, err := c.AddJob(sj.job.Schedule, sj); err != nil {
+			return fmt.Errorf("error scheduling job %s: %w", sj.job.Name, err)
 		}
 
-		names = append(names, job.Name)
+		names = append(names, sj.job.Name)
 	}
 
 	// start the scheduler
 	c.Start()
 
 	s.cron = c
-	s.jobs = jobs
+	s.jobs = schedJobs
 	s.jobNames = names
 	s.started = true
 
@@ -68,11 +140,14 @@ func (s *Scheduler) Start(jobs []Job) error {
 
 // ReplaceJobs stops the current scheduler (waiting for in-flight jobs to finish)
 // and starts a new scheduler with newJobs. This is a graceful replacement.
-func (s *Scheduler) ReplaceJobs(newJobs []Job) error {
+func (s *Scheduler) ReplaceJobs(newJobs []tasks.Job) error {
 	// Swap out safely: stop old cron and wait for running jobs to finish.
 	s.mu.Lock()
 	// Keep a snapshot of previous jobs for potential fallback (caller may handle)
-	prevJobs := s.jobs
+	var prevJobs []tasks.Job
+	for _, job := range s.jobs {
+		prevJobs = append(prevJobs, job.job)
+	}
 	s.mu.Unlock()
 
 	s.StopGraceful()
@@ -225,8 +300,8 @@ func ActiveHandleFunc(writer http.ResponseWriter, request *http.Request, names [
 func RunHTTPHandlers(addr string, sched *Scheduler) error {
 	http.HandleFunc("/health", HealthHandleFunc)
 	http.Handle("/metrics", promhttp.HandlerFor(
-		Metrics.Registry,
-		promhttp.HandlerOpts{Registry: Metrics.Registry}, //nolint:exhaustruct
+		metrics.Metrics.Registry,
+		promhttp.HandlerOpts{Registry: metrics.Metrics.Registry}, //nolint:exhaustruct
 	))
 
 	// active handler closure

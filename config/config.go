@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"errors"
@@ -11,14 +11,16 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
 )
 
 var ErrNoJobsFound = errors.New("no jobs found and at least one job is required")
 
 // Config is the global configuration for the scheduler containing job configuration.
 type Config struct {
-	DefaultConfig *ResticConfig `hcl:"default_config,block"`
-	Jobs          []Job         `hcl:"job,block"`
+	DefaultConfig *tasks.ResticConfig `hcl:"default_config,block"`
+	Jobs          []tasks.Job         `hcl:"job,block"`
 }
 
 // Validate ensures that the scheduler configuration is valid
@@ -42,7 +44,7 @@ func (c Config) Validate() error {
 	return nil
 }
 
-func ParseConfig(path string) ([]Job, error) {
+func ParseConfig(path string) ([]tasks.Job, error) {
 	var config Config
 
 	ctx := hcl.EvalContext{
@@ -93,7 +95,7 @@ func ParseConfig(path string) ([]Job, error) {
 	if len(config.Jobs) == 0 {
 		log.Printf("%s: No jobs defined in file", path)
 
-		return []Job{}, nil
+		return []tasks.Job{}, nil
 	}
 
 	for _, job := range config.Jobs {

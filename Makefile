@@ -28,7 +28,7 @@ build: $(APP_NAME)
 # Run all tests
 .PHONY: test
 test:
-	go test -v -coverprofile=coverage.out # -short
+	go test -v -coverpkg=./... -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 
 # Itest binary with coverage flag
@@ -44,9 +44,11 @@ itest-container: test/$(APP_NAME)-linux-$(CURRENT_GOARCH)
 itest: itest-container
 	# Clean coverage dir
 	mkdir -p ./coverage
+	# Add empty file so glob won't fail if dir didn't exist
+	touch ./coverage/empty
 	rm ./coverage/*
 	# Run unit tests once so we can combine coverage
-	go test -cover -test.gocoverdir=coverage
+	go test -cover -test.gocoverdir=coverage ./...
 	# Run all itests
 	./itest/run-once.sh
 	./itest/run-schedule.sh

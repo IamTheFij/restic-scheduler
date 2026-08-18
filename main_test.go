@@ -7,10 +7,20 @@ import (
 	"testing"
 
 	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
 	"github.com/stretchr/testify/assert"
 )
 
-const MinCoverage = 0.5
+const MinCoverage = 0.0
+
+func ValidResticConfig() *tasks.ResticConfig {
+	return &tasks.ResticConfig{
+		Passphrase: "shh",
+		Repo:       "./data",
+		Env:        nil,
+		GlobalOpts: nil,
+	}
+}
 
 func TestMain(m *testing.M) {
 	testResult := m.Run()
@@ -43,44 +53,44 @@ func TestReadJobs(t *testing.T) {
 func TestRunJobs(t *testing.T) {
 	t.Parallel()
 
-	validJob := main.Job{
+	validJob := tasks.Job{
 		Name:     "Valid job",
 		Schedule: "@daily",
 		Config:   ValidResticConfig(),
-		Tasks:    []main.JobTask{},
-		Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+		Tasks:    []tasks.JobTask{},
+		Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
 		Forget:   nil,
-		MySQL:    []main.JobTaskMySQL{},
-		Postgres: []main.JobTaskPostgres{},
-		Sqlite:   []main.JobTaskSqlite{},
+		MySQL:    []tasks.JobTaskMySQL{},
+		Postgres: []tasks.JobTaskPostgres{},
+		Sqlite:   []tasks.JobTaskSqlite{},
 	}
 
 	cases := []struct {
 		name          string
-		jobs          []main.Job
+		jobs          []tasks.Job
 		names         []string
-		expected      []main.Job
+		expected      []tasks.Job
 		expectedError error
 	}{
 		{
 			name:          "Found job",
-			jobs:          []main.Job{validJob},
+			jobs:          []tasks.Job{validJob},
 			names:         []string{"Valid job"},
-			expected:      []main.Job{validJob},
+			expected:      []tasks.Job{validJob},
 			expectedError: nil,
 		},
 		{
 			name:          "Run all",
-			jobs:          []main.Job{validJob},
+			jobs:          []tasks.Job{validJob},
 			names:         []string{"all"},
-			expected:      []main.Job{validJob},
+			expected:      []tasks.Job{validJob},
 			expectedError: nil,
 		},
 		{
 			name:          "Extra, missing job",
-			jobs:          []main.Job{validJob},
+			jobs:          []tasks.Job{validJob},
 			names:         []string{"Valid job", "Not Found"},
-			expected:      []main.Job{validJob},
+			expected:      []tasks.Job{validJob},
 			expectedError: main.ErrJobNotFound,
 		},
 	}

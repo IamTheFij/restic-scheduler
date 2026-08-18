@@ -1,31 +1,12 @@
-package main_test
+package utils_test
 
 import (
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
 	"github.com/go-test/deep"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
-
-func AssertEqual(t *testing.T, message string, expected, actual any) bool {
-	t.Helper()
-
-	if diff := deep.Equal(expected, actual); diff != nil {
-		t.Errorf("%s: %v", message, diff)
-
-		return false
-	}
-
-	return true
-}
-
-func AssertEqualFail(t *testing.T, message string, expected, actual any) {
-	t.Helper()
-
-	if !AssertEqual(t, message, expected, actual) {
-		t.FailNow()
-	}
-}
 
 func TestMergeEnvMap(t *testing.T) {
 	t.Parallel()
@@ -77,7 +58,7 @@ func TestMergeEnvMap(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			actual := main.MergeEnvMap(c.parent, c.child)
+			actual := utils.MergeEnvMap(c.parent, c.child)
 			if diff := deep.Equal(c.expected, actual); diff != nil {
 				t.Error(diff)
 			}
@@ -94,7 +75,7 @@ func TestEnvMapToList(t *testing.T) {
 	expected := []string{
 		"key=value",
 	}
-	actual := main.EnvMapToList(env)
+	actual := utils.EnvMapToList(env)
 
 	if diff := deep.Equal(expected, actual); diff != nil {
 		t.Error(diff)

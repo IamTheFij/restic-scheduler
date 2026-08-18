@@ -1,4 +1,4 @@
-package main
+package restic
 
 import (
 	"encoding/json"
@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
 
 var (
@@ -45,7 +47,7 @@ type UnlockOpts struct {
 
 // ToArgs returns the structs arguments as a slice of strings.
 func (uo UnlockOpts) ToArgs() (args []string) {
-	args = maybeAddArgBool(args, "--remove-all", uo.RemoveAll)
+	args = utils.MaybeAddArgBool(args, "--remove-all", uo.RemoveAll)
 
 	return
 }
@@ -60,10 +62,10 @@ type BackupOpts struct {
 
 // ToArgs returns the structs arguments as a slice of strings.
 func (bo BackupOpts) ToArgs() (args []string) {
-	args = maybeAddArgsList(args, "--exclude", bo.Exclude)
-	args = maybeAddArgsList(args, "--include", bo.Include)
-	args = maybeAddArgsList(args, "--tag", bo.Tags)
-	args = maybeAddArgString(args, "--host", bo.Host)
+	args = utils.MaybeAddArgsList(args, "--exclude", bo.Exclude)
+	args = utils.MaybeAddArgsList(args, "--include", bo.Include)
+	args = utils.MaybeAddArgsList(args, "--tag", bo.Tags)
+	args = utils.MaybeAddArgString(args, "--host", bo.Host)
 
 	return
 }
@@ -80,13 +82,13 @@ type RestoreOpts struct {
 
 // ToArgs returns the structs arguments as a slice of strings.
 func (ro RestoreOpts) ToArgs() (args []string) {
-	args = maybeAddArgsList(args, "--exclude", ro.Exclude)
-	args = maybeAddArgsList(args, "--include", ro.Include)
-	args = maybeAddArgsList(args, "--host", ro.Host)
-	args = maybeAddArgsList(args, "--tag", ro.Tags)
-	args = maybeAddArgString(args, "--path", ro.Path)
-	args = maybeAddArgString(args, "--target", ro.Target)
-	args = maybeAddArgBool(args, "--verify", ro.Verify)
+	args = utils.MaybeAddArgsList(args, "--exclude", ro.Exclude)
+	args = utils.MaybeAddArgsList(args, "--include", ro.Include)
+	args = utils.MaybeAddArgsList(args, "--host", ro.Host)
+	args = utils.MaybeAddArgsList(args, "--tag", ro.Tags)
+	args = utils.MaybeAddArgString(args, "--path", ro.Path)
+	args = utils.MaybeAddArgString(args, "--target", ro.Target)
+	args = utils.MaybeAddArgBool(args, "--verify", ro.Verify)
 
 	return
 }
@@ -120,12 +122,12 @@ type ForgetOpts struct {
 
 // ToArgs returns the structs arguments as a slice of strings.
 func (fo ForgetOpts) ToArgs() (args []string) {
-	args = maybeAddArgInt(args, "--keep-last", fo.KeepLast)
-	args = maybeAddArgInt(args, "--keep-hourly", fo.KeepHourly)
-	args = maybeAddArgInt(args, "--keep-daily", fo.KeepDaily)
-	args = maybeAddArgInt(args, "--keep-weekly", fo.KeepWeekly)
-	args = maybeAddArgInt(args, "--keep-monthly", fo.KeepMonthly)
-	args = maybeAddArgInt(args, "--keep-yearly", fo.KeepYearly)
+	args = utils.MaybeAddArgInt(args, "--keep-last", fo.KeepLast)
+	args = utils.MaybeAddArgInt(args, "--keep-hourly", fo.KeepHourly)
+	args = utils.MaybeAddArgInt(args, "--keep-daily", fo.KeepDaily)
+	args = utils.MaybeAddArgInt(args, "--keep-weekly", fo.KeepWeekly)
+	args = utils.MaybeAddArgInt(args, "--keep-monthly", fo.KeepMonthly)
+	args = utils.MaybeAddArgInt(args, "--keep-yearly", fo.KeepYearly)
 
 	// Add keep-within-*
 
@@ -163,7 +165,7 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 	}
 
 	// Add prune options
-	args = maybeAddArgBool(args, "--prune", fo.Prune)
+	args = utils.MaybeAddArgBool(args, "--prune", fo.Prune)
 
 	return args
 }
@@ -185,17 +187,17 @@ type ResticGlobalOpts struct {
 
 // ToArgs returns the structs arguments as a slice of strings.
 func (glo ResticGlobalOpts) ToArgs() (args []string) {
-	args = maybeAddArgString(args, "--cacert", glo.CaCertFile)
-	args = maybeAddArgString(args, "--cache-dir", glo.CacheDir)
-	args = maybeAddArgString(args, "--password-file", glo.PasswordFile)
-	args = maybeAddArgString(args, "--tls-client-cert", glo.TLSClientCertFile)
-	args = maybeAddArgInt(args, "--limit-download", glo.LimitDownload)
-	args = maybeAddArgInt(args, "--limit-upload", glo.LimitUpload)
-	args = maybeAddArgInt(args, "--verbose", glo.VerboseLevel)
-	args = maybeAddArgBool(args, "--cleanup-cache", glo.CleanupCache)
-	args = maybeAddArgBool(args, "--insecure-tls", glo.InsecureTLS)
-	args = maybeAddArgBool(args, "--no-cache", glo.NoCache)
-	args = maybeAddArgBool(args, "--no-lock", glo.NoLock)
+	args = utils.MaybeAddArgString(args, "--cacert", glo.CaCertFile)
+	args = utils.MaybeAddArgString(args, "--cache-dir", glo.CacheDir)
+	args = utils.MaybeAddArgString(args, "--password-file", glo.PasswordFile)
+	args = utils.MaybeAddArgString(args, "--tls-client-cert", glo.TLSClientCertFile)
+	args = utils.MaybeAddArgInt(args, "--limit-download", glo.LimitDownload)
+	args = utils.MaybeAddArgInt(args, "--limit-upload", glo.LimitUpload)
+	args = utils.MaybeAddArgInt(args, "--verbose", glo.VerboseLevel)
+	args = utils.MaybeAddArgBool(args, "--cleanup-cache", glo.CleanupCache)
+	args = utils.MaybeAddArgBool(args, "--insecure-tls", glo.InsecureTLS)
+	args = utils.MaybeAddArgBool(args, "--no-cache", glo.NoCache)
+	args = utils.MaybeAddArgBool(args, "--no-lock", glo.NoLock)
 
 	for key, value := range glo.Options {
 		args = append(args, "--option", fmt.Sprintf("%s='%s'", key, value))
@@ -262,7 +264,7 @@ func (rcmd Restic) RunRestic(
 	command string,
 	options CommandOptions,
 	commandArgs ...string,
-) (*CapturedCommandLogWriter, error) {
+) (*utils.CapturedCommandLogWriter, error) {
 	args := []string{}
 	if rcmd.GlobalOpts != nil {
 		args = rcmd.GlobalOpts.ToArgs()
@@ -274,7 +276,7 @@ func (rcmd Restic) RunRestic(
 
 	cmd := exec.Command("restic", args...)
 
-	output := NewCapturedCommandLogWriter(rcmd.Logger)
+	output := utils.NewCapturedCommandLogWriter(rcmd.Logger)
 	cmd.Stdout = output.Stdout
 	cmd.Stderr = output.Stderr
 	cmd.Env = rcmd.BuildEnv()

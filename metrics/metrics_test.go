@@ -1,16 +1,17 @@
-package main_test
+package metrics_test
 
 import (
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
 	"github.com/stretchr/testify/assert"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/metrics"
 )
 
 func TestInitMetrics(t *testing.T) {
 	t.Parallel()
 
-	metrics := main.InitMetrics()
+	metrics := metrics.InitMetrics()
 
 	assert.NotNil(t, metrics)
 	assert.NotNil(t, metrics.Registry)

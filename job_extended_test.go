@@ -3,7 +3,7 @@ package main_test
 import (
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,31 +11,31 @@ func TestAllTasks(t *testing.T) {
 	t.Parallel()
 
 	// Create a job with multiple task types
-	job := main.Job{
+	job := tasks.Job{
 		Name:     "TestJob",
 		Schedule: "@daily",
 		Config:   ValidResticConfig(),
-		Tasks: []main.JobTask{
+		Tasks: []tasks.JobTask{
 			{
 				Name: "test-task",
 			},
 		},
-		Backup: main.BackupFilesTask{Paths: []string{"/test"}},
-		MySQL: []main.JobTaskMySQL{
+		Backup: tasks.BackupFilesTask{Paths: []string{"/test"}},
+		MySQL: []tasks.JobTaskMySQL{
 			{
 				Name:       "test-mysql",
 				Hostname:   "localhost",
 				DumpToPath: "/tmp/mysql",
 			},
 		},
-		Postgres: []main.JobTaskPostgres{
+		Postgres: []tasks.JobTaskPostgres{
 			{
 				Name:       "test-postgres",
 				Hostname:   "localhost",
 				DumpToPath: "/tmp/postgres",
 			},
 		},
-		Sqlite: []main.JobTaskSqlite{
+		Sqlite: []tasks.JobTaskSqlite{
 			{
 				Name:       "test-sqlite",
 				Path:       "/path/to/db.sqlite",
@@ -44,7 +44,7 @@ func TestAllTasks(t *testing.T) {
 		},
 	}
 
-	tasks := job.AllTasks()
+	allTasks := job.AllTasks()
 
 	// We should have at least 5 tasks:
 	// - MySQL pre task
@@ -56,13 +56,13 @@ func TestAllTasks(t *testing.T) {
 	// - MySQL post task
 	// - Postgres post task
 	// - Sqlite post task
-	assert.GreaterOrEqual(t, len(tasks), 5, "Should have at least 5 tasks")
+	assert.GreaterOrEqual(t, len(allTasks), 5, "Should have at least 5 tasks")
 
 	// Make sure the backup task is included in the list
 	var foundBackup bool
 
-	for _, task := range tasks {
-		if bt, ok := task.(main.BackupFilesTask); ok && len(bt.Paths) > 0 {
+	for _, task := range allTasks {
+		if bt, ok := task.(tasks.BackupFilesTask); ok && len(bt.Paths) > 0 {
 			foundBackup = true
 			break
 		}
@@ -74,26 +74,26 @@ func TestAllTasks(t *testing.T) {
 func TestBackupPaths(t *testing.T) {
 	t.Parallel()
 
-	job := main.Job{
+	job := tasks.Job{
 		Name:     "TestJob",
 		Schedule: "@daily",
 		Config:   ValidResticConfig(),
-		Backup:   main.BackupFilesTask{Paths: []string{"/path1", "/path2"}},
-		MySQL: []main.JobTaskMySQL{
+		Backup:   tasks.BackupFilesTask{Paths: []string{"/path1", "/path2"}},
+		MySQL: []tasks.JobTaskMySQL{
 			{
 				Name:       "test-mysql",
 				Hostname:   "localhost",
 				DumpToPath: "/tmp/mysql",
 			},
 		},
-		Postgres: []main.JobTaskPostgres{
+		Postgres: []tasks.JobTaskPostgres{
 			{
 				Name:       "test-postgres",
 				Hostname:   "localhost",
 				DumpToPath: "/tmp/postgres",
 			},
 		},
-		Sqlite: []main.JobTaskSqlite{
+		Sqlite: []tasks.JobTaskSqlite{
 			{
 				Name:       "test-sqlite",
 				Path:       "/path/to/db.sqlite",
@@ -119,7 +119,7 @@ func TestBackupPaths(t *testing.T) {
 func TestLogger(t *testing.T) {
 	t.Parallel()
 
-	job := main.Job{
+	job := tasks.Job{
 		Name:     "TestLoggerJob",
 		Schedule: "@daily",
 		Config:   ValidResticConfig(),
@@ -137,7 +137,7 @@ func TestNewRestic(t *testing.T) {
 	resticCfg.Passphrase = "test-passphrase"
 	resticCfg.Env = map[string]string{"TEST_ENV": "value"}
 
-	job := main.Job{
+	job := tasks.Job{
 		Name:     "TestResticJob",
 		Schedule: "@daily",
 		Config:   resticCfg,

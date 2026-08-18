@@ -1,4 +1,4 @@
-package main
+package tasks
 
 import (
 	"errors"
@@ -7,13 +7,16 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"git.iamthefij.com/iamthefij/restic-scheduler/restic"
+	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
 
 type TaskConfig struct {
 	BackupPaths     []string
 	Env             map[string]string
 	Logger          *log.Logger
-	Restic          *Restic
+	Restic          *restic.Restic
 	RestoreSnapshot string
 }
 
@@ -38,12 +41,12 @@ func (t JobTaskScript) run(script string, cfg TaskConfig) error {
 		return nil
 	}
 
-	env := MergeEnvMap(cfg.Env, t.Env)
+	env := utils.MergeEnvMap(cfg.Env, t.Env)
 	if env == nil {
 		env = map[string]string{}
 	}
 
-	if err := RunShell(script, t.Cwd, env, cfg.Logger); err != nil {
+	if err := utils.RunShell(script, t.Cwd, env, cfg.Logger); err != nil {
 		return fmt.Errorf("failed running task script %s: %w", t.Name(), err)
 	}
 
@@ -140,11 +143,11 @@ func (t JobTaskMySQL) Validate() error {
 func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 	command := []string{t.mysqldumpCmd(), "--result-file", t.DumpToPath}
 
-	command = maybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
-	command = maybeAddArgString(command, "--host", t.Hostname)
-	command = maybeAddArgInt(command, "--port", t.Port)
-	command = maybeAddArgString(command, "--user", t.Username)
-	command = maybeAddArgBool(command, "--no-tablespaces", t.NoTablespaces)
+	command = utils.MaybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
+	command = utils.MaybeAddArgString(command, "--host", t.Hostname)
+	command = utils.MaybeAddArgInt(command, "--port", t.Port)
+	command = utils.MaybeAddArgString(command, "--user", t.Username)
+	command = utils.MaybeAddArgBool(command, "--no-tablespaces", t.NoTablespaces)
 
 	if t.Password != "" {
 		command = append(command, fmt.Sprintf("--password=%s", t.Password))
@@ -171,10 +174,10 @@ func (t JobTaskMySQL) GetPreTask() ExecutableTask {
 func (t JobTaskMySQL) GetPostTask() ExecutableTask {
 	command := []string{t.mysqlCommand()}
 
-	command = maybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
-	command = maybeAddArgString(command, "--host", t.Hostname)
-	command = maybeAddArgInt(command, "--port", t.Port)
-	command = maybeAddArgString(command, "--user", t.Username)
+	command = utils.MaybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
+	command = utils.MaybeAddArgString(command, "--host", t.Hostname)
+	command = utils.MaybeAddArgInt(command, "--port", t.Port)
+	command = utils.MaybeAddArgString(command, "--user", t.Username)
 
 	if t.Password != "" {
 		command = append(command, fmt.Sprintf("--password=%s", t.Password))
@@ -253,13 +256,13 @@ func (t JobTaskPostgres) GetPreTask() ExecutableTask {
 	}
 
 	command = append(command, "--file", t.DumpToPath)
-	command = maybeAddArgString(command, "--host", t.Hostname)
-	command = maybeAddArgInt(command, "--port", t.Port)
-	command = maybeAddArgString(command, "--username", t.Username)
-	command = maybeAddArgBool(command, "--no-tablespaces", t.NoTablespaces)
-	command = maybeAddArgBool(command, "--clean", t.Clean)
-	command = maybeAddArgBool(command, "--create", t.Create)
-	command = maybeAddArgsList(command, "--table", t.Tables)
+	command = utils.MaybeAddArgString(command, "--host", t.Hostname)
+	command = utils.MaybeAddArgInt(command, "--port", t.Port)
+	command = utils.MaybeAddArgString(command, "--username", t.Username)
+	command = utils.MaybeAddArgBool(command, "--no-tablespaces", t.NoTablespaces)
+	command = utils.MaybeAddArgBool(command, "--clean", t.Clean)
+	command = utils.MaybeAddArgBool(command, "--create", t.Create)
+	command = utils.MaybeAddArgsList(command, "--table", t.Tables)
 
 	if t.Database != "" {
 		command = append(command, t.Database)
@@ -283,9 +286,9 @@ func (t JobTaskPostgres) GetPreTask() ExecutableTask {
 func (t JobTaskPostgres) GetPostTask() ExecutableTask {
 	command := []string{"psql"}
 
-	command = maybeAddArgString(command, "--host", t.Hostname)
-	command = maybeAddArgInt(command, "--port", t.Port)
-	command = maybeAddArgString(command, "--username", t.Username)
+	command = utils.MaybeAddArgString(command, "--host", t.Hostname)
+	command = utils.MaybeAddArgInt(command, "--port", t.Port)
+	command = utils.MaybeAddArgString(command, "--username", t.Username)
 
 	if t.Database != "" {
 		command = append(command, t.Database)
@@ -365,16 +368,16 @@ func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 
 // BackupFilesTask is the main task for executing a backup to a remote.
 type BackupFilesTask struct {
-	Paths       []string     `hcl:"paths"`
-	BackupOpts  *BackupOpts  `hcl:"backup_opts,block"`
-	RestoreOpts *RestoreOpts `hcl:"restore_opts,block"`
+	Paths       []string            `hcl:"paths"`
+	BackupOpts  *restic.BackupOpts  `hcl:"backup_opts,block"`
+	RestoreOpts *restic.RestoreOpts `hcl:"restore_opts,block"`
 	name        string
 }
 
 // RunBackup runs the backup task sending data to the repository.
 func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 	if t.BackupOpts == nil {
-		t.BackupOpts = &BackupOpts{} //nolint:exhaustruct
+		t.BackupOpts = &restic.BackupOpts{} //nolint:exhaustruct
 	}
 
 	if err := cfg.Restic.Backup(cfg.BackupPaths, *t.BackupOpts); err != nil {
@@ -390,7 +393,7 @@ func (t BackupFilesTask) RunBackup(cfg TaskConfig) error {
 // RunRestore runs the restore task for the backup, pulling the data from the repository.
 func (t BackupFilesTask) RunRestore(cfg TaskConfig) error {
 	if t.RestoreOpts == nil {
-		t.RestoreOpts = &RestoreOpts{} //nolint:exhaustruct
+		t.RestoreOpts = &restic.RestoreOpts{} //nolint:exhaustruct
 	}
 
 	if cfg.RestoreSnapshot == "" {

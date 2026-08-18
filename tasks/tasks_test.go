@@ -1,4 +1,4 @@
-package main_test
+package tasks_test
 
 import (
 	"bytes"
@@ -6,7 +6,8 @@ import (
 	"log"
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
 
 func NewBufferedLogger(prefix string) (*bytes.Buffer, *log.Logger) {
@@ -21,21 +22,21 @@ func TestJobTaskScript(t *testing.T) {
 
 	cases := []struct {
 		name           string
-		script         main.JobTaskScript
-		config         main.TaskConfig
+		script         tasks.JobTaskScript
+		config         tasks.TaskConfig
 		expectedErr    error
 		expectedOutput string
 	}{
 		{
 			name: "simple",
-			config: main.TaskConfig{
+			config: tasks.TaskConfig{
 				BackupPaths: nil,
 				Env:         nil,
 				Logger:      nil,
 				Restic:      nil,
 			},
-			script: main.JobTaskScript{
-				Cwd:       "./test",
+			script: tasks.JobTaskScript{
+				Cwd:       "../test",
 				OnBackup:  "echo yass",
 				OnRestore: "echo yass",
 			},
@@ -44,14 +45,14 @@ func TestJobTaskScript(t *testing.T) {
 		},
 		{
 			name: "check from job dir",
-			config: main.TaskConfig{
+			config: tasks.TaskConfig{
 				BackupPaths: nil,
 				Env:         nil,
 				Logger:      nil,
 				Restic:      nil,
 			},
-			script: main.JobTaskScript{
-				Cwd:       "./test",
+			script: tasks.JobTaskScript{
+				Cwd:       "../test",
 				OnBackup:  "basename `pwd`",
 				OnRestore: "basename `pwd`",
 			},
@@ -60,14 +61,14 @@ func TestJobTaskScript(t *testing.T) {
 		},
 		{
 			name: "check env",
-			config: main.TaskConfig{
+			config: tasks.TaskConfig{
 				BackupPaths: nil,
 				Env:         map[string]string{"TEST": "OK"},
 				Logger:      nil,
 				Restic:      nil,
 			},
-			script: main.JobTaskScript{
-				Cwd:       "./test",
+			script: tasks.JobTaskScript{
+				Cwd:       "../test",
 				OnBackup:  "echo $TEST",
 				OnRestore: "echo $TEST",
 			},
@@ -105,8 +106,8 @@ func TestJobTaskSql(t *testing.T) {
 
 	type TaskGenerator interface {
 		Validate() error
-		GetPreTask() main.ExecutableTask
-		GetPostTask() main.ExecutableTask
+		GetPreTask() tasks.ExecutableTask
+		GetPostTask() tasks.ExecutableTask
 	}
 
 	cases := []struct {
@@ -121,7 +122,7 @@ func TestJobTaskSql(t *testing.T) {
 		{
 			name: "mysql simple",
 			//nolint:exhaustruct
-			task: main.JobTaskMySQL{
+			task: tasks.JobTaskMySQL{
 				Name:       "simple",
 				DumpToPath: "./simple.sql",
 			},
@@ -134,7 +135,7 @@ func TestJobTaskSql(t *testing.T) {
 		{
 			name: "mariadb simple",
 			//nolint:exhaustruct
-			task: main.JobTaskMySQL{
+			task: tasks.JobTaskMySQL{
 				Name:       "simple",
 				DumpToPath: "./simple.sql",
 				UseMariaDB: true,
@@ -148,12 +149,12 @@ func TestJobTaskSql(t *testing.T) {
 		{
 			name: "mysql tables no database",
 			//nolint:exhaustruct
-			task: main.JobTaskMySQL{
+			task: tasks.JobTaskMySQL{
 				Name:       "name",
 				Tables:     []string{"table1", "table2"},
 				DumpToPath: "./simple.sql",
 			},
-			validationErr: main.ErrMissingField,
+			validationErr: tasks.ErrMissingField,
 			preBackup:     "",
 			postBackup:    "",
 			preRestore:    "",
@@ -161,7 +162,7 @@ func TestJobTaskSql(t *testing.T) {
 		},
 		{
 			name: "mysql all options",
-			task: main.JobTaskMySQL{
+			task: tasks.JobTaskMySQL{
 				Name:          "simple",
 				Hostname:      "host",
 				Port:          3306,
@@ -181,7 +182,7 @@ func TestJobTaskSql(t *testing.T) {
 		},
 		{
 			name: "psql all",
-			task: main.JobTaskPostgres{
+			task: tasks.JobTaskPostgres{
 				Name:          "simple",
 				Hostname:      "host",
 				Port:          6543,
@@ -205,7 +206,7 @@ func TestJobTaskSql(t *testing.T) {
 		{
 			name: "sqlite simple",
 
-			task: main.JobTaskSqlite{
+			task: tasks.JobTaskSqlite{
 				Name:       "simple",
 				Path:       "database.db",
 				DumpToPath: "./simple.db.bak",
@@ -233,16 +234,16 @@ func TestJobTaskSql(t *testing.T) {
 				return
 			}
 
-			if preTask, ok := testCase.task.GetPreTask().(main.JobTaskScript); ok {
-				AssertEqual(t, "incorrect pre-backup", testCase.preBackup, preTask.OnBackup)
-				AssertEqual(t, "incorrect pre-restore", testCase.preRestore, preTask.OnRestore)
+			if preTask, ok := testCase.task.GetPreTask().(tasks.JobTaskScript); ok {
+				utils.AssertEqual(t, "incorrect pre-backup", testCase.preBackup, preTask.OnBackup)
+				utils.AssertEqual(t, "incorrect pre-restore", testCase.preRestore, preTask.OnRestore)
 			} else {
 				t.Error("pre task was not a JobTaskScript")
 			}
 
-			if postTask, ok := testCase.task.GetPostTask().(main.JobTaskScript); ok {
-				AssertEqual(t, "incorrect post-backup", testCase.postBackup, postTask.OnBackup)
-				AssertEqual(t, "incorrect post-restore", testCase.postRestore, postTask.OnRestore)
+			if postTask, ok := testCase.task.GetPostTask().(tasks.JobTaskScript); ok {
+				utils.AssertEqual(t, "incorrect post-backup", testCase.postBackup, postTask.OnBackup)
+				utils.AssertEqual(t, "incorrect post-restore", testCase.postRestore, postTask.OnRestore)
 			} else {
 				t.Error("post task was not a JobTaskScript")
 			}

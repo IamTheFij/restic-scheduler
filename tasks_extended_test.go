@@ -3,7 +3,7 @@ package main_test
 import (
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,7 +11,7 @@ func TestJobTaskScriptName(t *testing.T) {
 	t.Parallel()
 
 	// Create a script task
-	script := &main.JobTaskScript{}
+	script := &tasks.JobTaskScript{}
 
 	// Initial name should be empty
 	assert.Empty(t, script.Name())
@@ -24,7 +24,7 @@ func TestJobTaskScriptName(t *testing.T) {
 func TestMySQLTaskPaths(t *testing.T) {
 	t.Parallel()
 
-	mysqlTask := main.JobTaskMySQL{
+	mysqlTask := tasks.JobTaskMySQL{
 		Name:       "test-mysql",
 		DumpToPath: "/path/to/dump.sql",
 	}
@@ -36,7 +36,7 @@ func TestMySQLTaskPaths(t *testing.T) {
 func TestPostgresTaskPaths(t *testing.T) {
 	t.Parallel()
 
-	pgTask := main.JobTaskPostgres{
+	pgTask := tasks.JobTaskPostgres{
 		Name:       "test-postgres",
 		DumpToPath: "/path/to/dump.sql",
 	}
@@ -48,7 +48,7 @@ func TestPostgresTaskPaths(t *testing.T) {
 func TestSqliteTaskPaths(t *testing.T) {
 	t.Parallel()
 
-	sqliteTask := main.JobTaskSqlite{
+	sqliteTask := tasks.JobTaskSqlite{
 		Name:       "test-sqlite",
 		DumpToPath: "/path/to/dump.sql",
 	}
@@ -60,7 +60,7 @@ func TestSqliteTaskPaths(t *testing.T) {
 func TestMySQLGetPreTask(t *testing.T) {
 	t.Parallel()
 
-	mysqlTask := main.JobTaskMySQL{
+	mysqlTask := tasks.JobTaskMySQL{
 		Name:       "test-mysql",
 		Hostname:   "localhost",
 		Port:       3306,
@@ -79,7 +79,7 @@ func TestMySQLGetPreTask(t *testing.T) {
 func TestMySQLGetPostTask(t *testing.T) {
 	t.Parallel()
 
-	mysqlTask := main.JobTaskMySQL{
+	mysqlTask := tasks.JobTaskMySQL{
 		Name:       "test-mysql",
 		Hostname:   "localhost",
 		Port:       3306,

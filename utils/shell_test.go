@@ -1,11 +1,11 @@
-package main_test
+package utils_test
 
 import (
 	"bytes"
 	"log"
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
 
 /*
@@ -32,29 +32,29 @@ import (
 func TestGetLogger(t *testing.T) {
 	t.Parallel()
 
-	initialLogger := main.GetLogger("test")
+	initialLogger := utils.GetLogger("test")
 
 	t.Run("initial logger", func(t *testing.T) {
 		t.Parallel()
-		AssertEqual(t, "incorrect logger prefix", "test:", initialLogger.Prefix())
+		utils.AssertEqual(t, "incorrect logger prefix", "test:", initialLogger.Prefix())
 	})
 
-	dupeLogger := main.GetLogger("test")
+	dupeLogger := utils.GetLogger("test")
 
 	t.Run("dupe logger", func(t *testing.T) {
 		t.Parallel()
-		AssertEqual(t, "incorrect logger prefix", "test:", dupeLogger.Prefix())
+		utils.AssertEqual(t, "incorrect logger prefix", "test:", dupeLogger.Prefix())
 
 		if initialLogger != dupeLogger {
 			t.Error("expected reused instance")
 		}
 	})
 
-	secondLogger := main.GetLogger("test2")
+	secondLogger := utils.GetLogger("test2")
 
 	t.Run("dupe logger", func(t *testing.T) {
 		t.Parallel()
-		AssertEqual(t, "incorrect logger prefix", "test2:", secondLogger.Prefix())
+		utils.AssertEqual(t, "incorrect logger prefix", "test2:", secondLogger.Prefix())
 
 		if initialLogger == secondLogger {
 			t.Error("expected new instance")
@@ -65,10 +65,10 @@ func TestGetLogger(t *testing.T) {
 func TestGetChildLogger(t *testing.T) {
 	t.Parallel()
 
-	parentLogger := main.GetLogger("parent")
-	childLogger := main.GetChildLogger(parentLogger, "child")
+	parentLogger := utils.GetLogger("parent")
+	childLogger := utils.GetChildLogger(parentLogger, "child")
 
-	AssertEqual(t, "unexpected child logger prefix", "parent:child:", childLogger.Prefix())
+	utils.AssertEqual(t, "unexpected child logger prefix", "parent:child:", childLogger.Prefix())
 }
 
 func TestCapturedLogWriter(t *testing.T) {
@@ -76,14 +76,14 @@ func TestCapturedLogWriter(t *testing.T) {
 
 	buffer := bytes.Buffer{}
 	logger := log.New(&buffer, "test:", log.Lmsgprefix)
-	capturedLogWriter := main.NewCapturedLogWriter(logger)
+	capturedLogWriter := utils.NewCapturedLogWriter(logger)
 
 	if _, err := capturedLogWriter.Write([]byte("testing")); err != nil {
 		t.Fatalf("failed to write to captured log writter: %v", err)
 	}
 
-	AssertEqual(t, "buffer contains incorrect values", "test: testing\n", buffer.String())
-	AssertEqual(t, "lines contains incorrect values", []string{"testing"}, capturedLogWriter.Lines)
+	utils.AssertEqual(t, "buffer contains incorrect values", "test: testing\n", buffer.String())
+	utils.AssertEqual(t, "lines contains incorrect values", []string{"testing"}, capturedLogWriter.Lines)
 }
 
 func TestRunShell(t *testing.T) {
@@ -128,7 +128,7 @@ func TestRunShell(t *testing.T) {
 			buffer := bytes.Buffer{}
 			logger := log.New(&buffer, "prefix:", log.Lmsgprefix)
 
-			err := main.RunShell(
+			err := utils.RunShell(
 				testCase.script,
 				testCase.cwd,
 				testCase.env,
@@ -143,7 +143,7 @@ func TestRunShell(t *testing.T) {
 				t.Errorf("unexpected error: %v", err)
 			}
 
-			AssertEqual(t, "unexpected output", testCase.expectedOutput, buffer.String())
+			utils.AssertEqual(t, "unexpected output", testCase.expectedOutput, buffer.String())
 		})
 	}
 }
