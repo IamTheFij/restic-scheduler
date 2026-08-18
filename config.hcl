@@ -13,15 +13,19 @@ job "MyApp" {
     }
   }
 
-  mysql "DumpMainDB" {
-    hostname = "foo"
-    username = "bar"
-    dump_to = "/data/main.sql"
+  task "Backup main db" {
+    mysql "DumpMainDB" {
+      hostname = "foo"
+      username = "bar"
+      dump_to = "/data/main.sql"
+    }
   }
 
-  sqlite "DumpSqlite" {
-    path = "/db/sqlite.db"
-    dump_to = "/data/sqlite.db.bak"
+  task "Backup Sqlite" {
+    sqlite "DumpSqlite" {
+      path = "/db/sqlite.db"
+      dump_to = "/data/sqlite.db.bak"
+    }
   }
 
   task "Create biz file" {

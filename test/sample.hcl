@@ -54,9 +54,11 @@ job "BackupDataAndSqlite" {
     passphrase = readfile("./test/samplepassphrase.txt")
   }
 
-  sqlite "Backup database" {
-    path = "./sqlite.db"
-    dump_to = "./data/sqlite.db.bak"
+  task "backup database" {
+    sqlite "Backup database" {
+      path = "./sqlite.db"
+      dump_to = "./data/sqlite.db.bak"
+    }
   }
 
   backup {
@@ -77,13 +79,15 @@ job "BackupMySQLDatabase" {
     passphrase = "secret phrase"
   }
 
-  mysql "Backup database" {
-    hostname = "localhost"
-    database = "dbname"
-    username = "username"
-    // Values can be read from the env to avoid inlining as well
-    password = env("TEST_PASSWORD")
-    dump_to = "./data/sqlite.db.bak"
+  task "Backup database" {
+    mysql "Backup database" {
+      hostname = "localhost"
+      database = "dbname"
+      username = "username"
+      // Values can be read from the env to avoid inlining as well
+      password = env("TEST_PASSWORD")
+      dump_to = "./data/sqlite.db.bak"
+    }
   }
 
   backup {

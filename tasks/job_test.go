@@ -92,11 +92,8 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []tasks.JobTask{},
-				Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+				Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
-				MySQL:    []tasks.JobTaskMySQL{},
-				Postgres: []tasks.JobTaskPostgres{},
-				Sqlite:   []tasks.JobTaskSqlite{},
 			},
 			expectedErr: nil,
 		},
@@ -107,11 +104,8 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
 				Tasks:    []tasks.JobTask{},
-				Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+				Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
-				MySQL:    []tasks.JobTaskMySQL{},
-				Postgres: []tasks.JobTaskPostgres{},
-				Sqlite:   []tasks.JobTaskSqlite{},
 			},
 			expectedErr: tasks.ErrMissingField,
 		},
@@ -122,11 +116,8 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "shrug",
 				Config:   ValidResticConfig(),
 				Tasks:    []tasks.JobTask{},
-				Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+				Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
-				MySQL:    []tasks.JobTaskMySQL{},
-				Postgres: []tasks.JobTaskPostgres{},
-				Sqlite:   []tasks.JobTaskSqlite{},
 			},
 			expectedErr: tasks.ErrInvalidConfigValue,
 		},
@@ -137,11 +128,8 @@ func TestJobValidation(t *testing.T) {
 				Schedule: "@daily",
 				Config:   &tasks.ResticConfig{}, //nolint:exhaustruct
 				Tasks:    []tasks.JobTask{},
-				Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+				Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 				Forget:   nil,
-				MySQL:    []tasks.JobTaskMySQL{},
-				Postgres: []tasks.JobTaskPostgres{},
-				Sqlite:   []tasks.JobTaskSqlite{},
 			},
 			expectedErr: tasks.ErrMutuallyExclusive,
 		},
@@ -154,11 +142,8 @@ func TestJobValidation(t *testing.T) {
 				Tasks: []tasks.JobTask{
 					{}, //nolint:exhaustruct
 				},
-				Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
-				Forget:   nil,
-				MySQL:    []tasks.JobTaskMySQL{},
-				Postgres: []tasks.JobTaskPostgres{},
-				Sqlite:   []tasks.JobTaskSqlite{},
+				Backup: tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
+				Forget: nil,
 			},
 			expectedErr: tasks.ErrMissingField,
 		},
@@ -168,14 +153,15 @@ func TestJobValidation(t *testing.T) {
 				Name:     "Test job",
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
-				Tasks:    []tasks.JobTask{},
-				Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
-				Forget:   nil,
-				MySQL: []tasks.JobTaskMySQL{
-					{}, //nolint:exhaustruct
+				Tasks: []tasks.JobTask{
+					{
+						MySQL: []tasks.JobTaskMySQL{
+							{},
+						},
+					},
 				},
-				Postgres: []tasks.JobTaskPostgres{},
-				Sqlite:   []tasks.JobTaskSqlite{},
+				Backup: tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
+				Forget: nil,
 			},
 			expectedErr: tasks.ErrMissingField,
 		},
@@ -185,14 +171,15 @@ func TestJobValidation(t *testing.T) {
 				Name:     "Test job",
 				Schedule: "@daily",
 				Config:   ValidResticConfig(),
-				Tasks:    []tasks.JobTask{},
-				Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
-				Forget:   nil,
-				MySQL:    []tasks.JobTaskMySQL{},
-				Postgres: []tasks.JobTaskPostgres{},
-				Sqlite: []tasks.JobTaskSqlite{
-					{}, //nolint:exhaustruct
+				Tasks: []tasks.JobTask{
+					{
+						Sqlite: []tasks.JobTaskSqlite{
+							{}, //nolint:exhaustruct
+						},
+					},
 				},
+				Backup: tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
+				Forget: nil,
 			},
 			expectedErr: tasks.ErrMissingField,
 		},
@@ -230,11 +217,8 @@ func TestConfigValidation(t *testing.T) {
 					Schedule: "@daily",
 					Config:   ValidResticConfig(),
 					Tasks:    []tasks.JobTask{},
-					Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+					Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 					Forget:   nil,
-					MySQL:    []tasks.JobTaskMySQL{},
-					Postgres: []tasks.JobTaskPostgres{},
-					Sqlite:   []tasks.JobTaskSqlite{},
 				}},
 			},
 			expectedErr: nil,
@@ -248,11 +232,8 @@ func TestConfigValidation(t *testing.T) {
 					Schedule: "@daily",
 					Config:   nil,
 					Tasks:    []tasks.JobTask{},
-					Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+					Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 					Forget:   nil,
-					MySQL:    []tasks.JobTaskMySQL{},
-					Postgres: []tasks.JobTaskPostgres{},
-					Sqlite:   []tasks.JobTaskSqlite{},
 				}},
 			},
 			expectedErr: nil,
@@ -274,11 +255,8 @@ func TestConfigValidation(t *testing.T) {
 					Schedule: "@daily",
 					Config:   ValidResticConfig(),
 					Tasks:    []tasks.JobTask{},
-					Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+					Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 					Forget:   nil,
-					MySQL:    []tasks.JobTaskMySQL{},
-					Postgres: []tasks.JobTaskPostgres{},
-					Sqlite:   []tasks.JobTaskSqlite{},
 				}},
 			},
 			expectedErr: tasks.ErrMissingField,
@@ -292,11 +270,8 @@ func TestConfigValidation(t *testing.T) {
 					Schedule: "@daily",
 					Config:   nil,
 					Tasks:    []tasks.JobTask{},
-					Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+					Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 					Forget:   nil,
-					MySQL:    []tasks.JobTaskMySQL{},
-					Postgres: []tasks.JobTaskPostgres{},
-					Sqlite:   []tasks.JobTaskSqlite{},
 				}},
 			},
 			expectedErr: tasks.ErrMissingField,

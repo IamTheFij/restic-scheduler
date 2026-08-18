@@ -58,11 +58,8 @@ func TestRunJobs(t *testing.T) {
 		Schedule: "@daily",
 		Config:   ValidResticConfig(),
 		Tasks:    []tasks.JobTask{},
-		Backup:   tasks.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+		Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 		Forget:   nil,
-		MySQL:    []tasks.JobTaskMySQL{},
-		Postgres: []tasks.JobTaskPostgres{},
-		Sqlite:   []tasks.JobTaskSqlite{},
 	}
 
 	cases := []struct {

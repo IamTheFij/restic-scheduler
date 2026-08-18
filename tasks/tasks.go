@@ -25,15 +25,17 @@ type ExecutableTask interface {
 	RunBackup(cfg TaskConfig) error
 	RunRestore(cfg TaskConfig) error
 	Name() string
+	Paths() []string
 }
 
 // JobTaskScript is a sript to be executed as part of a job task.
 type JobTaskScript struct {
-	OnBackup  string            `hcl:"on_backup,optional"`
-	OnRestore string            `hcl:"on_restore,optional"`
-	Cwd       string            `hcl:"cwd,optional"`
-	Env       map[string]string `hcl:"env,optional"`
-	name      string
+	OnBackup    string            `hcl:"on_backup,optional"`
+	OnRestore   string            `hcl:"on_restore,optional"`
+	Cwd         string            `hcl:"cwd,optional"`
+	Env         map[string]string `hcl:"env,optional"`
+	BackupPaths []string          `hcl:"backup_paths,optional"`
+	name        string
 }
 
 func (t JobTaskScript) run(script string, cfg TaskConfig) error {
@@ -71,6 +73,18 @@ func (t JobTaskScript) Name() string {
 // SetName sets the name for the task.
 func (t *JobTaskScript) SetName(name string) {
 	t.name = name
+}
+
+// Paths returns all paths to be backed up from this task.
+func (t JobTaskScript) Paths() []string {
+	return t.BackupPaths
+}
+
+type DatabaseTask interface {
+	Validate() error
+	GetPreTask() ExecutableTask
+	GetPostTask() ExecutableTask
+	Paths() []string
 }
 
 // JobTaskMySQL is a MySQL backup task that performs required pre and post tasks.
@@ -368,7 +382,7 @@ func (t JobTaskSqlite) GetPostTask() ExecutableTask {
 
 // BackupFilesTask is the main task for executing a backup to a remote.
 type BackupFilesTask struct {
-	Paths       []string            `hcl:"paths"`
+	BackupPaths []string            `hcl:"paths"`
 	BackupOpts  *restic.BackupOpts  `hcl:"backup_opts,block"`
 	RestoreOpts *restic.RestoreOpts `hcl:"restore_opts,block"`
 	name        string
@@ -426,6 +440,11 @@ func (t *BackupFilesTask) Validate() error {
 	return nil
 }
 
+// Paths returns all paths to be backed up from this task.
+func (t BackupFilesTask) Paths() []string {
+	return t.BackupPaths
+}
+
 // JobTask represents a single task within a backup job.
 type JobTask struct {
 	Name        string            `hcl:"name,label"`
@@ -434,6 +453,25 @@ type JobTask struct {
 	MySQL       []JobTaskMySQL    `hcl:"mysql,block"`
 	Postgres    []JobTaskPostgres `hcl:"postgres,block"`
 	Sqlite      []JobTaskSqlite   `hcl:"sqlite,block"`
+}
+
+// // DatabaseTasks returns a slice of all DatabaseTasks in this JobTask.
+func (t JobTask) DatabaseTasks() []DatabaseTask {
+	tasks := []DatabaseTask{}
+
+	for _, task := range t.MySQL {
+		tasks = append(tasks, task)
+	}
+
+	for _, task := range t.Postgres {
+		tasks = append(tasks, task)
+	}
+
+	for _, task := range t.Sqlite {
+		tasks = append(tasks, task)
+	}
+
+	return tasks
 }
 
 // Validate ensures that this tasks configuration is valid.
@@ -446,15 +484,11 @@ func (t JobTask) Validate() error {
 	return nil
 }
 
-// GetPreTasks returns all ExecutableTasks that should be run before backup.
+// GetPreTasks returns all ExecutableTasks that should be run before backup or restore.
 func (t JobTask) GetPreTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
 
-	for _, task := range t.MySQL {
-		allTasks = append(allTasks, task.GetPreTask())
-	}
-
-	for _, task := range t.Sqlite {
+	for _, task := range t.DatabaseTasks() {
 		allTasks = append(allTasks, task.GetPreTask())
 	}
 
@@ -466,22 +500,37 @@ func (t JobTask) GetPreTasks() []ExecutableTask {
 	return allTasks
 }
 
-// GetPostTasks returns all ExecutableTasks that should be run after backup.
+// GetPostTasks returns all ExecutableTasks that should be run after backup or restore.
 func (t JobTask) GetPostTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
+
+	for _, task := range t.DatabaseTasks() {
+		allTasks = append(allTasks, task.GetPostTask())
+	}
 
 	for _, exTask := range t.PostScripts {
 		exTask.SetName(t.Name)
 		allTasks = append(allTasks, exTask)
 	}
 
-	for _, task := range t.MySQL {
-		allTasks = append(allTasks, task.GetPostTask())
-	}
-
-	for _, task := range t.Sqlite {
-		allTasks = append(allTasks, task.GetPostTask())
-	}
-
 	return allTasks
+}
+
+// BackupPaths returns a slice of all paths this task asks to back up
+func (t JobTask) BackupPaths() []string {
+	paths := []string{}
+
+	for _, task := range t.DatabaseTasks() {
+		paths = append(paths, task.Paths()...)
+	}
+
+	for _, task := range t.PostScripts {
+		paths = append(paths, task.Paths()...)
+	}
+
+	for _, task := range t.PreScripts {
+		paths = append(paths, task.Paths()...)
+	}
+
+	return paths
 }

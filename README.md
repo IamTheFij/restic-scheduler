@@ -144,15 +144,17 @@ job "MyApp" {
     }
   }
 
-  mysql "DumpMainDB" {
-    hostname = "foo"
-    username = "bar"
-    dump_to = "/data/main.sql"
-  }
+  task "Dump databases" {
+    mysql "DumpMainDB" {
+      hostname = "foo"
+      username = "bar"
+      dump_to = "/tmp/main.sql"
+    }
 
-  sqlite "DumpSqlite" {
-    path = "/db/sqlite.db"
-    dump_to = "/data/sqlite.db.bak"
+    sqlite "DumpSqlite" {
+      path = "/db/sqlite.db"
+      dump_to = "/tmp/sqlite.db.bak"
+    }
   }
 
   task "Create biz file" {
@@ -161,6 +163,8 @@ job "MyApp" {
       on_backup = <<EOF
       echo bar >> /biz.txt
       EOF
+
+      backup_paths = ["/biz.txt"]
     }
 
     post_script {
@@ -179,7 +183,6 @@ job "MyApp" {
   backup {
     files =[
       "/data",
-      "/biz.txt",
     ]
 
     backup_opts {

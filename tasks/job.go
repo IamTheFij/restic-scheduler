@@ -72,13 +72,6 @@ type Job struct {
 	Backup   BackupFilesTask    `hcl:"backup,block"`
 	Forget   *restic.ForgetOpts `hcl:"forget,block"`
 
-	// Meta Tasks
-	// NOTE: Now that these are also available within a task
-	// these could be removed to make task order more obvious
-	MySQL    []JobTaskMySQL    `hcl:"mysql,block"`
-	Postgres []JobTaskPostgres `hcl:"postgres,block"`
-	Sqlite   []JobTaskSqlite   `hcl:"sqlite,block"`
-
 	// Metrics and health
 	healthy bool
 	lastErr error
@@ -87,24 +80,6 @@ type Job struct {
 func (j Job) validateTasks() error {
 	for _, task := range j.Tasks {
 		if err := task.Validate(); err != nil {
-			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
-		}
-	}
-
-	for _, mysql := range j.MySQL {
-		if err := mysql.Validate(); err != nil {
-			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
-		}
-	}
-
-	for _, pg := range j.Postgres {
-		if err := pg.Validate(); err != nil {
-			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
-		}
-	}
-
-	for _, sqlite := range j.Sqlite {
-		if err := sqlite.Validate(); err != nil {
 			return fmt.Errorf("job %s has an invalid task: %w", j.Name, err)
 		}
 	}
@@ -151,18 +126,6 @@ func (j Job) AllTasks() []ExecutableTask {
 	allTasks := []ExecutableTask{}
 
 	// Pre tasks
-	for _, mysql := range j.MySQL {
-		allTasks = append(allTasks, mysql.GetPreTask())
-	}
-
-	for _, pg := range j.Postgres {
-		allTasks = append(allTasks, pg.GetPreTask())
-	}
-
-	for _, sqlite := range j.Sqlite {
-		allTasks = append(allTasks, sqlite.GetPreTask())
-	}
-
 	for _, jobTask := range j.Tasks {
 		allTasks = append(allTasks, jobTask.GetPreTasks()...)
 	}
@@ -175,35 +138,15 @@ func (j Job) AllTasks() []ExecutableTask {
 		allTasks = append(allTasks, jobTask.GetPostTasks()...)
 	}
 
-	for _, mysql := range j.MySQL {
-		allTasks = append(allTasks, mysql.GetPostTask())
-	}
-
-	for _, pg := range j.Postgres {
-		allTasks = append(allTasks, pg.GetPostTask())
-	}
-
-	for _, sqlite := range j.Sqlite {
-		allTasks = append(allTasks, sqlite.GetPostTask())
-	}
-
 	return allTasks
 }
 
 // BackupPaths returns all paths to backup defined in any tasks contained with the Job.
 func (j Job) BackupPaths() []string {
-	paths := j.Backup.Paths
+	paths := j.Backup.Paths()
 
-	for _, t := range j.MySQL {
-		paths = append(paths, t.DumpToPath)
-	}
-
-	for _, t := range j.Postgres {
-		paths = append(paths, t.DumpToPath)
-	}
-
-	for _, t := range j.Sqlite {
-		paths = append(paths, t.DumpToPath)
+	for _, jobTask := range j.Tasks {
+		paths = append(paths, jobTask.BackupPaths()...)
 	}
 
 	return paths

@@ -18,30 +18,30 @@ func TestAllTasks(t *testing.T) {
 		Tasks: []tasks.JobTask{
 			{
 				Name: "test-task",
+				MySQL: []tasks.JobTaskMySQL{
+					{
+						Name:       "test-mysql",
+						Hostname:   "localhost",
+						DumpToPath: "/tmp/mysql",
+					},
+				},
+				Postgres: []tasks.JobTaskPostgres{
+					{
+						Name:       "test-postgres",
+						Hostname:   "localhost",
+						DumpToPath: "/tmp/postgres",
+					},
+				},
+				Sqlite: []tasks.JobTaskSqlite{
+					{
+						Name:       "test-sqlite",
+						Path:       "/path/to/db.sqlite",
+						DumpToPath: "/tmp/sqlite",
+					},
+				},
 			},
 		},
-		Backup: tasks.BackupFilesTask{Paths: []string{"/test"}},
-		MySQL: []tasks.JobTaskMySQL{
-			{
-				Name:       "test-mysql",
-				Hostname:   "localhost",
-				DumpToPath: "/tmp/mysql",
-			},
-		},
-		Postgres: []tasks.JobTaskPostgres{
-			{
-				Name:       "test-postgres",
-				Hostname:   "localhost",
-				DumpToPath: "/tmp/postgres",
-			},
-		},
-		Sqlite: []tasks.JobTaskSqlite{
-			{
-				Name:       "test-sqlite",
-				Path:       "/path/to/db.sqlite",
-				DumpToPath: "/tmp/sqlite",
-			},
-		},
+		Backup: tasks.BackupFilesTask{BackupPaths: []string{"/test"}},
 	}
 
 	allTasks := job.AllTasks()
@@ -62,7 +62,7 @@ func TestAllTasks(t *testing.T) {
 	var foundBackup bool
 
 	for _, task := range allTasks {
-		if bt, ok := task.(tasks.BackupFilesTask); ok && len(bt.Paths) > 0 {
+		if bt, ok := task.(tasks.BackupFilesTask); ok && len(bt.BackupPaths) > 0 {
 			foundBackup = true
 			break
 		}
@@ -78,26 +78,30 @@ func TestBackupPaths(t *testing.T) {
 		Name:     "TestJob",
 		Schedule: "@daily",
 		Config:   ValidResticConfig(),
-		Backup:   tasks.BackupFilesTask{Paths: []string{"/path1", "/path2"}},
-		MySQL: []tasks.JobTaskMySQL{
+		Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/path1", "/path2"}},
+		Tasks: []tasks.JobTask{
 			{
-				Name:       "test-mysql",
-				Hostname:   "localhost",
-				DumpToPath: "/tmp/mysql",
-			},
-		},
-		Postgres: []tasks.JobTaskPostgres{
-			{
-				Name:       "test-postgres",
-				Hostname:   "localhost",
-				DumpToPath: "/tmp/postgres",
-			},
-		},
-		Sqlite: []tasks.JobTaskSqlite{
-			{
-				Name:       "test-sqlite",
-				Path:       "/path/to/db.sqlite",
-				DumpToPath: "/tmp/sqlite",
+				MySQL: []tasks.JobTaskMySQL{
+					{
+						Name:       "test-mysql",
+						Hostname:   "localhost",
+						DumpToPath: "/tmp/mysql",
+					},
+				},
+				Postgres: []tasks.JobTaskPostgres{
+					{
+						Name:       "test-postgres",
+						Hostname:   "localhost",
+						DumpToPath: "/tmp/postgres",
+					},
+				},
+				Sqlite: []tasks.JobTaskSqlite{
+					{
+						Name:       "test-sqlite",
+						Path:       "/path/to/db.sqlite",
+						DumpToPath: "/tmp/sqlite",
+					},
+				},
 			},
 		},
 	}

@@ -39,28 +39,45 @@ job "IntegrationTest" {
     }
   }
 
-  mysql "MariaDB" {
-    hostname = env("MYSQL_HOST")
-    database = "main"
-    username = env("MYSQL_USER")
-    password = env("MYSQL_PWD")
-    dump_to = "/tmp/mysql.sql"
-    skip_ssl = true
-    use_mariadb = true
+  task "Script task adds file to backup" {
+    pre_script {
+      # Create a file outside our backup task path list
+      on_backup = "echo 'howdy' > /tmp/hello.txt"
+
+      # Add the path to the backup paths
+      backup_paths = ["/tmp/hello.txt"]
+    }
+
+    post_script {
+      # This should ensure that we fail if this doesn't exist after restoring
+      on_restore = "cat /tmp/hello.txt"
+    }
   }
 
-  postgres "Postgres" {
-    hostname = env("PGSQL_HOST")
-    database = "main"
-    username = env("PGSQL_USER")
-    password = env("PGSQL_PASS")
-    create = true
-    dump_to = "/tmp/psql.sql"
-  }
+  task "Backup databases" {
+    mysql "MariaDB" {
+      hostname = env("MYSQL_HOST")
+      database = "main"
+      username = env("MYSQL_USER")
+      password = env("MYSQL_PWD")
+      dump_to = "/tmp/mysql.sql"
+      skip_ssl = true
+      use_mariadb = true
+    }
 
-  sqlite "SQLite" {
-    path = "/data/test_database.db"
-    dump_to = "/data/test_database.db.bak"
+    postgres "Postgres" {
+      hostname = env("PGSQL_HOST")
+      database = "main"
+      username = env("PGSQL_USER")
+      password = env("PGSQL_PASS")
+      create = true
+      dump_to = "/tmp/psql.sql"
+    }
+
+    sqlite "SQLite" {
+      path = "/data/test_database.db"
+      dump_to = "/tmp/test_database.db.bak"
+    }
   }
 
   backup {
