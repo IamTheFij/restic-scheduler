@@ -451,6 +451,10 @@ func (t JobTask) GetPreTasks() []ExecutableTask {
 		allTasks = append(allTasks, task.GetPreTask())
 	}
 
+	for _, task := range t.Postgres {
+		allTasks = append(allTasks, task.GetPreTask())
+	}
+
 	for _, task := range t.Sqlite {
 		allTasks = append(allTasks, task.GetPreTask())
 	}
@@ -473,6 +477,10 @@ func (t JobTask) GetPostTasks() []ExecutableTask {
 	}
 
 	for _, task := range t.MySQL {
+		allTasks = append(allTasks, task.GetPostTask())
+	}
+
+	for _, task := range t.Postgres {
 		allTasks = append(allTasks, task.GetPostTask())
 	}
 
