@@ -57,18 +57,18 @@ job "IntegrationTest" {
   task "Backup databases" {
     mariadb "MariaDB" {
       hostname = env("MYSQL_HOST")
-      database = "main"
       username = env("MYSQL_USER")
       password = env("MYSQL_PWD")
+      database = "main"
       dump_to = "/tmp/mysql.sql"
       skip_ssl = true
     }
 
     postgres "Postgres" {
       hostname = env("PGSQL_HOST")
-      database = "main"
       username = env("PGSQL_USER")
       password = env("PGSQL_PASS")
+      database = "main"
       create = true
       dump_to = "/tmp/psql.sql"
     }

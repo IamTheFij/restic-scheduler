@@ -1,127 +1,34 @@
 package tasks
 
-import (
-	"errors"
-	"fmt"
-	"io/fs"
-	"os"
-	"strings"
-
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
-)
-
 // JobTaskMariaDB is a MySQL backup task that performs required pre and post tasks.
 type JobTaskMariaDB struct {
-	Port          int      `hcl:"port,optional"`
-	Name          string   `hcl:"name,label"`
-	Hostname      string   `hcl:"hostname,optional"`
-	Database      string   `hcl:"database,optional"`
-	Username      string   `hcl:"username,optional"`
-	Password      string   `hcl:"password,optional"`
-	Tables        []string `hcl:"tables,optional"`
-	NoTablespaces bool     `hcl:"no_tablespaces,optional"`
-	SkipSSL       bool     `hcl:"skip_ssl,optional"`
-	DumpToPath    string   `hcl:"dump_to"`
+	*JobTaskMySQL `hcl:",remain"`
+
+	// labels won't pass through with remain
+	Name string `hcl:"name,label"`
 }
 
-func (t JobTaskMariaDB) mysqlCommand() string {
-	return "mariadb"
+func (t JobTaskMariaDB) patchInnerStruct() {
+	// Hook in GetPreTask to set to mariaDB
+	t.UseMariaDB = true
+	// Copy name down to inner struct
+	t.JobTaskMySQL.Name = t.Name
 }
 
-func (t JobTaskMariaDB) mysqldumpCmd() string {
-	return "mariadb-dump"
-}
-
-// Paths returns all paths to be backed up from this task.
-func (t JobTaskMariaDB) Paths() []string {
-	return []string{t.DumpToPath}
-}
-
-// Validate ensures that this tasks configuration is valid.
-func (t JobTaskMariaDB) Validate() error {
-	if t.DumpToPath == "" {
-		return fmt.Errorf("task %s is missing dump_to path: %w", t.Name, ErrMissingField)
-	}
-
-	if stat, err := os.Stat(t.DumpToPath); err != nil {
-		if !errors.Is(err, fs.ErrNotExist) {
-			return fmt.Errorf(
-				"task %s: invalid dump_to: could not stat path: %s: %w",
-				t.Name,
-				t.DumpToPath,
-				ErrInvalidConfigValue,
-			)
-		}
-	} else if stat.Mode().IsDir() {
-		return fmt.Errorf("task %s: dump_to cannot be a directory: %w", t.Name, ErrInvalidConfigValue)
-	}
-
-	if len(t.Tables) > 0 && t.Database == "" {
-		return fmt.Errorf(
-			"task %s is invalid. Must specify a database to use tables: %w",
-			t.Name,
-			ErrMissingField,
-		)
-	}
-
-	return nil
-}
-
-// GetPreTask returns an ExecutableTask that should be run before backup.
 func (t JobTaskMariaDB) GetPreTask() ExecutableTask {
-	command := []string{t.mysqldumpCmd(), "--result-file", t.DumpToPath}
+	t.patchInnerStruct()
 
-	command = utils.MaybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
-	command = utils.MaybeAddArgString(command, "--host", t.Hostname)
-	command = utils.MaybeAddArgInt(command, "--port", t.Port)
-	command = utils.MaybeAddArgString(command, "--user", t.Username)
-	command = utils.MaybeAddArgBool(command, "--no-tablespaces", t.NoTablespaces)
-
-	if t.Password != "" {
-		command = append(command, fmt.Sprintf("--password=%s", t.Password))
-	}
-
-	if t.Database != "" {
-		command = append(command, t.Database)
-	} else {
-		command = append(command, "--all-databases")
-	}
-
-	command = append(command, t.Tables...)
-
-	return JobTaskScript{
-		name:      t.Name,
-		Env:       nil,
-		Cwd:       ".",
-		OnBackup:  strings.Join(command, " "),
-		OnRestore: "",
-	}
+	return t.JobTaskMySQL.GetPreTask()
 }
 
-// GetPostTask returns an ExecutableTask that should be run after backup.
 func (t JobTaskMariaDB) GetPostTask() ExecutableTask {
-	command := []string{t.mysqlCommand()}
+	t.patchInnerStruct()
 
-	command = utils.MaybeAddArgBool(command, "--skip-ssl", t.SkipSSL)
-	command = utils.MaybeAddArgString(command, "--host", t.Hostname)
-	command = utils.MaybeAddArgInt(command, "--port", t.Port)
-	command = utils.MaybeAddArgString(command, "--user", t.Username)
+	return t.JobTaskMySQL.GetPostTask()
+}
 
-	if t.Password != "" {
-		command = append(command, fmt.Sprintf("--password=%s", t.Password))
-	}
+func (t JobTaskMariaDB) Validate() error {
+	t.patchInnerStruct()
 
-	if t.Database != "" {
-		command = append(command, t.Database)
-	}
-
-	command = append(command, "<", t.DumpToPath)
-
-	return JobTaskScript{
-		name:      t.Name,
-		Env:       nil,
-		Cwd:       ".",
-		OnBackup:  "",
-		OnRestore: strings.Join(command, " "),
-	}
+	return t.JobTaskMySQL.Validate()
 }

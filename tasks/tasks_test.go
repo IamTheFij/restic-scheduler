@@ -136,8 +136,11 @@ func TestJobTaskSql(t *testing.T) {
 			name: "mariadb simple",
 			//nolint:exhaustruct
 			task: tasks.JobTaskMariaDB{
-				Name:       "simple",
-				DumpToPath: "./simple.sql",
+				//nolint:exhaustruct
+				&tasks.JobTaskMySQL{
+					DumpToPath: "./simple.sql",
+				},
+				"simple",
 			},
 			validationErr: nil,
 			preBackup:     "mariadb-dump --result-file ./simple.sql --all-databases",
