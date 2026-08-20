@@ -54,70 +54,140 @@ func (uo UnlockOpts) ToArgs() (args []string) {
 
 // BackupOpts holds optional arguments for the Restic backup command.
 type BackupOpts struct {
-	Exclude []string `hcl:"Exclude,optional"`
-	Include []string `hcl:"Include,optional"`
-	Tags    []string `hcl:"Tags,optional"`
-	Host    string   `hcl:"Host,optional"`
+	DryRun            bool     `hcl:"DryRun,optional"`
+	Exclude           []string `hcl:"Exclude,optional"`
+	ExcludeCaches     bool     `hcl:"ExcludeCaches,optional"`
+	ExcludeFile       []string `hcl:"ExcludeFile,optional"`
+	ExcludeIfPresent  []string `hcl:"ExcludeIfPresent,optional"`
+	ExcludeLargerThan string   `hcl:"ExcludeLargerThan,optional"`
+	FilesFrom         []string `hcl:"FilesFrom,optional"`
+	FilesFromRaw      []string `hcl:"FilesFromRaw,optional"`
+	FilesFromVerbatim []string `hcl:"FilesFromVerbatim,optional"`
+	Force             bool     `hcl:"Force,optional"`
+	GroupBy           string   `hcl:"GroupBy,optional"`
+	Host              string   `hcl:"Host,optional"`
+	IExclude          []string `hcl:"IExclude,optional"`
+	IExcludeFile      []string `hcl:"IExcludeFile,optional"`
+	IgnoreCtime       bool     `hcl:"IgnoreCtime,optional"`
+	IgnoreInode       bool     `hcl:"IgnoreInode,optional"`
+	Include           []string `hcl:"Include,optional"`
+	NoScan            bool     `hcl:"NoScan,optional"`
+	OneFileSystem     bool     `hcl:"OneFileSystem,optional"`
+	Parent            string   `hcl:"Parent,optional"`
+	ReadConcurrency   int      `hcl:"ReadConcurrency,optional"`
+	SkipIfUnchanged   bool     `hcl:"SkipIfUnchanged,optional"`
+	Tags              []string `hcl:"Tags,optional"`
+	WithATime         bool     `hcl:"WithATime,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
 func (bo BackupOpts) ToArgs() (args []string) {
+	args = utils.MaybeAddArgBool(args, "--dry-run", bo.DryRun)
 	args = utils.MaybeAddArgsList(args, "--exclude", bo.Exclude)
-	args = utils.MaybeAddArgsList(args, "--include", bo.Include)
-	args = utils.MaybeAddArgsList(args, "--tag", bo.Tags)
+	args = utils.MaybeAddArgBool(args, "--exclude-caches", bo.ExcludeCaches)
+	args = utils.MaybeAddArgsList(args, "--exclude-file", bo.ExcludeFile)
+	args = utils.MaybeAddArgsList(args, "--exclude-if-present", bo.ExcludeIfPresent)
+	args = utils.MaybeAddArgString(args, "--exclude-larger-than", bo.ExcludeLargerThan)
+	args = utils.MaybeAddArgsList(args, "--files-from", bo.FilesFrom)
+	args = utils.MaybeAddArgsList(args, "--files-from-raw", bo.FilesFromRaw)
+	args = utils.MaybeAddArgsList(args, "--files-from-verbatim", bo.FilesFromVerbatim)
+	args = utils.MaybeAddArgBool(args, "--force", bo.Force)
+	args = utils.MaybeAddArgString(args, "--group-by", bo.GroupBy)
 	args = utils.MaybeAddArgString(args, "--host", bo.Host)
+	args = utils.MaybeAddArgsList(args, "--iexclude", bo.IExclude)
+	args = utils.MaybeAddArgsList(args, "--iexclude-file", bo.IExcludeFile)
+	args = utils.MaybeAddArgBool(args, "--ignore-ctime", bo.IgnoreCtime)
+	args = utils.MaybeAddArgBool(args, "--ignore-inode", bo.IgnoreInode)
+	args = utils.MaybeAddArgsList(args, "--include", bo.Include)
+	args = utils.MaybeAddArgBool(args, "--no-scan", bo.NoScan)
+	args = utils.MaybeAddArgBool(args, "--one-file-system", bo.OneFileSystem)
+	args = utils.MaybeAddArgString(args, "--parent", bo.Parent)
+	args = utils.MaybeAddArgInt(args, "--read-concurrency", bo.ReadConcurrency)
+	args = utils.MaybeAddArgBool(args, "--skip-if-unchanged", bo.SkipIfUnchanged)
+	args = utils.MaybeAddArgsList(args, "--tag", bo.Tags)
+	args = utils.MaybeAddArgBool(args, "--with-atime", bo.WithATime)
 
 	return
 }
 
 type RestoreOpts struct {
-	Exclude []string `hcl:"Exclude,optional"`
-	Include []string `hcl:"Include,optional"`
-	Host    []string `hcl:"Host,optional"`
-	Tags    []string `hcl:"Tags,optional"`
-	Path    string   `hcl:"Path,optional"`
-	Target  string   `hcl:"Target,optional"`
-	Verify  bool     `hcl:"Verify,optional"`
+	Delete       bool     `hcl:"Delete,optional"`
+	DryRun       bool     `hcl:"DryRun,optional"`
+	Exclude      []string `hcl:"Exclude,optional"`
+	ExcludeFile  []string `hcl:"ExcludeFile,optional"`
+	ExcludeXattr []string `hcl:"ExcludeXattr,optional"`
+	Hosts        []string `hcl:"Hosts,optional"`
+	IExclude     []string `hcl:"IExclude,optional"`
+	IExcludeFile []string `hcl:"IExcludeFile,optional"`
+	IInclude     []string `hcl:"IInclude,optional"`
+	IIncludeFile []string `hcl:"IIncludeFile,optional"`
+	Include      []string `hcl:"Include,optional"`
+	IncludeFile  []string `hcl:"IncludeFile,optional"`
+	IncludeXattr []string `hcl:"IncludeXattr,optional"`
+	Overwrite    string   `hcl:"Overwrite,optional"`
+	Paths        []string `hcl:"Paths,optional"`
+	Sparse       bool     `hcl:"Sparse,optional"`
+	Tags         []string `hcl:"Tags,optional"`
+	Target       string   `hcl:"Target,optional"`
+	Verify       bool     `hcl:"Verify,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
 func (ro RestoreOpts) ToArgs() (args []string) {
+	args = utils.MaybeAddArgBool(args, "--delete", ro.Delete)
+	args = utils.MaybeAddArgBool(args, "--dry-run", ro.DryRun)
 	args = utils.MaybeAddArgsList(args, "--exclude", ro.Exclude)
+	args = utils.MaybeAddArgsList(args, "--exclude-file", ro.ExcludeFile)
+	args = utils.MaybeAddArgsList(args, "--exclude-xattr", ro.ExcludeXattr)
+	args = utils.MaybeAddArgsList(args, "--host", ro.Hosts)
+	args = utils.MaybeAddArgsList(args, "--iexclude", ro.IExclude)
+	args = utils.MaybeAddArgsList(args, "--iexclude-file", ro.IExcludeFile)
+	args = utils.MaybeAddArgsList(args, "--iinclude", ro.IInclude)
+	args = utils.MaybeAddArgsList(args, "--iinclude-file", ro.IIncludeFile)
 	args = utils.MaybeAddArgsList(args, "--include", ro.Include)
-	args = utils.MaybeAddArgsList(args, "--host", ro.Host)
+	args = utils.MaybeAddArgsList(args, "--include-file", ro.IncludeFile)
+	args = utils.MaybeAddArgsList(args, "--include-xattr", ro.IncludeXattr)
+	args = utils.MaybeAddArgString(args, "--overwrite", ro.Overwrite)
+	args = utils.MaybeAddArgsList(args, "--path", ro.Paths)
+	args = utils.MaybeAddArgBool(args, "--sparse", ro.Sparse)
 	args = utils.MaybeAddArgsList(args, "--tag", ro.Tags)
-	args = utils.MaybeAddArgString(args, "--path", ro.Path)
 	args = utils.MaybeAddArgString(args, "--target", ro.Target)
 	args = utils.MaybeAddArgBool(args, "--verify", ro.Verify)
 
 	return
 }
 
-type TagList []string
-
-func (t TagList) String() string {
-	return strings.Join(t, ",")
-}
-
 type ForgetOpts struct {
 	KeepLast    int `hcl:"KeepLast,optional"`
-	KeepHourly  int `hcl:"KeepHourly,optional"`
 	KeepDaily   int `hcl:"KeepDaily,optional"`
-	KeepWeekly  int `hcl:"KeepWeekly,optional"`
+	KeepHourly  int `hcl:"KeepHourly,optional"`
 	KeepMonthly int `hcl:"KeepMonthly,optional"`
+	KeepWeekly  int `hcl:"KeepWeekly,optional"`
 	KeepYearly  int `hcl:"KeepYearly,optional"`
 
 	KeepWithin        time.Duration `hcl:"KeepWithin,optional"`
-	KeepWithinHourly  time.Duration `hcl:"KeepWithinHourly,optional"`
 	KeepWithinDaily   time.Duration `hcl:"KeepWithinDaily,optional"`
-	KeepWithinWeekly  time.Duration `hcl:"KeepWithinWeekly,optional"`
+	KeepWithinHourly  time.Duration `hcl:"KeepWithinHourly,optional"`
 	KeepWithinMonthly time.Duration `hcl:"KeepWithinMonthly,optional"`
+	KeepWithinWeekly  time.Duration `hcl:"KeepWithinWeekly,optional"`
 	KeepWithinYearly  time.Duration `hcl:"KeepWithinYearly,optional"`
 
-	Tags     []TagList `hcl:"Tags,optional"`
-	KeepTags []TagList `hcl:"KeepTags,optional"`
+	Compact              bool     `hcl:"Compact,optional"`
+	DryRun               bool     `hcl:"DryRun,optional"`
+	GroupBy              string   `hcl:"GroupBy,optional"`
+	Hosts                []string `hcl:"Hosts,optional"`
+	Paths                []string `hcl:"Paths,optional"`
+	Tags                 []string `hcl:"Tags,optional"`
+	KeepTags             []string `hcl:"KeepTags,optional"`
+	UnsafeAllowRemoveAll bool     `hcl:"UnsafeAllowRemoveAll,optional"`
 
-	Prune bool `hcl:"Prune,optional"`
+	Prune               bool   `hcl:"Prune,optional"`
+	MaxUnused           string `hcl:"MaxUnused,optional"`
+	MaxRepackSize       string `hcl:"MaxRepackSize,optional"`
+	RepackCacheableOnly bool   `hcl:"RepackCacheableOnly,optional"`
+	RepackSmall         bool   `hcl:"RepackSmall,optional"`
+	RepackUncompressed  bool   `hcl:"RepackUncompressed,optional"`
+	RepackSmallerThan   string `hcl:"RepackSmallerThan,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
@@ -128,44 +198,30 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 	args = utils.MaybeAddArgInt(args, "--keep-weekly", fo.KeepWeekly)
 	args = utils.MaybeAddArgInt(args, "--keep-monthly", fo.KeepMonthly)
 	args = utils.MaybeAddArgInt(args, "--keep-yearly", fo.KeepYearly)
-
-	// Add keep-within-*
-
-	if fo.KeepWithin > 0 {
-		args = append(args, "--keep-within", fo.KeepWithin.String())
-	}
-
-	if fo.KeepWithinHourly > 0 {
-		args = append(args, "--keep-within-hourly", fo.KeepWithinHourly.String())
-	}
-
-	if fo.KeepWithinDaily > 0 {
-		args = append(args, "--keep-within-daily", fo.KeepWithinDaily.String())
-	}
-
-	if fo.KeepWithinWeekly > 0 {
-		args = append(args, "--keep-within-weekly", fo.KeepWithinWeekly.String())
-	}
-
-	if fo.KeepWithinMonthly > 0 {
-		args = append(args, "--keep-within-monthly", fo.KeepWithinMonthly.String())
-	}
-
-	if fo.KeepWithinYearly > 0 {
-		args = append(args, "--keep-within-yearly", fo.KeepWithinYearly.String())
-	}
-
-	// Add tags
-	for _, tagList := range fo.Tags {
-		args = append(args, "--tag", tagList.String())
-	}
-
-	for _, tagList := range fo.KeepTags {
-		args = append(args, "--keep-tag", tagList.String())
-	}
-
-	// Add prune options
+	args = utils.MaybeAddArgDuration(args, "--keep-within", fo.KeepWithin)
+	args = utils.MaybeAddArgDuration(args, "--keep-within-hourly", fo.KeepWithinHourly)
+	args = utils.MaybeAddArgDuration(args, "--keep-within-daily", fo.KeepWithinDaily)
+	args = utils.MaybeAddArgDuration(args, "--keep-within-weekly", fo.KeepWithinWeekly)
+	args = utils.MaybeAddArgDuration(args, "--keep-within-monthly", fo.KeepWithinMonthly)
+	args = utils.MaybeAddArgDuration(args, "--keep-within-yearly", fo.KeepWithinYearly)
+	args = utils.MaybeAddArgBool(args, "--compact", fo.Compact)
+	args = utils.MaybeAddArgBool(args, "--dry-run", fo.DryRun)
+	args = utils.MaybeAddArgString(args, "--group-by", fo.GroupBy)
+	args = utils.MaybeAddArgsList(args, "--host", fo.Hosts)
+	args = utils.MaybeAddArgsList(args, "--path", fo.Paths)
+	args = utils.MaybeAddArgsList(args, "--tag", fo.Tags)
+	args = utils.MaybeAddArgsList(args, "--keep-tag", fo.KeepTags)
+	args = utils.MaybeAddArgBool(args, "--unsafe-allow-remove-all", fo.UnsafeAllowRemoveAll)
 	args = utils.MaybeAddArgBool(args, "--prune", fo.Prune)
+	args = utils.MaybeAddArgString(args, "--max-unused", fo.MaxUnused)
+	args = utils.MaybeAddArgString(args, "--max-repack-size", fo.MaxRepackSize)
+	args = utils.MaybeAddArgBool(args, "--repack-cacheable-only", fo.RepackCacheableOnly)
+	args = utils.MaybeAddArgBool(args, "--repack-small", fo.RepackSmall)
+	args = utils.MaybeAddArgBool(args, "--repack-uncompressed", fo.RepackUncompressed)
+	args = utils.MaybeAddArgString(args, "--repack-smaller-than", fo.RepackSmallerThan)
+
+
+
 
 	return args
 }

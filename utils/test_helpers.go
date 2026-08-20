@@ -12,6 +12,9 @@ func AssertEqual(t *testing.T, message string, expected, actual any) bool {
 	if diff := deep.Equal(expected, actual); diff != nil {
 		t.Errorf("%s: %v", message, diff)
 
+		t.Errorf("expected: %+v", expected)
+		t.Errorf("actual: %+v", actual)
+
 		return false
 	}
 

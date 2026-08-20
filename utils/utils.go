@@ -1,6 +1,9 @@
 package utils
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Set map[string]bool
 
@@ -53,6 +56,14 @@ func MaybeAddArgString(args []string, name, value string) []string {
 func MaybeAddArgInt(args []string, name string, value int) []string {
 	if value > 0 {
 		return append(args, name, fmt.Sprint(value))
+	}
+
+	return args
+}
+
+func MaybeAddArgDuration(args []string, name string, value time.Duration) []string {
+	if value > 0 {
+		return append(args, name, value.String())
 	}
 
 	return args

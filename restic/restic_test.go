@@ -72,9 +72,9 @@ func TestBackupOpts(t *testing.T) {
 	expected := []string{
 		"--exclude", "file1",
 		"--exclude", "file2",
+		"--host", "steve",
 		"--include", "directory",
 		"--tag", "thing",
-		"--host", "steve",
 	}
 
 	utils.AssertEqual(t, "args didn't match", expected, args)
@@ -86,9 +86,9 @@ func TestRestoreOpts(t *testing.T) {
 	args := restic.RestoreOpts{
 		Exclude: []string{"file1", "file2"},
 		Include: []string{"directory"},
-		Host:    []string{"steve"},
+		Hosts:   []string{"steve"},
 		Tags:    []string{"thing"},
-		Path:    "directory",
+		Paths:   []string{"directory"},
 		Target:  "directory",
 		Verify:  true,
 	}.ToArgs()
@@ -96,10 +96,10 @@ func TestRestoreOpts(t *testing.T) {
 	expected := []string{
 		"--exclude", "file1",
 		"--exclude", "file2",
-		"--include", "directory",
 		"--host", "steve",
-		"--tag", "thing",
+		"--include", "directory",
 		"--path", "directory",
+		"--tag", "thing",
 		"--target", "directory",
 		"--verify",
 	}
@@ -123,12 +123,9 @@ func TestForgetOpts(t *testing.T) {
 		KeepWithinWeekly:  1 * time.Second,
 		KeepWithinMonthly: 1 * time.Second,
 		KeepWithinYearly:  1 * time.Second,
-		Tags: []restic.TagList{
-			{"thing1", "thing2"},
-			{"otherthing"},
-		},
-		KeepTags: []restic.TagList{{"thing"}},
-		Prune:    true,
+		Tags:              []string{"thing1,thing2", "otherthing"},
+		KeepTags:          []string{"thing"},
+		Prune:             true,
 	}.ToArgs()
 
 	expected := []string{
@@ -197,8 +194,6 @@ func TestBuildEnv(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
