@@ -2,13 +2,13 @@ package tasks
 
 // JobTaskMariaDB is a MySQL backup task that performs required pre and post tasks.
 type JobTaskMariaDB struct {
-	*JobTaskMySQL `hcl:",remain"`
+	JobTaskMySQL `hcl:",remain"`
 
 	// labels won't pass through with remain
 	Name string `hcl:"name,label"`
 }
 
-func (t JobTaskMariaDB) patchInnerStruct() {
+func (t *JobTaskMariaDB) patchInnerStruct() {
 	// Hook in GetPreTask to set to mariaDB
 	t.UseMariaDB = true
 	// Copy name down to inner struct

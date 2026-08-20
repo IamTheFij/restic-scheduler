@@ -137,7 +137,7 @@ func TestJobTaskSql(t *testing.T) {
 			//nolint:exhaustruct
 			task: tasks.JobTaskMariaDB{
 				//nolint:exhaustruct
-				&tasks.JobTaskMySQL{
+				tasks.JobTaskMySQL{
 					DumpToPath: "./simple.sql",
 				},
 				"simple",
