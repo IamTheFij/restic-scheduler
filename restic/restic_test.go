@@ -164,6 +164,29 @@ func TestUnlockOpts(t *testing.T) {
 	utils.AssertEqual(t, "args didn't match", expected, args)
 }
 
+func TestResticCopyOpts(t *testing.T) {
+	t.Parallel()
+
+	args := restic.CopyOpts{
+		FromRepo: "s3:bucket",
+		Hosts:    []string{"host1", "host2"},
+		Paths:    []string{"path1", "path2"},
+		Tags:     []string{"tag1", "tag2"},
+	}.ToArgs()
+
+	expected := []string{
+		"--from-repo", "s3:bucket",
+		"--host", "host1",
+		"--host", "host2",
+		"--path", "path1",
+		"--path", "path2",
+		"--tag", "tag1",
+		"--tag", "tag2",
+	}
+
+	utils.AssertEqual(t, "args didn't match", expected, args)
+}
+
 func TestBuildEnv(t *testing.T) {
 	t.Parallel()
 

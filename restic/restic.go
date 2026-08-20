@@ -220,8 +220,33 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 	args = utils.MaybeAddArgBool(args, "--repack-uncompressed", fo.RepackUncompressed)
 	args = utils.MaybeAddArgString(args, "--repack-smaller-than", fo.RepackSmallerThan)
 
+	return
+}
 
+// CopyOpts contains options for the restic copy command
+type CopyOpts struct {
+	FromInsecureNoPassword bool     `hcl:"FromInsecureNoPassword,optional"`
+	FromKeyHint            string   `hcl:"FromKeyHint,optional"`
+	FromPasswordCommand    string   `hcl:"FromPasswordCommand,optional"`
+	FromPasswordFile       string   `hcl:"FromPasswordFile,optional"`
+	FromRepo               string   `hcl:"FromRepo,optional"`
+	FromRepositoryFile     string   `hcl:"FromRepositoryFile,optional"`
+	Hosts                  []string `hcl:"Hosts,optional"`
+	Paths                  []string `hcl:"Paths,optional"`
+	Tags                   []string `hcl:"Tags,optional"`
+}
 
+// ToArgs returns the structs arguments as a slice of strings.
+func (co CopyOpts) ToArgs() (args []string) {
+	args = utils.MaybeAddArgBool(args, "--from-insecure-no-password", co.FromInsecureNoPassword)
+	args = utils.MaybeAddArgString(args, "--from-key-hint", co.FromKeyHint)
+	args = utils.MaybeAddArgString(args, "--from-password-command", co.FromPasswordCommand)
+	args = utils.MaybeAddArgString(args, "--from-password-file", co.FromPasswordFile)
+	args = utils.MaybeAddArgString(args, "--from-repo", co.FromRepo)
+	args = utils.MaybeAddArgString(args, "--from-repository-file", co.FromRepositoryFile)
+	args = utils.MaybeAddArgsList(args, "--host", co.Hosts)
+	args = utils.MaybeAddArgsList(args, "--path", co.Paths)
+	args = utils.MaybeAddArgsList(args, "--tag", co.Tags)
 
 	return args
 }
@@ -380,6 +405,12 @@ func (rcmd Restic) Check() error {
 
 func (rcmd Restic) Unlock(unlockOpts UnlockOpts) error {
 	_, err := rcmd.RunRestic("unlock", unlockOpts)
+
+	return err
+}
+
+func (rcmd Restic) Copy(copyOpts CopyOpts, snapshots ...string) error {
+	_, err := rcmd.RunRestic("copy", copyOpts, snapshots...)
 
 	return err
 }
