@@ -40,13 +40,39 @@ func TestMain(m *testing.M) {
 func TestReadJobs(t *testing.T) {
 	t.Parallel()
 
-	jobs, err := main.ReadJobs([]string{"./test/sample.hcl"})
-	if err != nil {
-		t.Errorf("Unexpected error reading jobs: %v", err)
+	cases := []struct {
+		name          string
+		filePath      []string
+		expectedError bool
+		numJobs       int
+	}{
+		{
+			name:          "Read valid job file",
+			filePath:      []string{"./test/sample.hcl"},
+			expectedError: false,
+			numJobs:       1,
+		},
+		{
+			name:          "Read invalid file path",
+			filePath:      []string{"./nonexistent.hcl"},
+			expectedError: true,
+			numJobs:       1,
+		},
 	}
 
-	if len(jobs) == 0 {
-		t.Error("Expected read jobs but found none")
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			jobs, err := main.ReadJobs(testCase.filePath)
+			if (err != nil) != testCase.expectedError {
+				t.Errorf("Expected error: %v, got: %v", testCase.expectedError, err)
+			}
+
+			if len(jobs) == testCase.numJobs {
+				t.Error("Expected read jobs but found none")
+			}
+		})
 	}
 }
 
