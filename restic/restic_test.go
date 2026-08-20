@@ -187,6 +187,21 @@ func TestResticCopyOpts(t *testing.T) {
 	utils.AssertEqual(t, "args didn't match", expected, args)
 }
 
+func TestResticInitOpts(t *testing.T) {
+	t.Parallel()
+
+	args := restic.InitOpts{
+		CopyChunkerParams: true,
+		FromRepo:          "s3:bucket",
+	}.ToArgs()
+	expected := []string{
+		"--copy-chunker-params",
+		"--from-repo", "s3:bucket",
+	}
+
+	utils.AssertEqual(t, "init opts returned some opts", expected, args)
+}
+
 func TestBuildEnv(t *testing.T) {
 	t.Parallel()
 
@@ -272,11 +287,11 @@ func TestResticInterface(t *testing.T) {
 	}
 
 	// Init repo
-	err = r.EnsureInit()
+	err = r.EnsureInit(restic.InitOpts{})
 	utils.AssertEqualFail(t, "unexpected error initializing repo", nil, err)
 
 	// Verify it can be reinitialized with no issues
-	err = r.EnsureInit()
+	err = r.EnsureInit(restic.InitOpts{})
 	utils.AssertEqualFail(t, "unexpected error reinitializing repo", nil, err)
 
 	// Backup for real this time

@@ -251,6 +251,31 @@ func (co CopyOpts) ToArgs() (args []string) {
 	return args
 }
 
+type InitOpts struct {
+	CopyChunkerParams      bool   `hcl:"CopyChunkerParams,optional"`
+	FromInsecureNoPassword bool   `hcl:"FromInsecureNoPassword,optional"`
+	FromKeyHint            string `hcl:"FromKeyHint,optional"`
+	FromPasswordCommand    string `hcl:"FromPasswordCommand,optional"`
+	FromPasswordFile       string `hcl:"FromPasswordFile,optional"`
+	FromRepo               string `hcl:"FromRepo,optional"`
+	FromRepositoryFile     string `hcl:"FromRepositoryFile,optional"`
+	RepositoryVersion      string `hcl:"RepositoryVersion,optional"`
+}
+
+// ToArgs returns the structs arguments as a slice of strings.
+func (io InitOpts) ToArgs() (args []string) {
+	args = utils.MaybeAddArgBool(args, "--copy-chunker-params", io.CopyChunkerParams)
+	args = utils.MaybeAddArgBool(args, "--from-insecure-no-password", io.FromInsecureNoPassword)
+	args = utils.MaybeAddArgString(args, "--from-key-hint", io.FromKeyHint)
+	args = utils.MaybeAddArgString(args, "--from-password-command", io.FromPasswordCommand)
+	args = utils.MaybeAddArgString(args, "--from-password-file", io.FromPasswordFile)
+	args = utils.MaybeAddArgString(args, "--from-repo", io.FromRepo)
+	args = utils.MaybeAddArgString(args, "--from-repository-file", io.FromRepositoryFile)
+	args = utils.MaybeAddArgString(args, "--repository-version", io.RepositoryVersion)
+
+	return args
+}
+
 type ResticGlobalOpts struct {
 	CaCertFile        string            `hcl:"CaCertFile,optional"`
 	CacheDir          string            `hcl:"CacheDir,optional"`
@@ -379,6 +404,11 @@ func (rcmd Restic) RunRestic(
 	return output, nil
 }
 
+func (rcmd Restic) InitRepo(initOpts InitOpts) error {
+	_, err := rcmd.RunRestic("init", initOpts)
+	return err
+}
+
 func (rcmd Restic) Backup(files []string, opts BackupOpts) error {
 	_, err := rcmd.RunRestic("backup", opts, files...)
 
@@ -454,9 +484,9 @@ func (rcmd Restic) Snapshots() error {
 	return err
 }
 
-func (rcmd Restic) EnsureInit() error {
+func (rcmd Restic) EnsureInit(initOpts InitOpts) error {
 	if err := rcmd.Snapshots(); errors.Is(err, ErrRepoNotFound) {
-		_, err := rcmd.RunRestic("init", NoOpts{})
+		err := rcmd.InitRepo(initOpts)
 
 		return err
 	}

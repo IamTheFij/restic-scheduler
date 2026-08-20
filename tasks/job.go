@@ -155,9 +155,9 @@ func (j Job) BackupPaths() []string {
 // RunBackup executes the backup for this current Job.
 func (j *Job) RunBackup() error {
 	logger := utils.GetLogger(j.Name)
-	restic := j.NewRestic()
+	r := j.NewRestic()
 
-	if err := restic.EnsureInit(); err != nil {
+	if err := r.EnsureInit(restic.InitOpts{}); err != nil {
 		j.healthy = false
 		j.lastErr = err
 
@@ -170,7 +170,7 @@ func (j *Job) RunBackup() error {
 		taskCfg := TaskConfig{
 			BackupPaths: backupPaths,
 			Logger:      utils.GetChildLogger(logger, exTask.Name()),
-			Restic:      restic,
+			Restic:      r,
 			Env:         j.Config.Env,
 		}
 
@@ -183,7 +183,7 @@ func (j *Job) RunBackup() error {
 	}
 
 	if j.Forget != nil {
-		if err := restic.Forget(*j.Forget); err != nil {
+		if err := r.Forget(*j.Forget); err != nil {
 			j.healthy = false
 			j.lastErr = err
 
