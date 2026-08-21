@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"maps"
 	"time"
 )
 
@@ -25,15 +26,21 @@ func NewSetFrom(l []string) Set {
 func MergeEnvMap(parent, child map[string]string) map[string]string {
 	result := map[string]string{}
 
-	for key, value := range parent {
-		result[key] = value
-	}
-
-	for key, value := range child {
-		result[key] = value
-	}
+	maps.Copy(result, parent)
+	maps.Copy(result, child)
 
 	return result
+}
+
+func MapPop[K comparable, T any](m map[K]T, key K) T {
+	var zeroValue T
+
+	if val, ok := m[key]; ok {
+		delete(m, key)
+		return val
+	}
+
+	return zeroValue
 }
 
 func EnvMapToList(envMap map[string]string) []string {

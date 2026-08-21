@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 
@@ -34,6 +35,13 @@ type JobResult struct {
 
 func (r JobResult) Format() string {
 	return fmt.Sprintf("%s %s ok? %v\n\n%+v", r.JobName, r.JobType, r.Success, r.LastError)
+}
+
+type CopyConfig struct {
+	TargetRepo       string            `hcl:"target_repo"`
+	TargetPassphrase string            `hcl:"target_passphrase"`
+	Hosts            []string          `hcl:"hosts,optional"`
+	Env              map[string]string `hcl:"env,optional"`
 }
 
 // ResticConfig is all configuration to be sent to Restic for the job.
@@ -71,6 +79,7 @@ type Job struct {
 	Tasks    []JobTask          `hcl:"task,block"`
 	Backup   BackupFilesTask    `hcl:"backup,block"`
 	Forget   *restic.ForgetOpts `hcl:"forget,block"`
+	Copy     *CopyConfig        `hcl:"copy,block"`
 
 	// Metrics and health
 	healthy bool
@@ -190,6 +199,62 @@ func (j *Job) RunBackup() error {
 			return fmt.Errorf("failed forgetting and pruning job %s: %w", j.Name, err)
 		}
 	}
+
+	if j.Copy != nil {
+		// Make a copy of the base environment
+		copyEnv := map[string]string{}
+		maps.Copy(copyEnv, j.Config.Env)
+
+		// Move primary repo env variables to source repo variables
+		copyEnv["FROM_RESTIC_REPOSITORY"] = utils.MapPop(copyEnv, "RESTIC_REPOSITORY")
+		copyEnv["FROM_RESTIC_REPOSITORY_FILE"] = utils.MapPop(copyEnv, "RESTIC_REPOSITORY_FILE")
+		copyEnv["FROM_RESTIC_PASSWORD"] = utils.MapPop(copyEnv, "RESTIC_PASSWORD")
+		copyEnv["FROM_RESTIC_PASSWORD_COMMAND"] = utils.MapPop(copyEnv, "RESTIC_PASSWORD_COMMAND")
+		copyEnv["FROM_RESTIC_PASSWORD_FILE"] = utils.MapPop(copyEnv, "RESTIC_PASSWORD_FILE")
+
+		// Add primary repo passphrase to copyEnv
+		if j.Config.GlobalOpts.PasswordFile == "" && j.Config.Passphrase != "" {
+			copyEnv["RESTIC_FROM_PASSWORD"] = j.Config.Passphrase
+		}
+
+		copyRepo := restic.Restic{
+			Logger:     r.Logger,
+			Repo:       j.Copy.TargetRepo,
+			Passphrase: j.Copy.TargetPassphrase,
+			Env:        copyEnv,
+			// One bit of undefined behavior is the potential for a global PasswordFile
+			// set at the top level and having that pass through to this client.
+			// I might move this up to the Restic struct rather than relying on global
+			// opts.
+			GlobalOpts: j.Config.GlobalOpts,
+			Cwd:        "",
+		}
+
+		if err := copyRepo.EnsureInit(restic.InitOpts{
+			CopyChunkerParams: true,
+			FromRepo:          j.Config.Repo,
+			FromPasswordFile:  j.Config.GlobalOpts.PasswordFile,
+		}); err != nil {
+			j.healthy = false
+			j.lastErr = err
+
+			return fmt.Errorf("failed to init copy repo for job %s: %w", j.Name, err)
+		}
+
+		if err := copyRepo.Copy(restic.CopyOpts{
+			Hosts:            j.Copy.Hosts,
+			FromRepo:         j.Config.Repo,
+			FromPasswordFile: j.Config.GlobalOpts.PasswordFile,
+		}); err != nil {
+			j.healthy = false
+			j.lastErr = err
+
+			return fmt.Errorf("failed copying snapshots for job %s: %w", j.Name, err)
+		}
+	}
+
+	j.healthy = true
+	j.lastErr = nil
 
 	return nil
 }
