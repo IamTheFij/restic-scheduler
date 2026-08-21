@@ -28,7 +28,7 @@ build: $(APP_NAME)
 # Run all tests
 .PHONY: test
 test:
-	go test -v -coverpkg=./... -coverprofile=coverage.out ./...
+	go test -coverpkg=./... -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 
 # Itest binary with coverage flag
