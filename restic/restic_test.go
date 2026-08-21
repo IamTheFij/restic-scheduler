@@ -277,7 +277,7 @@ func TestResticInterface(t *testing.T) {
 	// Make sure no existing repo is found
 	_, err = r.ReadSnapshots()
 	if err == nil || !errors.Is(err, restic.ErrRepoNotFound) {
-		utils.AssertEqualFail(t, "didn't get expected error for backup", restic.ErrRepoNotFound.Error(), err.Error())
+		utils.AssertEqualFail(t, "didn't get expected error for snapshots", restic.ErrRepoNotFound.Error(), err.Error())
 	}
 
 	// Try to backup when repo is not initialized
@@ -351,4 +351,81 @@ func TestResticInterface(t *testing.T) {
 	// Try to unlock the repo (repo shouldn't really be locked, but this should still run without error
 	err = r.Unlock(restic.UnlockOpts{}) //nolint:exhaustruct
 	utils.AssertEqualFail(t, "unexpected error unlocking repo", nil, err)
+
+	// Test copy functionality
+	repoCopyDir := t.TempDir()
+
+	copyOpts := restic.CopyOpts{
+		FromRepo:            repoDir,
+		FromPasswordCommand: "echo 'Correct.Horse.Battery.Staple'",
+	}
+
+	rPrime := restic.Restic{
+		Logger:     log.New(os.Stderr, t.Name()+":Prime:", log.Lmsgprefix),
+		Repo:       repoCopyDir,
+		Env:        map[string]string{},
+		Passphrase: "Wrong.Pony.Solar.Tape",
+		GlobalOpts: &restic.ResticGlobalOpts{
+			CacheDir: cacheDir,
+			Options: map[string]string{
+				"s3.storage-class": "REDUCED_REDUNDANCY",
+			},
+		},
+		Cwd: dataDir,
+	}
+
+	// Make sure no existing repo is found
+	_, err = rPrime.ReadSnapshots()
+	if err == nil || !errors.Is(err, restic.ErrRepoNotFound) {
+		utils.AssertEqualFail(t, "copy repo: didn't get expected error for snapshots", restic.ErrRepoNotFound.Error(), err.Error())
+	}
+
+	// Try to copy when repo is not initialized
+	err = rPrime.Copy(copyOpts)
+	if !errors.Is(err, restic.ErrRepoNotFound) {
+		utils.AssertEqualFail(t, "unexpected error creating making copying repo", nil, err)
+	}
+
+	// Init repo
+	err = rPrime.EnsureInit(restic.InitOpts{
+		CopyChunkerParams:   true,
+		FromRepo:            repoDir,
+		FromPasswordCommand: "echo 'Correct.Horse.Battery.Staple'",
+	})
+	utils.AssertEqualFail(t, "unexpected error initializing copy repo", nil, err)
+
+	// Verify it can be reinitialized with no issues
+	err = rPrime.EnsureInit(restic.InitOpts{
+		CopyChunkerParams:   true,
+		FromRepo:            repoDir,
+		FromPasswordCommand: "echo 'Correct.Horse.Battery.Staple'",
+	})
+	utils.AssertEqualFail(t, "unexpected error initializing copy repo", nil, err)
+
+	// Try to make copy
+	err = rPrime.Copy(copyOpts)
+	utils.AssertEqualFail(t, "unexpected error creating making repo copy", nil, err)
+
+	// Check copy snapshots
+	snapshots, err = rPrime.ReadSnapshots()
+	utils.AssertEqualFail(t, "unexpected error reading copy snapshots", nil, err)
+	utils.AssertEqual(t, "unexpected number of copy snapshots", 1, len(snapshots))
+
+	// Change the previously restored data file
+	err = os.WriteFile(restoredDataFile, []byte("unexpected"), 0o644)
+	utils.AssertEqualFail(t, "unexpected error writing to test file", nil, err)
+
+	// Check that data wrote
+	value, err = os.ReadFile(restoredDataFile)
+	utils.AssertEqualFail(t, "unexpected error reading from test file", nil, err)
+	utils.AssertEqualFail(t, "incorrect value in test file (we expect the unexpected!)", "unexpected", string(value))
+
+	// Restore files from copy repo
+	err = rPrime.Restore("latest", restic.RestoreOpts{Target: restoreTarget}) //nolint:exhaustruct
+	utils.AssertEqualFail(t, "unexpected error restoring latest snapshot", nil, err)
+
+	// Check restored values
+	value, err = os.ReadFile(restoredDataFile)
+	utils.AssertEqualFail(t, "unexpected error reading from test file", nil, err)
+	utils.AssertEqualFail(t, "incorrect value in test file", "testing", string(value))
 }
