@@ -28,7 +28,7 @@ func ReadJobs(paths []string) ([]tasks.Job, error) {
 	allJobs := []tasks.Job{}
 
 	for _, path := range paths {
-		jobs, err := config.ParseConfig(path)
+		jobs, err := config.ParseConfigFile(path)
 		if err != nil {
 			return nil, err
 		}
