@@ -6,6 +6,7 @@ import (
 	"log"
 	"maps"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/robfig/cron/v3"
@@ -44,6 +45,11 @@ type CopyConfig struct {
 	Env              map[string]string `hcl:"env,optional"`
 }
 
+type RcloneConfig struct {
+	Source      string `hcl:"source"`
+	Destination string `hcl:"destination"`
+}
+
 // ResticConfig is all configuration to be sent to Restic for the job.
 type ResticConfig struct {
 	Repo       string                   `hcl:"repo"`
@@ -80,6 +86,7 @@ type Job struct {
 	Backup   BackupFilesTask    `hcl:"backup,block"`
 	Forget   *restic.ForgetOpts `hcl:"forget,block"`
 	Copy     *CopyConfig        `hcl:"copy,block"`
+	Rclone   *RcloneConfig      `hcl:"rclone,block"`
 
 	// Metrics and health
 	healthy bool
@@ -250,6 +257,17 @@ func (j *Job) RunBackup() error {
 			j.lastErr = err
 
 			return fmt.Errorf("failed copying snapshots for job %s: %w", j.Name, err)
+		}
+	}
+
+	if j.Rclone != nil {
+		cmd := exec.Command("rclone", "sync", j.Rclone.Source, j.Rclone.Destination)
+
+		if err := cmd.Run(); err != nil {
+			j.healthy = false
+			j.lastErr = err
+
+			return fmt.Errorf("failed syncing repo with rclone for job %s: %w", j.Name, err)
 		}
 	}
 
