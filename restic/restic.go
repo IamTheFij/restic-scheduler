@@ -54,30 +54,30 @@ func (uo UnlockOpts) ToArgs() (args []string) {
 
 // BackupOpts holds optional arguments for the Restic backup command.
 type BackupOpts struct {
-	DryRun            bool     `hcl:"DryRun,optional"`
-	Exclude           []string `hcl:"Exclude,optional"`
-	ExcludeCaches     bool     `hcl:"ExcludeCaches,optional"`
-	ExcludeFile       []string `hcl:"ExcludeFile,optional"`
-	ExcludeIfPresent  []string `hcl:"ExcludeIfPresent,optional"`
-	ExcludeLargerThan string   `hcl:"ExcludeLargerThan,optional"`
-	FilesFrom         []string `hcl:"FilesFrom,optional"`
-	FilesFromRaw      []string `hcl:"FilesFromRaw,optional"`
-	FilesFromVerbatim []string `hcl:"FilesFromVerbatim,optional"`
-	Force             bool     `hcl:"Force,optional"`
-	GroupBy           string   `hcl:"GroupBy,optional"`
-	Host              string   `hcl:"Host,optional"`
-	IExclude          []string `hcl:"IExclude,optional"`
-	IExcludeFile      []string `hcl:"IExcludeFile,optional"`
-	IgnoreCtime       bool     `hcl:"IgnoreCtime,optional"`
-	IgnoreInode       bool     `hcl:"IgnoreInode,optional"`
-	Include           []string `hcl:"Include,optional"`
-	NoScan            bool     `hcl:"NoScan,optional"`
-	OneFileSystem     bool     `hcl:"OneFileSystem,optional"`
-	Parent            string   `hcl:"Parent,optional"`
-	ReadConcurrency   int      `hcl:"ReadConcurrency,optional"`
-	SkipIfUnchanged   bool     `hcl:"SkipIfUnchanged,optional"`
-	Tags              []string `hcl:"Tags,optional"`
-	WithATime         bool     `hcl:"WithATime,optional"`
+	DryRun            bool     `hcl:"dry_run,optional"`
+	Exclude           []string `hcl:"exclude,optional"`
+	ExcludeCaches     bool     `hcl:"exclude_caches,optional"`
+	ExcludeFile       []string `hcl:"exclude_file,optional"`
+	ExcludeIfPresent  []string `hcl:"exclude_if_present,optional"`
+	ExcludeLargerThan string   `hcl:"exclude_larger_than,optional"`
+	FilesFrom         []string `hcl:"files_from,optional"`
+	FilesFromRaw      []string `hcl:"files_from_raw,optional"`
+	FilesFromVerbatim []string `hcl:"files_from_verbatim,optional"`
+	Force             bool     `hcl:"force,optional"`
+	GroupBy           string   `hcl:"group_by,optional"`
+	Host              string   `hcl:"host,optional"`
+	IExclude          []string `hcl:"iexclude,optional"`
+	IExcludeFile      []string `hcl:"iexclude_file,optional"`
+	IgnoreCtime       bool     `hcl:"ignore_ctime,optional"`
+	IgnoreInode       bool     `hcl:"ignore_inode,optional"`
+	Include           []string `hcl:"include,optional"`
+	NoScan            bool     `hcl:"no_scan,optional"`
+	OneFileSystem     bool     `hcl:"one_file_system,optional"`
+	Parent            string   `hcl:"parent,optional"`
+	ReadConcurrency   int      `hcl:"read_concurrency,optional"`
+	SkipIfUnchanged   bool     `hcl:"skip_if_unchanged,optional"`
+	Tags              []string `hcl:"tags,optional"`
+	WithATime         bool     `hcl:"with_atime,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
@@ -111,25 +111,25 @@ func (bo BackupOpts) ToArgs() (args []string) {
 }
 
 type RestoreOpts struct {
-	Delete       bool     `hcl:"Delete,optional"`
-	DryRun       bool     `hcl:"DryRun,optional"`
-	Exclude      []string `hcl:"Exclude,optional"`
-	ExcludeFile  []string `hcl:"ExcludeFile,optional"`
-	ExcludeXattr []string `hcl:"ExcludeXattr,optional"`
-	Hosts        []string `hcl:"Hosts,optional"`
-	IExclude     []string `hcl:"IExclude,optional"`
-	IExcludeFile []string `hcl:"IExcludeFile,optional"`
-	IInclude     []string `hcl:"IInclude,optional"`
-	IIncludeFile []string `hcl:"IIncludeFile,optional"`
-	Include      []string `hcl:"Include,optional"`
-	IncludeFile  []string `hcl:"IncludeFile,optional"`
-	IncludeXattr []string `hcl:"IncludeXattr,optional"`
-	Overwrite    string   `hcl:"Overwrite,optional"`
-	Paths        []string `hcl:"Paths,optional"`
-	Sparse       bool     `hcl:"Sparse,optional"`
-	Tags         []string `hcl:"Tags,optional"`
-	Target       string   `hcl:"Target,optional"`
-	Verify       bool     `hcl:"Verify,optional"`
+	Delete       bool     `hcl:"delete,optional"`
+	DryRun       bool     `hcl:"dry_run,optional"`
+	Exclude      []string `hcl:"exclude,optional"`
+	ExcludeFile  []string `hcl:"exclude_file,optional"`
+	ExcludeXattr []string `hcl:"exclude_xattr,optional"`
+	Hosts        []string `hcl:"hosts,optional"`
+	IExclude     []string `hcl:"iexclude,optional"`
+	IExcludeFile []string `hcl:"iexclude_file,optional"`
+	IInclude     []string `hcl:"iinclude,optional"`
+	IIncludeFile []string `hcl:"iinclude_file,optional"`
+	Include      []string `hcl:"include,optional"`
+	IncludeFile  []string `hcl:"include_file,optional"`
+	IncludeXattr []string `hcl:"include_xattr,optional"`
+	Overwrite    string   `hcl:"overwrite,optional"`
+	Paths        []string `hcl:"paths,optional"`
+	Sparse       bool     `hcl:"sparse,optional"`
+	Tags         []string `hcl:"tags,optional"`
+	Target       string   `hcl:"target,optional"`
+	Verify       bool     `hcl:"verify,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
@@ -158,36 +158,36 @@ func (ro RestoreOpts) ToArgs() (args []string) {
 }
 
 type ForgetOpts struct {
-	KeepLast    int `hcl:"KeepLast,optional"`
-	KeepDaily   int `hcl:"KeepDaily,optional"`
-	KeepHourly  int `hcl:"KeepHourly,optional"`
-	KeepMonthly int `hcl:"KeepMonthly,optional"`
-	KeepWeekly  int `hcl:"KeepWeekly,optional"`
-	KeepYearly  int `hcl:"KeepYearly,optional"`
+	KeepLast    int `hcl:"keep_last,optional"`
+	KeepDaily   int `hcl:"keep_daily,optional"`
+	KeepHourly  int `hcl:"keep_hourly,optional"`
+	KeepMonthly int `hcl:"keep_monthly,optional"`
+	KeepWeekly  int `hcl:"keep_weekly,optional"`
+	KeepYearly  int `hcl:"keep_yearly,optional"`
 
-	KeepWithin        time.Duration `hcl:"KeepWithin,optional"`
-	KeepWithinDaily   time.Duration `hcl:"KeepWithinDaily,optional"`
-	KeepWithinHourly  time.Duration `hcl:"KeepWithinHourly,optional"`
-	KeepWithinMonthly time.Duration `hcl:"KeepWithinMonthly,optional"`
-	KeepWithinWeekly  time.Duration `hcl:"KeepWithinWeekly,optional"`
-	KeepWithinYearly  time.Duration `hcl:"KeepWithinYearly,optional"`
+	KeepWithin        time.Duration `hcl:"keep_within,optional"`
+	KeepWithinDaily   time.Duration `hcl:"keep_within_daily,optional"`
+	KeepWithinHourly  time.Duration `hcl:"keep_within_hourly,optional"`
+	KeepWithinMonthly time.Duration `hcl:"keep_within_monthly,optional"`
+	KeepWithinWeekly  time.Duration `hcl:"keep_within_weekly,optional"`
+	KeepWithinYearly  time.Duration `hcl:"keep_within_yearly,optional"`
 
-	Compact              bool     `hcl:"Compact,optional"`
-	DryRun               bool     `hcl:"DryRun,optional"`
-	GroupBy              string   `hcl:"GroupBy,optional"`
-	Hosts                []string `hcl:"Hosts,optional"`
-	Paths                []string `hcl:"Paths,optional"`
-	Tags                 []string `hcl:"Tags,optional"`
-	KeepTags             []string `hcl:"KeepTags,optional"`
-	UnsafeAllowRemoveAll bool     `hcl:"UnsafeAllowRemoveAll,optional"`
+	Compact              bool     `hcl:"compact,optional"`
+	DryRun               bool     `hcl:"dry_run,optional"`
+	GroupBy              string   `hcl:"group_by,optional"`
+	Hosts                []string `hcl:"hosts,optional"`
+	Paths                []string `hcl:"paths,optional"`
+	Tags                 []string `hcl:"tags,optional"`
+	KeepTags             []string `hcl:"keep_tags,optional"`
+	UnsafeAllowRemoveAll bool     `hcl:"unsafe_allow_remove_all,optional"`
 
-	Prune               bool   `hcl:"Prune,optional"`
-	MaxUnused           string `hcl:"MaxUnused,optional"`
-	MaxRepackSize       string `hcl:"MaxRepackSize,optional"`
-	RepackCacheableOnly bool   `hcl:"RepackCacheableOnly,optional"`
-	RepackSmall         bool   `hcl:"RepackSmall,optional"`
-	RepackUncompressed  bool   `hcl:"RepackUncompressed,optional"`
-	RepackSmallerThan   string `hcl:"RepackSmallerThan,optional"`
+	Prune               bool   `hcl:"prune,optional"`
+	MaxUnused           string `hcl:"max_unused,optional"`
+	MaxRepackSize       string `hcl:"max_repack_size,optional"`
+	RepackCacheableOnly bool   `hcl:"repack_cacheable_only,optional"`
+	RepackSmall         bool   `hcl:"repack_small,optional"`
+	RepackUncompressed  bool   `hcl:"repack_uncompressed,optional"`
+	RepackSmallerThan   string `hcl:"repack_smaller_than,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
@@ -225,15 +225,15 @@ func (fo ForgetOpts) ToArgs() (args []string) {
 
 // CopyOpts contains options for the restic copy command
 type CopyOpts struct {
-	FromInsecureNoPassword bool     `hcl:"FromInsecureNoPassword,optional"`
-	FromKeyHint            string   `hcl:"FromKeyHint,optional"`
-	FromPasswordCommand    string   `hcl:"FromPasswordCommand,optional"`
-	FromPasswordFile       string   `hcl:"FromPasswordFile,optional"`
-	FromRepo               string   `hcl:"FromRepo,optional"`
-	FromRepositoryFile     string   `hcl:"FromRepositoryFile,optional"`
-	Hosts                  []string `hcl:"Hosts,optional"`
-	Paths                  []string `hcl:"Paths,optional"`
-	Tags                   []string `hcl:"Tags,optional"`
+	FromInsecureNoPassword bool     `hcl:"from_insecure_no_password,optional"`
+	FromKeyHint            string   `hcl:"from_key_hint,optional"`
+	FromPasswordCommand    string   `hcl:"from_password_command,optional"`
+	FromPasswordFile       string   `hcl:"from_password_file,optional"`
+	FromRepo               string   `hcl:"from_repo,optional"`
+	FromRepositoryFile     string   `hcl:"from_repository_file,optional"`
+	Hosts                  []string `hcl:"hosts,optional"`
+	Paths                  []string `hcl:"paths,optional"`
+	Tags                   []string `hcl:"tags,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
@@ -252,14 +252,14 @@ func (co CopyOpts) ToArgs() (args []string) {
 }
 
 type InitOpts struct {
-	CopyChunkerParams      bool   `hcl:"CopyChunkerParams,optional"`
-	FromInsecureNoPassword bool   `hcl:"FromInsecureNoPassword,optional"`
-	FromKeyHint            string `hcl:"FromKeyHint,optional"`
-	FromPasswordCommand    string `hcl:"FromPasswordCommand,optional"`
-	FromPasswordFile       string `hcl:"FromPasswordFile,optional"`
-	FromRepo               string `hcl:"FromRepo,optional"`
-	FromRepositoryFile     string `hcl:"FromRepositoryFile,optional"`
-	RepositoryVersion      string `hcl:"RepositoryVersion,optional"`
+	CopyChunkerParams      bool   `hcl:"copy_chunker_params,optional"`
+	FromInsecureNoPassword bool   `hcl:"from_insecure_no_password,optional"`
+	FromKeyHint            string `hcl:"from_key_hint,optional"`
+	FromPasswordCommand    string `hcl:"from_password_command,optional"`
+	FromPasswordFile       string `hcl:"from_password_file,optional"`
+	FromRepo               string `hcl:"from_repo,optional"`
+	FromRepositoryFile     string `hcl:"from_repository_file,optional"`
+	RepositoryVersion      string `hcl:"repository_version,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.
@@ -277,18 +277,18 @@ func (io InitOpts) ToArgs() (args []string) {
 }
 
 type ResticGlobalOpts struct {
-	CaCertFile        string            `hcl:"CaCertFile,optional"`
-	CacheDir          string            `hcl:"CacheDir,optional"`
-	PasswordFile      string            `hcl:"PasswordFile,optional"`
-	TLSClientCertFile string            `hcl:"TlsClientCertFile,optional"`
-	LimitDownload     int               `hcl:"LimitDownload,optional"`
-	LimitUpload       int               `hcl:"LimitUpload,optional"`
-	VerboseLevel      int               `hcl:"VerboseLevel,optional"`
-	Options           map[string]string `hcl:"Options,optional"`
-	CleanupCache      bool              `hcl:"CleanupCache,optional"`
-	InsecureTLS       bool              `hcl:"InsecureTls,optional"`
-	NoCache           bool              `hcl:"NoCache,optional"`
-	NoLock            bool              `hcl:"NoLock,optional"`
+	CaCertFile        string            `hcl:"cacert,optional"`
+	CacheDir          string            `hcl:"cache_dir,optional"`
+	PasswordFile      string            `hcl:"password_file,optional"`
+	TLSClientCertFile string            `hcl:"tls_client_cert,optional"`
+	LimitDownload     int               `hcl:"limit_download,optional"`
+	LimitUpload       int               `hcl:"limit_upload,optional"`
+	VerboseLevel      int               `hcl:"verbose_level,optional"`
+	Options           map[string]string `hcl:"options,optional"`
+	CleanupCache      bool              `hcl:"cleanup_cache,optional"`
+	InsecureTLS       bool              `hcl:"insecure_tls,optional"`
+	NoCache           bool              `hcl:"no_cache,optional"`
+	NoLock            bool              `hcl:"no_lock,optional"`
 }
 
 // ToArgs returns the structs arguments as a slice of strings.

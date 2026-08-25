@@ -83,7 +83,7 @@ job "IntegrationTest" {
     paths = ["/data"]
 
     restore_opts {
-      Target = "/"
+      target = "/"
     }
   }
 }

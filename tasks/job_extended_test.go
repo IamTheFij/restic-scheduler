@@ -22,7 +22,7 @@ job "TestJob" {
 		passphrase = "shhh"
 
 		options {
-			CacheDir = "%s"
+			cache_dir = "%s"
 		}
 	}
 
@@ -31,7 +31,7 @@ job "TestJob" {
 		paths = ["%s"]
 
 		restore_opts {
-			Target = "%s"
+			target = "%s"
 		}
 	}
 
@@ -41,7 +41,7 @@ job "TestJob" {
 	}
 
 	forget {
-		KeepLast = 2
+		keep_last = 2
 	}
 }
 `

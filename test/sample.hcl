@@ -12,14 +12,14 @@ job "BackupDataDir" {
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
 
   }
 
   forget {
-    KeepLast = 2
-    Prune = true
+    keep_last = 2
+    prune = true
   }
 }
 
@@ -30,7 +30,7 @@ job "PassphraseFile" {
     repo = "./backups"
     options {
       // A more secure method of specifying password
-      PasswordFile = "./test/samplepassphrase.txt"
+      password_file = "./test/samplepassphrase.txt"
     }
   }
 
@@ -39,7 +39,7 @@ job "PassphraseFile" {
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
 
   }
@@ -66,7 +66,7 @@ job "BackupDataAndSqlite" {
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
   }
 }
@@ -96,7 +96,7 @@ job "BackupMySQL" {
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
   }
 }
@@ -125,7 +125,7 @@ job "BackupMariaDB" {
     paths = []
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
   }
 }
