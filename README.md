@@ -115,9 +115,9 @@ A job in the configuration file is defined using the `job` block. Each job must 
   - `env`: (Optional) Environment variables for restic.
   - `options`: (Optional) Global options for restic. See the `restic` command for details.
 - `task`: (Optional) A list of tasks to run before and after the backup.
-- `mysql`, `postgres`, `sqlite`: (Optional) Database-specific tasks.
 - `backup`: The backup configuration block.
 - `forget`: (Optional) Options for forgetting old snapshots.
+- `copy`: (Optional) Configuration for copying all snapshots to a secondary target repo.
 
 ### Example
 
@@ -138,9 +138,9 @@ job "MyApp" {
       "foo" = "bar",
     }
     options {
-      VerboseLevel = 3
+      verbose_level = 3
       # Another alternate way to pass the passphrase to restic
-      # PasswordFile = "/path/to/passphrase"
+      # password_file = "/path/to/passphrase"
     }
   }
 
@@ -186,22 +186,22 @@ job "MyApp" {
     ]
 
     backup_opts {
-      Tags = ["service"]
+      tags = ["service"]
     }
 
     restore_opts {
-      Verify = true
+      verify = true
       # Since paths are absolute, restore to root
-      Target = "/"
+      target = "/"
     }
   }
 
   forget {
-    KeepLast = 3
-    KeepWeekly = 2
-    KeepMonthly = 2
-    KeepYearly = 2
-    Prune = true
+    keep_last = 3
+    keep_weekly = 2
+    keep_monthly = 2
+    keep_yearly = 2
+    prune = true
   }
 }
 ```
@@ -213,6 +213,35 @@ restic-scheduler jobs.hcl
 This will read the job definitions from `jobs.hcl` and execute the specified jobs.
 
 For more examples, check out `./config.hcl` or some of the example integration test configs in `./test/`.
+
+## Migrating from v1 to v2
+
+There are a few breaking changes in this migration.
+
+### 1. No job level database tasks
+You can no longer list `mysql` or other database blocks at the job level. These now belong exclusively within a `task` block. This helps create predicable ordering of tasks.
+
+### 2. All restic options are now converted to snake case
+
+Previously, options that passed directly to Restic used CamelCase and were incosistent with the rest of the configuration. These are now all consistent. These are also now closer to what you'll see if you run `restic --help` as well. The `--keep-last` option will now map to `keep_last`.[
+
+Instead of:
+```hcl
+job {
+  forget {
+    KeepLast = 2
+  }
+}
+```
+
+You must now use:
+```hcl
+job {
+  forget {
+    keep_last = 2
+  }
+}
+```
 
 ## Contributing
 
