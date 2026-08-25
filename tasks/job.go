@@ -290,6 +290,14 @@ func (j Job) RunRestore(snapshot string) error {
 	return nil
 }
 
+func (j Job) RunUnlock() error {
+	if err := j.NewRestic().Unlock(restic.UnlockOpts{RemoveAll: true}); err != nil {
+		return fmt.Errorf("failed to unlock %s: %w", j.Name, err)
+	}
+
+	return nil
+}
+
 // Healthy checks if the current job is healthy, returnning a bool and a possible error.
 func (j Job) Healthy() (bool, error) {
 	return j.healthy, j.lastErr

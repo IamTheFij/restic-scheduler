@@ -13,7 +13,6 @@ import (
 
 	"git.iamthefij.com/iamthefij/restic-scheduler/config"
 	"git.iamthefij.com/iamthefij/restic-scheduler/metrics"
-	"git.iamthefij.com/iamthefij/restic-scheduler/restic"
 	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
 	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
 )
@@ -125,7 +124,7 @@ func runUnlockJobs(jobs []tasks.Job, names string) error {
 
 	jobs, filterJobErr := FilterJobs(jobs, namesSlice)
 	for _, job := range jobs {
-		if err := job.NewRestic().Unlock(restic.UnlockOpts{RemoveAll: true}); err != nil {
+		if err := job.RunUnlock(); err != nil {
 			return err
 		}
 	}
