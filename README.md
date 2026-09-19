@@ -11,7 +11,7 @@
 You can install `restic-scheduler` using the following command:
 
 ```sh
-go install git.iamthefij.com/iamthefij/restic-scheduler/v2@latest
+go install git.iamthefij.com/iamthefij/restic-scheduler/v2@v2.0.0
 ```
 
 You can also download the latest release from the [releases page](https://git.iamthefij.com/iamthefij/restic-scheduler/releases).
