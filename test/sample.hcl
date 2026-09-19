@@ -12,14 +12,14 @@ job "BackupDataDir" {
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
 
   }
 
   forget {
-    KeepLast = 2
-    Prune = true
+    keep_last = 2
+    prune = true
   }
 }
 
@@ -30,7 +30,7 @@ job "PassphraseFile" {
     repo = "./backups"
     options {
       // A more secure method of specifying password
-      PasswordFile = "./test/samplepassphrase.txt"
+      password_file = "./test/samplepassphrase.txt"
     }
   }
 
@@ -39,7 +39,7 @@ job "PassphraseFile" {
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
 
   }
@@ -54,9 +54,11 @@ job "BackupDataAndSqlite" {
     passphrase = readfile("./test/samplepassphrase.txt")
   }
 
-  sqlite "Backup database" {
-    path = "./sqlite.db"
-    dump_to = "./data/sqlite.db.bak"
+  task "backup database" {
+    sqlite "Backup database" {
+      path = "./sqlite.db"
+      dump_to = "./data/sqlite.db.bak"
+    }
   }
 
   backup {
@@ -64,12 +66,12 @@ job "BackupDataAndSqlite" {
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
     }
   }
 }
 
-job "BackupMySQLDatabase" {
+job "BackupMySQL" {
   schedule = "@daily"
 
   config {
@@ -77,21 +79,53 @@ job "BackupMySQLDatabase" {
     passphrase = "secret phrase"
   }
 
-  mysql "Backup database" {
-    hostname = "localhost"
-    database = "dbname"
-    username = "username"
-    // Values can be read from the env to avoid inlining as well
-    password = env("TEST_PASSWORD")
-    dump_to = "./data/sqlite.db.bak"
+  task "Backup database" {
+    mysql "Backup database" {
+      hostname = "localhost"
+      database = "dbname"
+      username = "username"
+      // Values can be read from the env to avoid inlining as well
+      password = env("TEST_PASSWORD")
+      dump_to = "dump.sql"
+    }
   }
 
   backup {
-    paths = ["./data"]
+    // Test empty path list since path should be added by database task
+    paths = []
 
     restore_opts {
       // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
-      Target = "."
+      target = "."
+    }
+  }
+}
+
+job "BackupMariaDB" {
+  schedule = "@daily"
+
+  config {
+    repo = "./backups"
+    passphrase = "secret phrase"
+  }
+
+  task "Backup database" {
+    mariadb "Backup database" {
+      hostname = "localhost"
+      database = "dbname"
+      username = "username"
+      // Values can be read from the env to avoid inlining as well
+      password = env("TEST_PASSWORD")
+      dump_to = "dump.sql"
+    }
+  }
+
+  backup {
+    // Test missing paths since path should be added by database task
+    paths = []
+    restore_opts {
+      // Since backup paths are relative to cwd, we're going to restore relative to cwd as well
+      target = "."
     }
   }
 }

@@ -9,19 +9,23 @@ job "MyApp" {
       "foo" = "bar",
     }
     options {
-      VerboseLevel = 3
+      verbose_level = 3
     }
   }
 
-  mysql "DumpMainDB" {
-    hostname = "foo"
-    username = "bar"
-    dump_to = "/data/main.sql"
+  task "Backup main db" {
+    mysql "DumpMainDB" {
+      hostname = "foo"
+      username = "bar"
+      dump_to = "/data/main.sql"
+    }
   }
 
-  sqlite "DumpSqlite" {
-    path = "/db/sqlite.db"
-    dump_to = "/data/sqlite.db.bak"
+  task "Backup Sqlite" {
+    sqlite "DumpSqlite" {
+      path = "/db/sqlite.db"
+      dump_to = "/data/sqlite.db.bak"
+    }
   }
 
   task "Create biz file" {
@@ -52,21 +56,21 @@ job "MyApp" {
     ]
 
     backup_opts {
-      Tags = ["service"]
+      tags = ["service"]
     }
 
     restore_opts {
-      Verify = true
+      verify = true
       # Since paths are absolute, restore to root
-      Target = "/"
+      target = "/"
     }
   }
 
   forget {
-    KeepLast = 3
-    KeepWeekly = 2
-    KeepMonthly = 2
-    KeepYearly = 2
-    Prune = true
+    keep_last = 3
+    keep_weekly = 2
+    keep_monthly = 2
+    keep_yearly = 2
+    prune = true
   }
 }

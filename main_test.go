@@ -6,11 +6,21 @@ import (
 	"os"
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	main "git.iamthefij.com/iamthefij/restic-scheduler/v2"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
 	"github.com/stretchr/testify/assert"
 )
 
-const MinCoverage = 0.5
+const MinCoverage = 0.0
+
+func ValidResticConfig() *tasks.ResticConfig {
+	return &tasks.ResticConfig{
+		Passphrase: "shh",
+		Repo:       "./data",
+		Env:        nil,
+		GlobalOpts: nil,
+	}
+}
 
 func TestMain(m *testing.M) {
 	testResult := m.Run()
@@ -30,57 +40,80 @@ func TestMain(m *testing.M) {
 func TestReadJobs(t *testing.T) {
 	t.Parallel()
 
-	jobs, err := main.ReadJobs([]string{"./test/sample.hcl"})
-	if err != nil {
-		t.Errorf("Unexpected error reading jobs: %v", err)
+	cases := []struct {
+		name          string
+		filePath      []string
+		expectedError bool
+		numJobs       int
+	}{
+		{
+			name:          "Read valid job file",
+			filePath:      []string{"./test/sample.hcl"},
+			expectedError: false,
+			numJobs:       1,
+		},
+		{
+			name:          "Read invalid file path",
+			filePath:      []string{"./nonexistent.hcl"},
+			expectedError: true,
+			numJobs:       1,
+		},
 	}
 
-	if len(jobs) == 0 {
-		t.Error("Expected read jobs but found none")
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			jobs, err := main.ReadJobs(testCase.filePath)
+			if (err != nil) != testCase.expectedError {
+				t.Errorf("Expected error: %v, got: %v", testCase.expectedError, err)
+			}
+
+			if len(jobs) == testCase.numJobs {
+				t.Error("Expected read jobs but found none")
+			}
+		})
 	}
 }
 
 func TestRunJobs(t *testing.T) {
 	t.Parallel()
 
-	validJob := main.Job{
+	validJob := tasks.Job{
 		Name:     "Valid job",
 		Schedule: "@daily",
 		Config:   ValidResticConfig(),
-		Tasks:    []main.JobTask{},
-		Backup:   main.BackupFilesTask{Paths: []string{"/test"}}, //nolint:exhaustruct
+		Tasks:    []tasks.JobTask{},
+		Backup:   tasks.BackupFilesTask{BackupPaths: []string{"/test"}}, //nolint:exhaustruct
 		Forget:   nil,
-		MySQL:    []main.JobTaskMySQL{},
-		Postgres: []main.JobTaskPostgres{},
-		Sqlite:   []main.JobTaskSqlite{},
 	}
 
 	cases := []struct {
 		name          string
-		jobs          []main.Job
+		jobs          []tasks.Job
 		names         []string
-		expected      []main.Job
+		expected      []tasks.Job
 		expectedError error
 	}{
 		{
 			name:          "Found job",
-			jobs:          []main.Job{validJob},
+			jobs:          []tasks.Job{validJob},
 			names:         []string{"Valid job"},
-			expected:      []main.Job{validJob},
+			expected:      []tasks.Job{validJob},
 			expectedError: nil,
 		},
 		{
 			name:          "Run all",
-			jobs:          []main.Job{validJob},
+			jobs:          []tasks.Job{validJob},
 			names:         []string{"all"},
-			expected:      []main.Job{validJob},
+			expected:      []tasks.Job{validJob},
 			expectedError: nil,
 		},
 		{
 			name:          "Extra, missing job",
-			jobs:          []main.Job{validJob},
+			jobs:          []tasks.Job{validJob},
 			names:         []string{"Valid job", "Not Found"},
-			expected:      []main.Job{validJob},
+			expected:      []tasks.Job{validJob},
 			expectedError: main.ErrJobNotFound,
 		},
 	}

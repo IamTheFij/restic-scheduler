@@ -6,7 +6,7 @@ job "TestBackup" {
     passphrase = "supersecret"
 
     options {
-      CacheDir = "test/data/cache"
+      cache_dir = "test/data/cache"
     }
   }
 
@@ -31,11 +31,11 @@ job "TestBackup" {
   backup {
     paths = ["./test/data/data"]
     restore_opts {
-      Target = "."
+      target = "."
     }
   }
 
   forget {
-    KeepLast = 2
+    keep_last = 2
   }
 }

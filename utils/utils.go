@@ -1,6 +1,10 @@
-package main
+package utils
 
-import "fmt"
+import (
+	"fmt"
+	"maps"
+	"time"
+)
 
 type Set map[string]bool
 
@@ -22,15 +26,21 @@ func NewSetFrom(l []string) Set {
 func MergeEnvMap(parent, child map[string]string) map[string]string {
 	result := map[string]string{}
 
-	for key, value := range parent {
-		result[key] = value
-	}
-
-	for key, value := range child {
-		result[key] = value
-	}
+	maps.Copy(result, parent)
+	maps.Copy(result, child)
 
 	return result
+}
+
+func MapPop[K comparable, T any](m map[K]T, key K) T {
+	var zeroValue T
+
+	if val, ok := m[key]; ok {
+		delete(m, key)
+		return val
+	}
+
+	return zeroValue
 }
 
 func EnvMapToList(envMap map[string]string) []string {
@@ -42,7 +52,7 @@ func EnvMapToList(envMap map[string]string) []string {
 	return envList
 }
 
-func maybeAddArgString(args []string, name, value string) []string {
+func MaybeAddArgString(args []string, name, value string) []string {
 	if value != "" {
 		return append(args, name, value)
 	}
@@ -50,7 +60,7 @@ func maybeAddArgString(args []string, name, value string) []string {
 	return args
 }
 
-func maybeAddArgInt(args []string, name string, value int) []string {
+func MaybeAddArgInt(args []string, name string, value int) []string {
 	if value > 0 {
 		return append(args, name, fmt.Sprint(value))
 	}
@@ -58,7 +68,15 @@ func maybeAddArgInt(args []string, name string, value int) []string {
 	return args
 }
 
-func maybeAddArgBool(args []string, name string, value bool) []string {
+func MaybeAddArgDuration(args []string, name string, value time.Duration) []string {
+	if value > 0 {
+		return append(args, name, value.String())
+	}
+
+	return args
+}
+
+func MaybeAddArgBool(args []string, name string, value bool) []string {
 	if value {
 		return append(args, name)
 	}
@@ -66,7 +84,7 @@ func maybeAddArgBool(args []string, name string, value bool) []string {
 	return args
 }
 
-func maybeAddArgsList(args []string, name string, value []string) []string {
+func MaybeAddArgsList(args []string, name string, value []string) []string {
 	for _, v := range value {
 		args = append(args, name, v)
 	}
