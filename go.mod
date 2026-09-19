@@ -1,4 +1,4 @@
-module git.iamthefij.com/iamthefij/restic-scheduler
+module git.iamthefij.com/iamthefij/restic-scheduler/v2
 
 go 1.26
 

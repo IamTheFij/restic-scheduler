@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/config"
-	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/config"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 	"github.com/stretchr/testify/assert"
 )
 

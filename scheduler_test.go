@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
+	main "git.iamthefij.com/iamthefij/restic-scheduler/v2"
 	"github.com/stretchr/testify/assert"
 )
 

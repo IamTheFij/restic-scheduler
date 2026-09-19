@@ -11,10 +11,10 @@ import (
 	"strings"
 	"syscall"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/config"
-	"git.iamthefij.com/iamthefij/restic-scheduler/metrics"
-	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/config"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/metrics"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 var (

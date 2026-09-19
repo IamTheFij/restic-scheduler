@@ -3,7 +3,7 @@ package tasks_test
 import (
 	"testing"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
 	"github.com/stretchr/testify/assert"
 )
 

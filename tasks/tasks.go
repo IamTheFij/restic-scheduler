@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/restic"
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/restic"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 type TaskConfig struct {

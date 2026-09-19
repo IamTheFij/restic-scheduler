@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-test/deep"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 func TestMergeEnvMap(t *testing.T) {

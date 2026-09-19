@@ -10,8 +10,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron/v3"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/metrics"
-	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/metrics"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
 )
 
 // In-memory job result storage (shared across scheduler instances)

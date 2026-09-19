@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/metrics"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/metrics"
 )
 
 func TestInitMetrics(t *testing.T) {

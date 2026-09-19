@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/restic"
-	utils "git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/restic"
+	utils "git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 func TestNoOpts(t *testing.T) {

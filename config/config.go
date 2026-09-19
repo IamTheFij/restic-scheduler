@@ -12,7 +12,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
 )
 
 var ErrNoJobsFound = errors.New("no jobs found and at least one job is required")

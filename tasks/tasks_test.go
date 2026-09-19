@@ -6,8 +6,8 @@ import (
 	"log"
 	"testing"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 func NewBufferedLogger(prefix string) (*bytes.Buffer, *log.Logger) {

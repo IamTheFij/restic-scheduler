@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 var (

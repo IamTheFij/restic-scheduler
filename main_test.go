@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	main "git.iamthefij.com/iamthefij/restic-scheduler"
-	"git.iamthefij.com/iamthefij/restic-scheduler/tasks"
+	main "git.iamthefij.com/iamthefij/restic-scheduler/v2"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
 	"github.com/stretchr/testify/assert"
 )
 

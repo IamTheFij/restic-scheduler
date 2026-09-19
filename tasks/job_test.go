@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	config "git.iamthefij.com/iamthefij/restic-scheduler/config"
-	restic "git.iamthefij.com/iamthefij/restic-scheduler/restic"
-	tasks "git.iamthefij.com/iamthefij/restic-scheduler/tasks"
+	config "git.iamthefij.com/iamthefij/restic-scheduler/v2/config"
+	restic "git.iamthefij.com/iamthefij/restic-scheduler/v2/restic"
+	tasks "git.iamthefij.com/iamthefij/restic-scheduler/v2/tasks"
 )
 
 func ValidResticConfig() *tasks.ResticConfig {

@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 // JobTaskMySQL is a MySQL backup task that performs required pre and post tasks.

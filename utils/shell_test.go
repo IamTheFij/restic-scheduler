@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"git.iamthefij.com/iamthefij/restic-scheduler/utils"
+	"git.iamthefij.com/iamthefij/restic-scheduler/v2/utils"
 )
 
 /*
