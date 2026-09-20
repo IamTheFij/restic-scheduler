@@ -118,7 +118,7 @@ func (s *Scheduler) Start(jobs []tasks.Job) error {
 	names := make([]string, 0, len(jobs))
 
 	for _, sj := range schedJobs {
-		log.Printf("Scheduling %s", sj.job.Name)
+		fmt.Printf("Scheduling %s", sj.job.Name)
 
 		if _, err := c.AddJob(sj.job.Schedule, sj); err != nil {
 			return fmt.Errorf("error scheduling job %s: %w", sj.job.Name, err)
@@ -226,7 +226,7 @@ func (r JobResult) Format() string {
 
 // JobComplete records completion state for a job into the in-memory map.
 func JobComplete(result JobResult) {
-	log.Printf("Completed job %+v\n", result)
+	fmt.Printf("Completed job %+v\n", result)
 
 	jobResultsLock.Lock()
 	jobResults[result.JobName] = result
