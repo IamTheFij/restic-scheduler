@@ -21,7 +21,7 @@ ARG TARGETARCH
 COPY ./$DIST/restic-scheduler-$TARGETOS-$TARGETARCH /bin/restic-scheduler
 
 # Install nomad
-COPY --from=hashicorp/nomad:2.0 /bin/nomad /bin/
+COPY --from=hashicorp/nomad:2.1 /bin/nomad /bin/
 COPY --from=hashicorp/consul:2.0 /bin/consul /bin/
 
 HEALTHCHECK CMD ["curl", "--silent", "--show-error", "--fail", "-o", "/dev/null", "http://localhost:8080/health"]
